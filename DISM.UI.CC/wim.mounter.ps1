@@ -1,10 +1,10 @@
 <#
 .SYNOPSIS
-    WinISO Image Mounter v1.00.00 - Mounts a Windows Image (*.wim) file into a
+    wim.mounter.ps1 - Mounts a Windows Image (*.wim) file into a
     target directory using DISM, presented through a PowerEdge-style dark WPF UI.
 
 .DESCRIPTION
-    WinISO Image Mounter opens a single, non-resizable, always-centered WPF
+    wim.mounter.ps1 opens a single, non-resizable, always-centered WPF
     window (frameless, custom title bar, close button only) that lets the
     user pick a *.wim file and a target mount directory, then mounts the
     image via "DISM /Mount-Wim" inside a separate, visible console window.
@@ -24,14 +24,14 @@
     defaults to "en-us".
 
 .EXAMPLE
-    .\WinIsoImageMounter.ps1
+    .\wim.mounter.ps1
 
 .EXAMPLE
-    .\WinIsoImageMounter.ps1 -Language de-de
+    .\wim.mounter.ps1 -Language de-de
 
 .NOTES
     Creation Date: 18.08.2026
-    Version:       1.00.00
+    Version:       1.00.02
     Author:        praetoriani
 
     REQUIREMENTS:
@@ -53,51 +53,68 @@ param(
 # GLOBAL PATH CONSTANTS
 # ─────────────────────────────────────────────────────────────────────────────
 $global:approot   = $PSScriptRoot
-$global:appicon   = Join-Path $PSScriptRoot "WinIsoImageMounter.ico"
-$configFile       = Join-Path $PSScriptRoot "data\config.json"
+$global:appicon   = Join-Path $PSScriptRoot "DISM.UI.CC.ico"
+$duccappid        = "wim.mounter"
+# Global WinTwin Fusion config
+$configRoot       = "..\core\config.json"
+# Local (app-internal) config
+$configTool       = Join-Path $PSScriptRoot "config.json"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # LOAD CONFIGURATION (data\config.json)
 # ─────────────────────────────────────────────────────────────────────────────
-if (-not (Test-Path -LiteralPath $configFile)) {
-    Write-Error "WinIsoImageMounter: Configuration file not found: $configFile"
+if (-not (Test-Path -LiteralPath $configRoot)) {
+    Write-Error "ducc.wim.mounter: Configuration file not found: $configRoot"
+    exit 1
+}
+if (-not (Test-Path -LiteralPath $configTool)) {
+    Write-Error "ducc.wim.mounter: Configuration file not found: $configTool"
     exit 1
 }
 
 try {
-    $global:AppConfig = Get-Content -LiteralPath $configFile -Raw | ConvertFrom-Json -ErrorAction Stop
+    $global:cfg = Get-Content -LiteralPath $configRoot -Raw | ConvertFrom-Json -ErrorAction Stop
 }
 catch {
-    Write-Error "WinIsoImageMounter: Failed to parse config.json: $($_.Exception.Message)"
+    Write-Error "ducc.wim.mounter: Failed to parse $configRoot\n$($_.Exception.Message)"
     exit 1
 }
 
-$global:uipath   = Join-Path $PSScriptRoot $global:AppConfig.appcore.uidata
-$global:langpath = Join-Path $PSScriptRoot $global:AppConfig.appcore.langdata
-$global:fxpath   = Join-Path $PSScriptRoot $global:AppConfig.appcore.fxdata
-$global:mainwin  = Join-Path $global:uipath "main.window.xml"
-$global:wimIndex = $global:AppConfig.dism.wimIndex
+try {
+    $global:appcfg = Get-Content -LiteralPath $configTool -Raw | ConvertFrom-Json -ErrorAction Stop
+}
+catch {
+    Write-Error "ducc.wim.mounter: Failed to parse $configTool\n$($_.Exception.Message)"
+    exit 1
+}
+
+$global:root     = $global:cfg.path.root
+$global:uipath   = Join-Path $global:root $global:cfg.path.appui
+$global:langpath = Join-Path $global:root $global:cfg.path.lang
+$appfxfile       = $duccappid+".fx.ps1"
+$global:fxpath   = Join-Path $global:approot $appfxfile
+$appxmlui        = $duccappid+".main.xml"
+$global:mainwin  = Join-Path $global:uipath $appxmlui
+$global:wimIndex = $global:cfg.wim.index
 
 if ([string]::IsNullOrWhiteSpace($Language)) {
-    $Language = $global:AppConfig.appconfig.defaultlanguage
+    $Language = $global:cfg.appconfig.defaultlanguage
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
 # DOT-SOURCE EXTERNAL FUNCTION LIBRARY (data\fxlib) - same pattern as PowerEdge
 # ─────────────────────────────────────────────────────────────────────────────
 if (-not (Test-Path -LiteralPath $global:fxpath)) {
-    Write-Error "WinIsoImageMounter: Function library directory not found: $global:fxpath"
+    Write-Error "ducc.wim.mounter: Function library directory not found:\n$global:fxpath"
     exit 1
 }
 
-Get-ChildItem -Path $global:fxpath -Filter "*.ps1" | ForEach-Object {
-    try {
-        . $_.FullName
-    }
-    catch {
-        Write-Error "WinIsoImageMounter: Failed to dot-source $($_.Name): $($_.Exception.Message)"
-        exit 1
-    }
+try {
+    . $global:fxpath
+}
+catch {
+    Write-Error "ducc.wim.mounter: Failed to dot-source $global:fxpath\n$($_.Exception.Message)"
+    exit 1
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -116,13 +133,23 @@ Add-Type -AssemblyName System.Xml
 # ─────────────────────────────────────────────────────────────────────────────
 # LOAD LANGUAGE TABLE (data\lang\<code>.json)
 # ─────────────────────────────────────────────────────────────────────────────
+$applangfile = $duccappid+"."+$Language+".json"
+$applangpath = Join-Path $global:langpath $applangfile
 try {
-    $lang = Get-LanguageTable -LangDirectory $global:langpath -LanguageCode $Language
+    $apptxt = Get-Content -LiteralPath $applangpath -Raw | ConvertFrom-Json -ErrorAction Stop
 }
 catch {
-    Write-Error $_.Exception.Message
+    Write-Error "ducc.wim.mounter: Failed to parse $applangpath\n$($_.Exception.Message)"
     exit 1
 }
+# DEPRECATED
+#try {
+#    $lang = Get-LanguageTable -LangDirectory $global:langpath -LanguageCode $Language
+#}
+#catch {
+#    Write-Error $_.Exception.Message
+#    exit 1
+#}
 
 # ─────────────────────────────────────────────────────────────────────────────
 # LOAD THE EXTERNAL XAML UI (data\ui\main.window.xml)
@@ -142,7 +169,7 @@ if (Test-Path -LiteralPath $global:appicon) {
         $window.Icon = $iconImage
     }
     catch {
-        Write-Verbose "WinIsoImageMounter: Could not set window icon: $($_.Exception.Message)"
+        Write-Verbose "ducc.wim.mounter: Could not set window icon: $($_.Exception.Message)"
     }
 }
 
@@ -168,28 +195,30 @@ $btnCancel       = $window.FindName("BtnCancel")
 $btnExit         = $window.FindName("BtnExit")
 
 $statusText      = $window.FindName("StatusText")
+$statusInfo      = $window.FindName("StatusInfo")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # APPLY LOCALIZED TEXTS FROM THE LANGUAGE TABLE
 # ─────────────────────────────────────────────────────────────────────────────
-$window.Title              = $lang.window.title
-$titleBarText.Text         = $lang.window.title
-$lblInstructions.Text      = $lang.labels.instructions
-$lblImageFile.Text         = $lang.labels.imageFile
-$lblMountPoint.Text        = $lang.labels.mountPoint
-$btnOpenImage.ToolTip      = $lang.buttons.openTooltip
-$btnBrowseMount.ToolTip    = $lang.buttons.browseTooltip
-$btnMount.Content          = $lang.buttons.mount
-$btnCancel.Content         = $lang.buttons.cancel
-$btnExit.Content           = $lang.buttons.exit
-$statusText.Text           = $lang.status.ready
+$window.Title              = $apptxt.window.title
+$titleBarText.Text         = $apptxt.window.title
+$lblInstructions.Text      = $apptxt.labels.instructions
+$lblImageFile.Text         = $apptxt.labels.imageFile
+$lblMountPoint.Text        = $apptxt.labels.mountPoint
+$btnOpenImage.ToolTip      = $apptxt.buttons.openTooltip
+$btnBrowseMount.ToolTip    = $apptxt.buttons.browseTooltip
+$btnMount.Content          = $apptxt.buttons.mount
+$btnCancel.Content         = $apptxt.buttons.cancel
+$btnExit.Content           = $apptxt.buttons.exit
+$statusText.Text           = $apptxt.status.ready
+$statusInfo.Text           = $global:appcfg.appinfo.name+" ("+$global:appcfg.appinfo.version+")"
 
 if (Test-Path -LiteralPath $global:appicon) {
     try {
         $titleBarLogo.Source = [System.Windows.Media.Imaging.BitmapImage]::new([System.Uri]::new($global:appicon))
     }
     catch {
-        Write-Verbose "WinIsoImageMounter: Could not set title bar logo: $($_.Exception.Message)"
+        Write-Verbose "ducc.wim.mounter: Could not set title bar logo: $($_.Exception.Message)"
     }
 }
 
@@ -201,7 +230,7 @@ function Reset-FormState {
     $txtMountPoint.Text = ""
     Clear-FieldError -TextBox $txtImageFile
     Clear-FieldError -TextBox $txtMountPoint
-    $statusText.Text = $lang.status.ready
+    $statusText.Text = $apptxt.status.ready
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -220,8 +249,8 @@ $titleBarPanel.Add_MouseLeftButtonDown({
 $btnOpenImage.Add_Click({
     Clear-FieldError -TextBox $txtImageFile
 
-    $selectedFile = Select-WimFile -DialogTitle $lang.dialogs.fileDialogTitle `
-                                    -FilterName  $lang.dialogs.fileDialogFilterName
+    $selectedFile = Select-WimFile -DialogTitle $apptxt.dialogs.fileDialogTitle `
+                                    -FilterName  $apptxt.dialogs.fileDialogFilterName
 
     if ($null -ne $selectedFile) {
         $txtImageFile.Text = $selectedFile
@@ -238,7 +267,7 @@ $btnOpenImage.Add_Click({
 $btnBrowseMount.Add_Click({
     Clear-FieldError -TextBox $txtMountPoint
 
-    $selectedFolder = Select-MountFolder -DialogTitle $lang.dialogs.folderDialogTitle
+    $selectedFolder = Select-MountFolder -DialogTitle $apptxt.dialogs.folderDialogTitle
 
     if ($null -ne $selectedFolder) {
         $txtMountPoint.Text = $selectedFolder
@@ -306,7 +335,7 @@ $btnMount.Add_Click({
     $btnCancel.IsEnabled      = $false
     $btnOpenImage.IsEnabled   = $false
     $btnBrowseMount.IsEnabled = $false
-    $statusText.Text          = $lang.status.mounting
+    $statusText.Text          = $apptxt.status.mounting
 
     $mountResult = Invoke-DismMount -WimFilePath $imagePath `
                                      -MountDirectory $mountDir `
@@ -334,5 +363,5 @@ $window.Add_Loaded({
 
 $window.ShowDialog() | Out-Null
 
-Write-Verbose "WinIsoImageMounter: Application closed cleanly."
+Write-Verbose "ducc.wim.mounter: Application closed cleanly."
 exit 0
