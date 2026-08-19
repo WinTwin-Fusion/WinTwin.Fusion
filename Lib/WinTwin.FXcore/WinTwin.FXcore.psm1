@@ -1,20 +1,20 @@
 <#
 .SYNOPSIS
-    WinISO.ScriptFXLib - Powerfull Module for downloading, customizing and re-building bootable Windows 11 Pro Setup ISO Files
+    WinTwin.FXcore - Powerfull Module for downloading, customizing and re-building bootable Windows 11 Pro Setup ISO Files
 
 .DESCRIPTION
     This PowerShell Module was designed to provide powerfull functions to almost fully automate the process of
     downloading and generating Windows 11 Pro ISO Files (using uupdump.net), customizing install.wim images
     to fit your personal needs and necessary requirements (using DISM and other tools) and re-building a final
     version to an bootable ISO file based on your previously made customizations to the Windows Image.
-    In simple words: With WinISO.ScriptFXLib you can create your own customized bootable Windows 11 Pro Setup ISO!
+    In simple words: With WinTwin.FXcore you can create your own customized bootable Windows 11 Pro Setup ISO!
 
 .NOTES
-    Creation Date: 28.03.2026
+    Creation Date: 28.03.2026  (as WinISO.ScriptFXLib)
     Last Update:   19.08.2026
     Version:       1.00.06
     Author:        Praetoriani (a.k.a. M.Sczepanski)
-    Website:       https://github.com/praetoriani/PowerShell.Mods
+    Website:       https://github.com/WinTwin-Fusion/WinTwin.FXcore
 
     REQUIREMENTS & DEPENDENCIES:
     - PowerShell 5.1 or higher
@@ -29,11 +29,12 @@ $script:appinfo = @{
     AppVers     = '1.00.06'
     AppDevName  = 'Praetoriani'
     AppDevMail  = 'mr.praetoriani{at}gmail.com'
-    AppWebsite  = 'https://github.com/praetoriani/PowerShell.Mods'
+    AppWebsite  = 'https://github.com/WinTwin-Fusion/WinTwin.FXcore'
     DateCreate  = '28.03.2026'
     LastUpdate  = '19.08.2026'
 }
 
+<#
 # This var stores important paths and other important environment informations
 $script:appenv = @{
     ISOroot    = 'C:\WinISO'
@@ -141,44 +142,46 @@ function AppScope {
         [Parameter()]
         [ValidateNotNullOrEmpty()]
         [string] $KeyID
-    )
-
-    # Initialize status object (as per App Development Guidelines)
-    $script:exit['code'] = -1
-    $script:exit['text'] = [string]::Empty
-
-    try {
-        # Validate the KeyID-Param
-        if ([string]::IsNullOrWhiteSpace($KeyID)) {
-            $script:exit['code'] = -1
-            $script:exit['text'] = "Parameter 'KeyID' is required and must not be null, empty or whitespace-only."
-        }
-        # KeyID-Param seems to be valid
-        else {
-            # Normalize the KeyID for case-insensitive comparison
-            $KeyID = $KeyID.ToLower()
-            switch ($KeyID) {
-                'appinfo'   { return $script:appinfo }
-                'appenv'    { return $script:appenv }
-                'reghive'   { return $script:LoadedHives }
-                'appverify' { return $script:appverify }
-                'appx'      { return $script:appx }
-                default     {
-                    $script:exit['code'] = -1
-                    $script:exit['text'] = "Parameter 'KeyID' can only be 'appinfo', 'appenv', 'reghive', 'appverify', or 'appx'."
-                }
+        )
+        
+        # Initialize status object (as per App Development Guidelines)
+        $script:exit['code'] = -1
+        $script:exit['text'] = [string]::Empty
+        
+        try {
+            # Validate the KeyID-Param
+            if ([string]::IsNullOrWhiteSpace($KeyID)) {
+                $script:exit['code'] = -1
+                $script:exit['text'] = "Parameter 'KeyID' is required and must not be null, empty or whitespace-only."
             }
+            # KeyID-Param seems to be valid
+            else {
+                # Normalize the KeyID for case-insensitive comparison
+                $KeyID = $KeyID.ToLower()
+                switch ($KeyID) {
+                    'appinfo'   { return $script:appinfo }
+                    'appenv'    { return $script:appenv }
+                    'reghive'   { return $script:LoadedHives }
+                    'appverify' { return $script:appverify }
+                    'appx'      { return $script:appx }
+                    default     {
+                        $script:exit['code'] = -1
+                        $script:exit['text'] = "Parameter 'KeyID' can only be 'appinfo', 'appenv', 'reghive', 'appverify', or 'appx'."
+                    }
+                }
         }
     }
     catch {
-        <#Do this if a terminating exception happens#>
+        #Do this if a terminating exception happens
         $script:exit['code'] = -1
         $script:exit['text'] = "Error in AppScope: $($_.Exception.Message)"
     }
-
+    
     # final return
     return $script:exit
 }
+
+#>
 
 # Get public and private function definition files
 $PublicFunctions = @(Get-ChildItem -Path $PSScriptRoot\Public\*.ps1 -ErrorAction SilentlyContinue)
