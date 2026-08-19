@@ -1,0 +1,32 @@
+{
+    "appinfo": {
+        "name":         "WinTwin Fusion",
+        "version":      "v1.00.00",
+        "devname":      "praetoriani",
+        "website":      "https://github.com/praetoriani/WinTwin.Fusion",
+        "datecreate":   "18.08.2026",
+        "dateupdate":   "18.08.2026"
+    },
+
+    "appconfig": {
+        "defaultlanguage": "en-us",
+        "logfiles":        [false, "logs"]
+    },
+
+    "path": {
+        "root": "C:\\WinISO",
+        "lang": "\\Core\\lang",
+        "appui": "\\Core\\ui",
+        "logfiles": "\\Core\\logs",
+        "export": "\\Core\\export",
+        "modules": "\\Lib",
+        "pstools": "\\PS.Toolbox",
+        "ducc": "\\DISM.UI.CC",
+        "usmt": "\\USMTwrapper"
+    },
+
+    "wim": {
+        "mountpoint": "D:\\WinISO\\Win11.25H2.Pro.DE",
+        "mountstate": "false"
+    }
+}
