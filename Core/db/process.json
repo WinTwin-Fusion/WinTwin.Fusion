@@ -1,0 +1,10 @@
+{
+    "mount": {
+        "state": "false",
+        "image": {
+            "file": "",
+            "name": "",
+            "index": ""
+        }
+    }
+}
