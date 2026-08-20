@@ -1,0 +1,40 @@
+{
+    "language": "en-us",
+    "window": { "title": "WTF.Console" },
+    "labels": { "prompt": "Cmd:" },
+    "buttons": {
+        "minimizeTooltip": "Minimize",
+        "maximizeTooltip": "Maximize",
+        "restoreTooltip":  "Restore",
+        "closeTooltip":    "Close",
+        "send":            "Send",
+        "clear":           "Clear",
+        "sendTooltip":     "Send the command to the running console process",
+        "clearTooltip":    "Clear the terminal output (does not stop the process)"
+    },
+    "status": {
+        "ready":        "Ready",
+        "starting":     "Starting console process...",
+        "running":      "Process running (PID {0})...",
+        "sending":      "Sending command...",
+        "finished":     "Process finished (exit code {0}).",
+        "finishedOk":   "Process finished successfully.",
+        "finishedFail": "Process finished with errors (exit code {0}).",
+        "terminated":   "Process was terminated by the user.",
+        "notrunning":   "No active process."
+    },
+    "messages": {
+        "missingScriptParam":  "No script file was specified. WTF.Console requires -ScriptPath to be provided.",
+        "scriptNotFound":      "The specified script file could not be found: {0}",
+        "processStartFailed":  "Failed to start the console process: {0}",
+        "processAlreadyRunning": "A console process is already running. Please wait until it finishes or close the window.",
+        "logfileInitFailed":   "Failed to initialize the VPDLX log file: {0}",
+        "confirmCloseRunning": "A process is still running. Closing this window will terminate it. Continue?"
+    },
+    "console": {
+        "processStarted":    "[WTF.Console] Process started (PID {0}): {1}",
+        "processExited":     "[WTF.Console] Process exited with code {0}.",
+        "userInputEcho":     "> {0}",
+        "errorPrefix":       "[ERROR] "
+    }
+}

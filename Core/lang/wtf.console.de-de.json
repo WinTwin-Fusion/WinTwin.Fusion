@@ -1,0 +1,40 @@
+{
+    "language": "de-de",
+    "window": { "title": "WTF.Console" },
+    "labels": { "prompt": "Befehl:" },
+    "buttons": {
+        "minimizeTooltip": "Minimieren",
+        "maximizeTooltip": "Maximieren",
+        "restoreTooltip":  "Wiederherstellen",
+        "closeTooltip":    "Schließen",
+        "send":            "Senden",
+        "clear":           "Leeren",
+        "sendTooltip":     "Befehl an den laufenden Konsolenprozess senden",
+        "clearTooltip":    "Terminalausgabe leeren (beendet den Prozess nicht)"
+    },
+    "status": {
+        "ready":        "Bereit",
+        "starting":     "Konsolenprozess wird gestartet...",
+        "running":      "Prozess läuft (PID {0})...",
+        "sending":      "Befehl wird gesendet...",
+        "finished":     "Prozess beendet (Exit-Code {0}).",
+        "finishedOk":   "Prozess erfolgreich beendet.",
+        "finishedFail": "Prozess mit Fehlern beendet (Exit-Code {0}).",
+        "terminated":   "Prozess wurde vom Benutzer beendet.",
+        "notrunning":   "Kein aktiver Prozess."
+    },
+    "messages": {
+        "missingScriptParam":  "Es wurde keine Skriptdatei angegeben. WTF.Console benötigt den Parameter -ScriptPath.",
+        "scriptNotFound":      "Die angegebene Skriptdatei wurde nicht gefunden: {0}",
+        "processStartFailed":  "Der Konsolenprozess konnte nicht gestartet werden: {0}",
+        "processAlreadyRunning": "Es läuft bereits ein Konsolenprozess. Bitte warten Sie, bis dieser beendet ist, oder schließen Sie das Fenster.",
+        "logfileInitFailed":   "Die VPDLX-Logdatei konnte nicht initialisiert werden: {0}",
+        "confirmCloseRunning": "Es läuft noch ein Prozess. Wenn Sie dieses Fenster schließen, wird der Prozess beendet. Fortfahren?"
+    },
+    "console": {
+        "processStarted":    "[WTF.Console] Prozess gestartet (PID {0}): {1}",
+        "processExited":     "[WTF.Console] Prozess mit Code {0} beendet.",
+        "userInputEcho":     "> {0}",
+        "errorPrefix":       "[FEHLER] "
+    }
+}
