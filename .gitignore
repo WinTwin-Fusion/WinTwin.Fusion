@@ -3,3 +3,5 @@
 wim.mounter.cmd
 *.code-workspace
 **/.Documentation/
+*.hash
+create.checksum.ps1
