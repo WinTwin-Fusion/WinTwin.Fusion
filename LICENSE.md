@@ -78,6 +78,7 @@ By downloading, installing, or otherwise making use of **WinTwin Fusion Framewor
 ## Final Provision
 
 A so-called NOTICE file is included with this license. This NOTICE file must always accompany this license file whenever copies of the **WinTwin Fusion Framework** are distributed. Should either or both of these files (LICENSE.md and/or the NOTICE file) be missing, the right to possess and use the **WinTwin Fusion Framework** (or individual programs integrated into the framework such as _PS.Tweak.Tools_ , _DISM UI Control Center_ etc.) terminates in its entirety. In such an event, the entire **WinTwin Fusion Framework** (including all copies) must be completely and thoroughly removed from the target system.
+
 ---
 
 *WinTwin Fusion Framework™ · © 2026 by Praetoriani · All rights reserved.*
