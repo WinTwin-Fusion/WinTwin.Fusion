@@ -35,21 +35,43 @@ catch {
     exit 1
 }
 
-$global:root     = $global:cfg.path.root
-$global:uipath   = Join-Path $global:root $global:cfg.path.appui
-$global:langpath = Join-Path $global:root $global:cfg.path.lang
-$appfxfile       = $duccappid+".fx.ps1"
-$global:fxpath   = Join-Path $global:approot $appfxfile
-$appxmlui        = $duccappid+".main.xml"
-$global:mainwin  = Join-Path $global:uipath $appxmlui
-$global:wimIndex = [int]$global:cfg.wim.index
+$global:root       = $global:cfg.path.root
+$global:uipath     = Join-Path $global:root $global:cfg.path.appui
+$global:langpath   = Join-Path $global:root $global:cfg.path.lang
+$global:modulesDir = Join-Path $global:root $global:cfg.path.modules
+$appfxfile         = $duccappid+".fx.ps1"
+$global:fxpath     = Join-Path $global:approot $appfxfile
+$appxmlui          = $duccappid+".main.xml"
+$global:mainwin    = Join-Path $global:uipath $appxmlui
+$global:wimIndex   = [int]$global:cfg.wim.index
 $global:exportPath = Join-Path $global:root $global:cfg.path.export
 $global:logPath    = Join-Path $global:root $global:cfg.path.logfiles
 $global:psToolsPath = Join-Path $global:root $global:cfg.path.pstools
 $global:wtfConsolePath = Join-Path $global:psToolsPath 'WTF.Console.ps1'
 
+$global:opsReturnModulePath   = Join-Path $global:modulesDir 'OPSreturn\OPSreturn.psd1'
+$global:psAppCoreLibModulePath = Join-Path $global:modulesDir 'PSAppCoreLib\PSAppCoreLib.psd1'
+$global:winTwinFXcoreModulePath = Join-Path $global:modulesDir 'WinTwin.FXcore\WinTwin.FXcore.psd1'
+
 if ([string]::IsNullOrWhiteSpace($Language)) {
     $Language = $global:cfg.appconfig.defaultlanguage
+}
+
+foreach ($requiredModulePath in @($global:opsReturnModulePath, $global:psAppCoreLibModulePath, $global:winTwinFXcoreModulePath)) {
+    if (-not (Test-Path -LiteralPath $requiredModulePath -PathType Leaf)) {
+        Write-Error "ducc.wim.mounter: Required module manifest not found:`n$requiredModulePath"
+        exit 1
+    }
+}
+
+try {
+    Import-Module $global:opsReturnModulePath -Force -ErrorAction Stop
+    Import-Module $global:psAppCoreLibModulePath -Force -ErrorAction Stop
+    Import-Module $global:winTwinFXcoreModulePath -Force -ErrorAction Stop
+}
+catch {
+    Write-Error "ducc.wim.mounter: Failed to import required framework modules.`n$($_.Exception.Message)"
+    exit 1
 }
 
 if (-not (Test-Path -LiteralPath $global:fxpath)) {
@@ -118,19 +140,19 @@ $btnExit         = $window.FindName("BtnExit")
 $statusText      = $window.FindName("StatusText")
 $statusInfo      = $window.FindName("StatusInfo")
 
-$window.Title              = $apptxt.window.title
-$titleBarText.Text         = $apptxt.window.title
-$lblInstructions.Text      = $apptxt.labels.instructions
-$lblImageFile.Text         = $apptxt.labels.imageFile
-$lblMountPoint.Text        = $apptxt.labels.mountPoint
+$window.Title                = $apptxt.window.title
+$titleBarText.Text           = $apptxt.window.title
+$lblInstructions.Text        = $apptxt.labels.instructions
+$lblImageFile.Text           = $apptxt.labels.imageFile
+$lblMountPoint.Text          = $apptxt.labels.mountPoint
 $chkCreateMountPoint.Content = $apptxt.labels.createMountPoint
-$btnOpenImage.ToolTip      = $apptxt.buttons.openTooltip
-$btnBrowseMount.ToolTip    = $apptxt.buttons.browseTooltip
-$btnMount.Content          = $apptxt.buttons.mount
-$btnCancel.Content         = $apptxt.buttons.cancel
-$btnExit.Content           = $apptxt.buttons.exit
-$statusText.Text           = $apptxt.status.ready
-$statusInfo.Text           = $global:appcfg.appinfo.name+" ("+$global:appcfg.appinfo.version+")"
+$btnOpenImage.ToolTip        = $apptxt.buttons.openTooltip
+$btnBrowseMount.ToolTip      = $apptxt.buttons.browseTooltip
+$btnMount.Content            = $apptxt.buttons.mount
+$btnCancel.Content           = $apptxt.buttons.cancel
+$btnExit.Content             = $apptxt.buttons.exit
+$statusText.Text             = $apptxt.status.ready
+$statusInfo.Text             = $global:appcfg.appinfo.name+" ("+$global:appcfg.appinfo.version+")"
 
 if (Test-Path -LiteralPath $global:appicon) {
     try {
@@ -216,10 +238,22 @@ $btnMount.Add_Click({
     $statusText.Text          = $apptxt.status.mounting
 
     try {
-        $mountScriptPath = New-WimMountConsoleScript -ExportDirectory $global:exportPath -WimFilePath $imagePath -MountDirectory $mountDir -WimIndex $global:wimIndex -CreateMountPoint $createMountPoint
+        $mountScriptPath = New-WimMountConsoleScript `
+            -ExportDirectory $global:exportPath `
+            -WimFilePath $imagePath `
+            -MountDirectory $mountDir `
+            -WimIndex $global:wimIndex `
+            -CreateMountPoint $createMountPoint `
+            -ModulesRoot $global:modulesDir `
+            -OpsReturnModulePath $global:opsReturnModulePath `
+            -PSAppCoreLibModulePath $global:psAppCoreLibModulePath `
+            -WinTwinFXcoreModulePath $global:winTwinFXcoreModulePath
 
         if (-not (Test-Path -LiteralPath $global:logPath)) {
-            New-Item -ItemType Directory -Path $global:logPath -Force | Out-Null
+            $createLogDir = CreateNewDir -Path $global:logPath -Force -Confirm:$false
+            if ($createLogDir.code -ne 0 -and -not (Test-Path -LiteralPath $global:logPath -PathType Container)) {
+                throw $createLogDir.msg
+            }
         }
 
         $logPattern = '[DATETIME].wim.mounter.log'
@@ -229,6 +263,11 @@ $btnMount.Add_Click({
         $timestamp = Get-Date -Format 'yyyyMMdd-HHmm'
         $logFileName = $logPattern -replace '\[DATETIME\]', $timestamp
         $logFilePath = Join-Path $global:logPath $logFileName
+
+        $logInitResult = WriteLogMessage -Logfile $logFilePath -Message 'wim.mounter launched WTF.Console mount workflow.' -Flag INFO -Override 0 -Confirm:$false
+        if ($logInitResult.code -ne 0) {
+            Write-Verbose "ducc.wim.mounter: Failed to precreate log file: $($logInitResult.msg)"
+        }
 
         $statusText.Text = $apptxt.status.launchingConsole
         $null = Start-WtfConsoleProcess -WtfConsolePath $global:wtfConsolePath -MountScriptPath $mountScriptPath -LogFilePath $logFilePath -Language $Language -Action 'mount'
