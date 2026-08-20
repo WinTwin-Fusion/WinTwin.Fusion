@@ -1,7 +1,6 @@
-================================================================================
- WTF.Console (part of PS.Tweak.Tools / WinTwin Fusion Framework)
- NOTICE FILE  |  wtf.license.md
-================================================================================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+WTF.Console (part of PS.Tweak.Tools / WinTwin Fusion Framework)
+NOTICE FILE  |  wtf.license.md
 
 Copyright 2026 Praetoriani (a.k.a. M.Sczepanski)
 
@@ -11,7 +10,7 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied.
 
 This NOTICE file must be preserved and included in all copies or substantial
-portions of this software, as required by the WTF.Console License (wtf.license.md).
+portions of this software, as required by the WTF.Console License wtf.license.md
 
 --------------------------------------------------------------------------------
  📖 ABOUT THIS PROJECT
@@ -39,7 +38,6 @@ Made with 💖 in Munich, Germany.
 Source code and documentation:
 https://github.com/WinTwin-Fusion/PS.Tweak.Tools (see WTF.Console.ps1)
 
-
 --------------------------------------------------------------------------------
  ✒️  ACKNOWLEDGEMENTS
 --------------------------------------------------------------------------------
@@ -50,13 +48,13 @@ inspired me to follow my dreams and to never give up. No matter what.
 And to my father — who introduced me to the world of computers and supported
 me every step of the way. Thank you both. 🙏
 
-~ ~ ~
+~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
 Volevo dirti che non ti ho mai dimenticata.
 E anche se le nostre strade non si incroceranno più,
 spero che tu stia ancora volando, mia piccola colibrì. 🐦
 
-~ ~ ~
+~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
 In certi momenti silenziosi, il pensiero torna a te
 e al tempo che abbiamo condiviso insieme.
@@ -65,4 +63,7 @@ Grazie per i tanti anni meravigliosi che abbiamo vissuto.
 Spero con tutto il cuore che tu abbia trovato la tua felicità
 da qualche parte nel mondo, pazza tartarughina mia. 🐢
 
-================================================================================
+~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
