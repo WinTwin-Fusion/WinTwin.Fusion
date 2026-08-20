@@ -43,7 +43,7 @@ Violation of any term outlined in this License Agreement may result in immediate
 
 **WTF.Console** is a part of **PS.Tweak.Tools** within the **WinTwin Fusion Framework** and is also capable of running as a fully independent, standalone program. It is provided on an **as-is basis** and is made available in its current state at the time of each release. The sole official and authoritative source for this project is the following repository:
 
-> 🔗 [https://github.com/WinTwin-Fusion/WinTwin.Fusion](https://github.com/WinTwin-Fusion/WinTwin.Fusion) (see `PS.Tweak.Tools\WTF.Console.ps1`)
+> 🔗 [https://github.com/WinTwin-Fusion/PS.Tweak.Tools](https://github.com/WinTwin-Fusion/PS.Tweak.Tools) (see `WTF.Console.ps1`)
 
 Any copy, mirror, or distribution of **WTF.Console** obtained through any other source is considered unofficial and may not reflect the latest or unaltered version of the project.
 

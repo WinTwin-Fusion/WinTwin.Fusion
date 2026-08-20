@@ -7,13 +7,14 @@ standard input, output and error streams into its own WPF-based user interface. 
 DISM-, USMT-, aria2- or otherwise console-driven operation inside WinTwin.Fusion to be fully
 supervised, logged and — if necessary — reacted to, without ever displaying a native console
 window. WTF.Console is organizationally part of **PS.Tweak.Tools**, but is also fully capable of
-running as an independent, standalone program.
+running as an independent, portable, standalone program.
 
 ## Table of Contents
 
 - Core Idea
 - Operating Modes
-- Files
+- Files (Framework Mode)
+- Files (Standalone / Portable Mode)
 - Requirements
 - Usage
 - Command-Line Parameters
@@ -35,10 +36,10 @@ occur.
 
 |Mode|Description|
 |--|--|
-|`framework` (default)|Uses the shared WinTwin.Fusion resources (`Core\ui`, `Core\lang`, `Core\db`, `Lib\...`), loads `OPSreturn`, `WinTwin.FXcore`, `PSAppCoreLib` and (optionally) `VPDLX`, honors `console.logging` from the global `Core\config.json`, watches output for defined trigger patterns, and exposes a Close + Minimize title bar (fixed size unless `-WinSize` is given).|
-|`standalone`|Fully self-contained. Loads `wtf.console.main.xml`, its language files and `wtf.config.json` from a `.\wtf.data` folder next to the script. Loads no framework modules, does not watch output, and always exposes Close + Minimize + Maximize buttons; starts at 800×600 and is freely resizable.|
+|`framework` (default)|Uses the shared WinTwin.Fusion resources (`Core\ui`, `Core\lang`, `Core\db`, `Lib\...`) directly from the framework root. Loads `OPSreturn`, `WinTwin.FXcore`, `PSAppCoreLib` and (optionally) `VPDLX`, honors `console.logging` from the global `Core\config.json`, watches output for defined trigger patterns, and exposes a Close + Minimize title bar (fixed size unless `-WinSize` is given).|
+|`standalone`|Fully self-contained and portable. WTF.Console is copied together with a `.\wtf.data` folder that mirrors the relevant parts of the WinTwin.Fusion root — including the shared PowerShell modules under `Lib\` — so the tool can run on any machine without the rest of the framework being installed. Loads no other framework tools, does not watch output, and always exposes Close + Minimize + Maximize buttons; starts at 800×600 and is freely resizable.|
 
-## Files
+## Files (Framework Mode)
 
 ```
 PS.Tweak.Tools/
@@ -49,15 +50,47 @@ PS.Tweak.Tools/
 
 Core/
 ├── ui/
-│   └── wtf.console.main.xml   # WPF/XAML UI definition (framework mode)
+│   └── wtf.console.main.xml   # WPF/XAML UI definition
 ├── lang/
-│   ├── wtf.console.en-us.json # English language file (framework mode)
-│   └── wtf.console.de-de.json # German language file (framework mode)
+│   ├── wtf.console.en-us.json # English language file
+│   └── wtf.console.de-de.json # German language file
 └── wtf.config.json            # Program configuration (version, author, website, ...)
 ```
 
-In standalone mode, the equivalent `wtf.console.main.xml`, language files and `wtf.config.json`
-are placed inside a `.\wtf.data` folder next to `WTF.Console.ps1` instead of under `Core\`.
+In framework mode, `WTF.Console.ps1` resolves `Core\ui`, `Core\lang`, `Core\wtf.config.json` and
+`Lib\` relative to the WinTwin.Fusion root and never needs a local `.\wtf.data` folder.
+
+## Files (Standalone / Portable Mode)
+
+To turn WTF.Console into a fully portable tool, create a target folder (e.g.
+`WTF.Console.Portable`) and lay it out as follows:
+
+```
+WTF.Console.Portable/
+├── WTF.Console.ps1
+├── wtf.readme.md
+├── wtf.license.md
+├── wtf.notice.md
+└── wtf.data/
+    ├── ui/
+    │   └── wtf.console.main.xml
+    ├── lang/
+    │   ├── wtf.console.en-us.json
+    │   └── wtf.console.de-de.json
+    ├── wtf.config.json
+    └── Lib/                        # Copied from the WinTwin.Fusion root
+        ├── OPSreturn/
+        ├── WinTwin.FXcore/
+        ├── PSAppCoreLib/
+        └── VPDLX/
+```
+
+`.\wtf.data` mirrors the relevant slice of the WinTwin.Fusion root: the tool's own UI/lang/config
+resources plus the shared `Lib\` PowerShell modules it depends on. A quick-and-dirty approach is
+to copy the entire `Core\` and `Lib\` folders into `.\wtf.data` and simply not worry about the
+extra files that WTF.Console itself does not need — nothing beyond that (no other tools such as
+`DISM.UI.CC` or `USMT.Composer`) is required for a working standalone copy. All internal paths are
+resolved relative to `.\wtf.data` in this mode instead of the framework root.
 
 ## Requirements
 
@@ -72,7 +105,7 @@ are placed inside a `.\wtf.data` folder next to `WTF.Console.ps1` instead of und
 # Framework mode (default) - honors global config.json, logs via VPDLX, watches output
 .\WTF.Console.ps1 -ScriptPath "C:\WinTwin\Core\db\temp.mount.ps1" -Action mount
 
-# Standalone mode - fully self-contained, no framework dependencies
+# Standalone / portable mode - self-contained via .\wtf.data, still uses the shared PS modules
 .\WTF.Console.ps1 -ScriptPath ".\myscript.ps1" -AppMode standalone
 
 # Framework mode with a custom window size
@@ -86,14 +119,16 @@ are placed inside a `.\wtf.data` folder next to `WTF.Console.ps1` instead of und
 |`-ScriptPath`|Yes (both modes)|Full path to the PowerShell script to execute inside the redirected console process. Validated for existence before the process starts.|
 |`-AppMode`|No|`framework` (default) or `standalone`.|
 |`-WinSize`|No|Custom window size as `WIDTHxHEIGHT` (e.g. `640x480`). Framework mode only; standalone mode always starts at 800×600 and is resizable afterwards.|
-|`-Action`|No|Optional action tag (e.g. `mount`, `unmount`) used to annotate the framework's process database (`Core\db\dbprocess.json`) so other tools can track what WTF.Console is doing.|
+|`-Action`|No|Optional action tag (e.g. `mount`, `unmount`) used to annotate the framework's process database (`Core\db\dbprocess.json`) so other tools can track what WTF.Console is doing. Framework mode only.|
 |`-Language`|No|Overrides the default UI language (`en-us` / `de-de`) defined in `wtf.config.json`.|
 
 ## Project Status
 
 WTF.Console is an early but functional milestone of the WinTwin.Fusion Framework, intended to
 become the shared console back end for every other tool (starting with `wim.mounter.ps1`) that
-needs to run and supervise a console-based operation.
+needs to run and supervise a console-based operation. Its standalone/portable mode also serves as
+the blueprint for making other suitable tools (e.g. a future portable `USMT.Composer`) independently
+distributable.
 
 ## License
 
