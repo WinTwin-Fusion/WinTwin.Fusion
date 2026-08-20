@@ -110,7 +110,11 @@ function New-WimMountConsoleScript {
         [Parameter(Mandatory = $true)][string]$WimFilePath,
         [Parameter(Mandatory = $true)][string]$MountDirectory,
         [Parameter(Mandatory = $false)][int]$WimIndex = 1,
-        [Parameter(Mandatory = $false)][bool]$CreateMountPoint = $false
+        [Parameter(Mandatory = $false)][bool]$CreateMountPoint = $false,
+        [Parameter(Mandatory = $false)][string]$ModulesRoot,
+        [Parameter(Mandatory = $false)][string]$OpsReturnModulePath,
+        [Parameter(Mandatory = $false)][string]$PSAppCoreLibModulePath,
+        [Parameter(Mandatory = $false)][string]$WinTwinFXcoreModulePath
     )
 
     if (-not (Test-Path -LiteralPath $ExportDirectory)) {
@@ -118,6 +122,11 @@ function New-WimMountConsoleScript {
     }
 
     $scriptPath = Join-Path $ExportDirectory 'mount.image.ps1'
+
+    $opsLiteral  = if ([string]::IsNullOrWhiteSpace($OpsReturnModulePath)) { '' } else { $OpsReturnModulePath.Replace("'", "''") }
+    $psaLiteral  = if ([string]::IsNullOrWhiteSpace($PSAppCoreLibModulePath)) { '' } else { $PSAppCoreLibModulePath.Replace("'", "''") }
+    $fxcLiteral  = if ([string]::IsNullOrWhiteSpace($WinTwinFXcoreModulePath)) { '' } else { $WinTwinFXcoreModulePath.Replace("'", "''") }
+    $rootLiteral = if ([string]::IsNullOrWhiteSpace($ModulesRoot)) { '' } else { $ModulesRoot.Replace("'", "''") }
 
     $scriptContent = @"
 `$ErrorActionPreference = 'Stop'
@@ -129,22 +138,34 @@ Write-Output ('Mount dir   : {0}' -f '$($MountDirectory.Replace("'", "''"))')
 Write-Output ('WIM index   : {0}' -f '$WimIndex')
 Write-Output ('Create path : {0}' -f '$CreateMountPoint')
 
+`$moduleCandidates = @(
+    '$opsLiteral',
+    '$psaLiteral',
+    '$fxcLiteral'
+) | Where-Object { -not [string]::IsNullOrWhiteSpace(`$_) }
+
+foreach (`$modulePath in `$moduleCandidates) {
+    if (-not (Test-Path -LiteralPath `$modulePath)) {
+        throw ('Required module path not found: {0}' -f `$modulePath)
+    }
+    Import-Module `$modulePath -Force -ErrorAction Stop
+}
+
 if ($CreateMountPoint -and -not (Test-Path -LiteralPath '$($MountDirectory.Replace("'", "''"))')) {
-    Write-Output 'Mount point does not exist. Creating directory...'
-    New-Item -ItemType Directory -Path '$($MountDirectory.Replace("'", "''"))' -Force | Out-Null
+    Write-Output 'Mount point does not exist. Creating directory via CreateNewDir...'
+    `$createResult = CreateNewDir -Path '$($MountDirectory.Replace("'", "''"))' -Force -Confirm:`$false
+    if (`$createResult.code -ne 0) {
+        throw ('CreateNewDir failed: {0}' -f `$createResult.msg)
+    }
 }
 
-if (-not (Test-Path -LiteralPath '$($MountDirectory.Replace("'", "''"))')) {
-    throw 'Mount directory does not exist.'
+Write-Output 'Mounting image via MountWIMimage...'
+`$mountResult = MountWIMimage -WIMimage '$($WimFilePath.Replace("'", "''"))' -IndexNo $WimIndex -MountPoint '$($MountDirectory.Replace("'", "''"))'
+if (`$mountResult.code -ne 0) {
+    throw `$mountResult.msg
 }
 
-Write-Output 'Mounting image via DISM...'
-& DISM /Mount-Wim /WimFile:"$($WimFilePath.Replace("`"", "``\""))" /Index:$WimIndex /MountDir:"$($MountDirectory.Replace("`"", "``\""))"
-`$exitCode = `$LASTEXITCODE
-Write-Output ('DISM exit code: {0}' -f `$exitCode)
-if (`$exitCode -ne 0) {
-    throw ('DISM failed with exit code {0}.' -f `$exitCode)
-}
+Write-Output `$mountResult.msg
 Write-Output 'The operation completed successfully.'
 exit 0
 "@
@@ -175,5 +196,10 @@ function Start-WtfConsoleProcess {
         '-LogFilePath', $LogFilePath
     )
 
-    return Start-Process -FilePath 'powershell.exe' -ArgumentList $argList -WindowStyle Normal -PassThru -ErrorAction Stop
+    $processResult = RunProcess -FilePath "$($PSHOME)\powershell.exe" -ArgumentList $argList -WindowStyle Normal -Confirm:$false
+    if ($processResult.code -ne 0) {
+        throw $processResult.msg
+    }
+
+    return $processResult.data
 }
