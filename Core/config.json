@@ -5,7 +5,7 @@
         "devname":      "praetoriani",
         "website":      "https://github.com/praetoriani/WinTwin.Fusion",
         "datecreate":   "18.08.2026",
-        "dateupdate":   "18.08.2026",
+        "dateupdate":   "20.08.2026"
     },
 
     "appconfig": {
@@ -14,20 +14,30 @@
     },
 
     "path": {
-        "root": "C:\\WinISO",
-        "lang": "\\Core\\lang",
-        "appui": "\\Core\\ui",
-        "logfiles": "\\Core\\logs",
-        "export": "\\Core\\export",
-        "modules": "\\Lib",
-        "pstools": "\\PS.Toolbox",
-        "ducc": "\\DISM.UI.CC",
-        "usmt": "\\USMTwrapper"
+        "root":      "C:\\WinISO",
+        "lang":      "\\Core\\lang",
+        "appui":     "\\Core\\ui",
+        "logfiles":  "\\Core\\logs",
+        "export":    "\\Core\\export",
+        "modules":   "\\Lib",
+        "pstools":   "\\PS.Toolbox",
+        "ducc":      "\\DISM.UI.CC",
+        "usmt":      "\\USMTwrapper"
     },
 
     "wim": {
         "mountpoint": "D:\\WinISO\\Win11.25H2.Pro.DE",
         "index": "1",
         "mountstate": "false"
+    },
+
+    "console": {
+        "logging":    "false",
+        "defaultlog": "[DATETIME].wtf.console.log",
+        "logfile": {
+            "mount": "[DATETIME].wim.mounter.log",
+            "appx":  "[DATETIME].wim.ctrl.msstore.log"
+        }
     }
+
 }
