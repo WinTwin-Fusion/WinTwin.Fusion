@@ -9,35 +9,65 @@
     },
 
     "appconfig": {
-        "defaultlanguage": "en-us",
-        "logfiles":        [false, "logs"]
+        "defaultlanguage": "en-us"
     },
 
     "path": {
-        "root":      "C:\\WinISO",
-        "lang":      "\\Core\\lang",
-        "appui":     "\\Core\\ui",
-        "logfiles":  "\\Core\\logs",
-        "export":    "\\Core\\export",
-        "modules":   "\\Lib",
-        "pstools":   "\\PS.Toolbox",
-        "ducc":      "\\DISM.UI.CC",
-        "usmt":      "\\USMTwrapper"
-    },
+        "root":        "C:\\WinISO",
+        "lang":        "\\Core\\lang",
+        "logs":        "\\Core\\logs",
+        "appui":       "\\Core\\ui",
+        "fonts":       "\\Core\\fonts",
+        "export":      "\\Core\\export",
+        "appdb": {
+            "process": "\\Core\\db\\process.json",
+            "actions": "\\Core\\db\\jobaction.json",
+            "appflow": "\\Core\\db\\workflow.json"
+        },
 
-    "wim": {
-        "mountpoint": "D:\\WinISO\\Win11.25H2.Pro.DE",
-        "index": "1",
-        "mountstate": "false"
-    },
+        "addons":      "\\AddOns",
+        "drivers":     "\\Drivers",
+        "mountdir":    "\\Mount",
+        "msstore":     "\\MSStore",
+        "output":      "\\Output",
+        "backup": {
+            "winmenu": "\\Profile.Backup\\Startmenu",
+            "wintbar": "\\Profile.Backup\\Taskbar"
+        },
+        "rawiso":      "\\RawISO",
+        "userdata":    "\\UserData",
+        "uupdump":     "\\UUPD",
 
-    "console": {
-        "logging":    "false",
-        "defaultlog": "[DATETIME].wtf.console.log",
-        "logfile": {
-            "mount": "[DATETIME].wim.mounter.log",
-            "appx":  "[DATETIME].wim.ctrl.msstore.log"
+        "ducc": {
+            "root":    "\\DISM.UI.CC",
+            "mount":   "\\DISM.UI.CC\\wim.mount.ps1",
+            "eject":   "\\DISM.UI.CC\\wim.eject.ps1",
+            "monitor": "\\DISM.UI.CC\\dism.watchdog.ps1"
+        },
+        "pstools": {
+            "root":    "\\PS.Tweak.Tools",
+            "console": "\\PS.Tweak.Tools\\wtf.console.ps1",
+            "uupdcat": "\\PS.Tweak.Tools\\UUPDcatcher.ps1",
+            "uupdcmp": "\\PS.Tweak.Tools\\UUPDcompose.ps1",
+            "uupdiso": "\\PS.Tweak.Tools\\UUPDisodump.ps1"
+        },
+        "usmt": {
+            "root":    "\\USMT.Composer"
         }
-    }
+    },
+
+    "framework": {
+        "guard": "\\Core\\wintwin.praetoriani.ps1"
+    },
+
+    "action-id": [
+        "uupd-catch",
+        "uupd-compose",
+        "uupd-isodump",
+        "wim-mount",
+        "wim-eject",
+        "wtfc",
+        "...."
+    ]
 
 }
