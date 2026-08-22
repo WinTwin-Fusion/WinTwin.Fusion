@@ -1,4 +1,3 @@
-
 # Development Tasks — WinTwin.Fusion
 
 This file tracks the currently pending work items for the WinTwin.Fusion framework. It is a
@@ -45,6 +44,80 @@ Legend: `[x]` done · `[ ]` open · `[~]` in progress
   - [ ] Optional Google Fonts usage in framework mode — not yet implemented.
   - [x] Completed and wired up **before** `wim.mounter.ps1` was reworked to depend on it, per the
         original sequencing requirement.
+  - [ ] When started by `wim.mounter.ps1`, launch `dism.watchdog` at the end of the job instead of
+        allowing the framework to close while an image is still mounted, and ensure
+        `jobaction.json` → `wim-mount.state` is set to `true` so other tools can reliably detect
+        an active mount (per the latest concept-documentation update, 21.08.2026).
+
+## New From Documentation Update (2026-08-22)
+
+- [ ] **`WinTwin.XUI` — new dedicated PowerShell module (own GitHub repository, already
+      scaffolded at `WinTwin-Fusion/WinTwin.XUI`, currently a stub with a placeholder
+      `README.md`).** Exclusively responsible for graphical/UI interactions of every GUI tool in
+      the framework, so tools no longer need program-local helper files
+      (e.g. `wim.mounter.fx.ps1`):
+  - [ ] Implement a private, module-internal `OPSreturn` function modeled on the original
+        `OPSreturn` module (mirrors the same requirement already tracked for `WinTwin.FXcore`,
+        since `WinTwin.XUI` must also work without a hard dependency on the external module).
+  - [ ] Implement `xuiLoadXMLwindow -XMLfile <path>` — loads a XAML/XML GUI window file, replacing
+        `Import-XamlWindow` from `wim.mounter.fx.ps1`; must validate all prerequisites before
+        loading, abort cleanly on error, and always return an `OPSreturn` object.
+  - [ ] Implement `xuiOpenPath` — shows the standard Windows folder-picker dialog (always
+        foreground-focused), replacing `Select-MountFolder`; returns the selected path via an
+        `OPSreturn` object.
+  - [ ] Implement `xuiOpenFile -Filter <filter> -Title <title>` — shows the standard Windows
+        file-picker dialog (optional `-Filter` / `-Title`), replacing `Select-WimFile`; returns
+        the selected file path via an `OPSreturn` object.
+  - [ ] Add functions to load external `*.ico`, `*.png` and `*.svg` graphics for use inside the
+        XAML UI.
+  - [ ] Build an internal SVG graphics library: predefined, reusable SVG icon code (always in
+        neutral white) shared across all framework components (`PS.Tweak.Tools`, `DISM.UI.CC`,
+        etc.); colorization happens at the point of use.
+  - [ ] Fully English, well-commented source code; add a `.\Samples` folder with example scripts
+        and one or two simple demonstration XAML files.
+  - [ ] Adapt the WinTwin.Fusion `LICENSE.md` / `NOTICE` for `WinTwin.XUI`, explicitly stating
+        that this is an exclusive library for the WinTwin.Fusion framework and that any use
+        outside the framework is at the user's own risk (not originally designed for external
+        reuse).
+  - [ ] Add `README.md` and `CHANGELOG.md` following the same structure/format used across all
+        other framework changelogs (unified changelog format requirement).
+  - [ ] Evaluate the architecture recommendations gathered from the PowerShell/WPF/XAML research
+        session (Event-Map + thin `ScriptBlock` handlers, per-window controller, `Import-WpfView`
+        -style control auto-discovery, `Register-WpfEventMap` / `Unregister-WpfEvents` cleanup
+        pattern) as a design reference for `xuiLoadXMLwindow` and future `WinTwin.XUI` event-wiring
+        helpers — the module should stay pure UI infrastructure and must not encode any
+        tool-specific business logic.
+- [ ] **`WinTwin.FXcore` — additional core functions identified in the functional
+      documentation**, to be implemented alongside the already-tracked deeper rework:
+  - [ ] `wtfLoadJSON -JSONfile <path>` — reads a JSON file and returns its content; returns an
+        `OPSreturn` error object if the parameter is missing/empty or the file does not exist.
+  - [ ] `wtfLoadJSONC -JSONfile <path>` — reads a JSONC file, strips `//` and `/* */` comments to
+        produce valid JSON, and returns the converted content; same `OPSreturn` error handling as
+        `wtfLoadJSON`.
+  - [ ] `wtfWriteJSON -FileType <json|jsonc> -JSONfile <path> -KeyID <key> -DataType
+        <string|bool|int|object|array> -Data <value>` — writes a value to a specific key in a
+        JSON/JSONC file; must support writing empty values and always return an `OPSreturn`
+        object; aborts if prerequisites are not met or the write fails.
+  - [ ] `wtfGetJobAction -ActionID <id> [-KeyID <key>]` — reads details for a job action from
+        `.\Core\db\jobaction.json`; returns the full action object when `-KeyID` is omitted, or
+        just the requested key's value when provided; aborts (with an `OPSreturn` error) if the
+        action or key cannot be found.
+  - [ ] `wtfSetJobAction -ActionID <id> -KeyID <key> -DataType <type> -Data <value>` — writes a
+        value into a job action entry in `.\Core\db\jobaction.json`; always returns an
+        `OPSreturn` object; aborts if the file is missing or prerequisites are not met.
+  - [ ] `wtfSetCMDstate -State <hide|show> [-invisible]` — forcibly minimizes/restores (`show`) or
+        completely hides (`hide -invisible`) the Windows Terminal/console window, replacing
+        `Set-ConsoleWindowState` from `wim.mounter.fx.ps1`.
+- [ ] Implement the `-appmode standalone` app-data redirection pattern consistently across all
+      framework tools: when `-appmode standalone` is passed (default remains `framework`), the
+      tool looks for a local `.\appdata` folder mirroring the framework's own directory layout
+      (containing only the subset of data the tool actually needs) and re-points all internal path
+      references to it; this keeps the standalone/portable code path structurally identical to the
+      framework mode and minimizes standalone-specific development effort.
+- [ ] Evaluate centralizing all inline/external SVG and icon graphics for every tool in a single
+      UI graphics store inside `WinTwin.XUI`, instead of per-tool inline SVG, to simplify
+      maintenance across the framework; PNG/SVG remain the fallback where inline SVG is not
+      feasible, `*.ico` remains the only accepted non-SVG/PNG exception.
 
 ## Mid-Term
 
@@ -70,10 +143,11 @@ Legend: `[x]` done · `[ ]` open · `[~]` in progress
       was introduced as a fast, pragmatic first-pass helper library (console window state,
       XAML loading, field-validation helpers, mount script generation, WTF.Console process
       launch). This is intentionally a stop-gap and must **not** become a long-term pattern:
-  - [ ] Move generic/reusable helpers (`Import-XamlWindow`, `Show-FieldError`,
-        `Clear-FieldError`, `Set-ConsoleWindowState`) into a shared UI-helper module consumed by
-        *all* DISM.UI.CC tools (candidate: a new `WinTwin.FXcore` sub-area or a dedicated
-        `PSAppCoreLib` UI namespace), instead of duplicating/copy-pasting them per tool.
+  - [ ] Move generic/reusable UI helpers (`Import-XamlWindow`, `Show-FieldError`,
+        `Clear-FieldError`) into the new `WinTwin.XUI` module (see "New From Documentation Update"
+        above) instead of a shared `WinTwin.FXcore` sub-area or `PSAppCoreLib` namespace — this
+        supersedes the earlier "candidate" note now that `WinTwin.XUI` exists as its own module.
+  - [ ] Move `Set-ConsoleWindowState` into `WinTwin.FXcore` as `wtfSetCMDstate` (see above).
   - [ ] Move `New-WimMountConsoleScript` (and equivalents for future actions such as unmount,
         Appx/MSIX, capability/feature/package operations) into `WinTwin.FXcore` as proper,
         versioned, testable public functions that return `OPSreturn`-style result objects instead
@@ -82,17 +156,27 @@ Legend: `[x]` done · `[ ]` open · `[~]` in progress
         USMT.Composer tool launches WTF.Console the exact same way (consistent argument
         contract, consistent error handling).
   - [ ] Once all functions have been migrated, delete `wim.mounter.fx.ps1` entirely and update
-        `wim.mounter.ps1` to dot-source/import only the shared modules.
+        `wim.mounter.ps1` to dot-source/import only the shared modules (`WinTwin.FXcore` +
+        `WinTwin.XUI`).
 - [ ] Introduce a small, structured job-metadata model (JSON, fields such as `Action`,
       `ScriptPath`, `LogFile`, `Arguments`, `CreatedAt`, `Status`, `ExitCode`) instead of the
       current single-snapshot `Core\db\dbprocess.json`, so multiple/queued WTF.Console jobs can be
-      tracked reliably and other tools can safely read job state.
+      tracked reliably and other tools can safely read job state. Must align with the two
+      distinct, formally documented databases now specified in the concept documentation:
+      `Core\db\process.json` (tracks the single currently-running process/job, `running.job-state`
+      = `running`/`finished`, used to block concurrent tool starts) and `Core\db\jobaction.json`
+      (per-action metadata/status, backed by the new `wtfGetJobAction` / `wtfSetJobAction`
+      functions above). The `lastjob` and `linedup` keys in `process.json` remain unused until
+      further notice.
 - [ ] Centralize WTF.Console / tool logging behind one logging adapter that always targets VPDLX
       and only falls back to plain `Add-Content` text logging as a last resort, instead of the
       current dual-path (`Write-VpdlxLog` if available, else plain text) inside `WTF.Console.ps1`.
 - [ ] Harden and extend `Test-WtfWatchTriggers` in `WTF.Console.ps1`: validate the current `mount`
       regex patterns against real DISM output captured during manual testing, then add equivalent
       pattern sets for unmount, Appx/MSIX, feature, package, capability and registry-hive actions.
+      All DISM invocations (regardless of caller) must always pass the additional `/english`
+      parameter, even when the framework's configured UI language is not `en-us`, so these watch
+      triggers stay reliable.
 - [ ] Evaluate adding WIM index selection to the `wim.mounter.ps1` UI instead of always relying on
       the configured default index (`Core\config.json` → `wim.index`).
 - [ ] Build `wim.unmount.ps1` using the finalized `wim.mounter.ps1` (WTF.Console-integrated
@@ -140,6 +224,10 @@ Legend: `[x]` done · `[ ]` open · `[~]` in progress
       `mount.image.ps1` job script and the mount must proceed normally.
 - [ ] Verify `Core\db\dbprocess.json` is updated with sensible state transitions
       (`running` → `success`/`error` → `finished`) during a real mount job.
+- [ ] Verify that every framework tool correctly checks `Core\db\process.json` on startup
+      (`running.job-state`), refuses to start a second concurrent job, and correctly
+      registers/deregisters itself at start/end — per the process-handoff example
+      (`wim.mounter` → `WTF.Console`) now formally documented in the concept documentation.
 
 ## Long-Term
 
@@ -173,7 +261,11 @@ Legend: `[x]` done · `[ ]` open · `[~]` in progress
   flagged for joint review once real console operations (starting with `wim.mounter.ps1`) are
   attached and tested.
 - `wim.mounter.fx.ps1` is a transitional, tool-local helper file and is **not** the final
-  architecture; see the dedicated refactoring debt item above.
+  architecture; see the dedicated refactoring debt item above. Its target replacement is now
+  split across two modules: `WinTwin.FXcore` (data/job/logic helpers) and the new `WinTwin.XUI`
+  (UI/XAML/dialog helpers).
+- The `WinTwin.XUI` repository currently only contains a placeholder `README.md`; none of the
+  functions specified in the functional documentation have been implemented yet.
 - The Windows 11 24H2/25H2 build-number check in `wintwin.installer.ps1` only warns and does not
   block installation on unsupported systems; this is intentional for now but should be revisited
   once the framework depends on version-specific DISM/ADK behavior.
