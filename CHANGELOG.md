@@ -8,7 +8,29 @@ adheres to `Major.Minor.Patch` versioning.
 Each entry below shows only the version, date and a one-line summary by default. Click on an
 entry (or its **Details** line) to expand the full list of changes.
 
----
+***
+
+<details>
+<summary><strong>[Unreleased]</strong> — Documentation re-sync: DEV.TASKS.md alignment, WinTwin.XUI introduced, README branding update</summary>
+
+### Added
+- `WinTwin.XUI` formally introduced as the framework's dedicated UI/XAML helper module
+  (own repository, currently scaffolded), responsible for `xuiLoadXMLwindow`, `xuiOpenPath`,
+  `xuiOpenFile` and centralized SVG/icon graphics loading, replacing tool-local helper files
+  such as `wim.mounter.fx.ps1`.
+- New planned `WinTwin.FXcore` functions documented: `wtfLoadJSON`, `wtfLoadJSONC`,
+  `wtfWriteJSON`, `wtfGetJobAction`, `wtfSetJobAction`, `wtfSetCMDstate`.
+- Centered WinTwin.Fusion logo (`wintwin.fusion.logo.png`) added to `README.md`.
+
+### Changed
+- `DEV.TASKS.md` updated to reflect the 22.08.2026 documentation revision, including the
+  clarified distinction between `Core\db\process.json` (single active process/job lock) and
+  `Core\db\jobaction.json` (per-action metadata and status).
+- `README.md` refreshed to mention `WinTwin.XUI` alongside `WinTwin.FXcore` as the framework's
+  two preferred, mandatory shared libraries, and to document the protected `main` branch /
+  development branch workflow.
+
+</details>
 
 <details>
 <summary><strong>[0.2.0] — 2026-08-20</strong> — Console installer hardened: admin gate, machine-wide font install, license integrity check, English source</summary>
@@ -103,6 +125,6 @@ entry (or its **Details** line) to expand the full list of changes.
 
 </details>
 
----
+***
 
-*Maintained by the [WinTwin-Fusion](https://github.com/WinTwin-Fusion) team.*
+*Maintained by the [WinTwin.Fusion](https://github.com/WinTwin-Fusion) team.*
