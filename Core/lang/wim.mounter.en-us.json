@@ -6,7 +6,8 @@
     "labels": {
         "instructions": "Please specify a Windows Image (*.wim) file and define a directory\ninto which the image content should be mounted.",
         "imageFile":     "Image File:",
-        "mountPoint":    "Mount Point:"
+        "mountPoint":    "Mount Point:",
+        "createMountPoint": "Create mount point if it does not exist"
     },
     "buttons": {
         "openTooltip":   "Open",
@@ -22,8 +23,9 @@
     },
     "status": {
         "ready":     "Ready",
-        "mounting":  "Mounting image via DISM, please wait...",
+        "mounting":  "Preparing mount job for WTF.Console...",
         "done":      "Mount operation finished.",
-        "cancelled": "Operation cancelled."
+        "cancelled": "Operation cancelled.",
+        "launchingConsole": "Launching WTF.Console..."
     }
 }

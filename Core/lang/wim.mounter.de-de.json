@@ -6,7 +6,8 @@
     "labels": {
         "instructions": "Bitte geben Sie ein Windows Image (*.wim) an und definieren Sie ein Verzeichnis, in dem der Inhalt des Images gemountet werden soll.",
         "imageFile":     "Image Datei:",
-        "mountPoint":    "Mount Point:"
+        "mountPoint":    "Mount Point:",
+        "createMountPoint": "Mount Point erstellen, falls nicht vorhanden"
     },
     "buttons": {
         "openTooltip":   "Öffnen",
@@ -22,8 +23,9 @@
     },
     "status": {
         "ready":     "Bereit",
-        "mounting":  "Image wird über DISM gemountet, bitte warten...",
+        "mounting":  "Mount-Auftrag für WTF.Console wird vorbereitet...",
         "done":      "Mount-Vorgang abgeschlossen.",
-        "cancelled": "Vorgang abgebrochen."
+        "cancelled": "Vorgang abgebrochen.",
+        "launchingConsole": "WTF.Console wird gestartet..."
     }
 }

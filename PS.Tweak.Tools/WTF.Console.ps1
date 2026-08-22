@@ -45,59 +45,32 @@
                   inside the redirected console process. Required in BOTH
                   operating modes. The file's existence is validated before
                   the process is started.
-
-    EXAMPLES
-    --------
-    .\WTF.Console.ps1 -ScriptPath "C:\WinTwin\Core\db\temp.mount.ps1" -Action mount
-    .\WTF.Console.ps1 -ScriptPath ".\myscript.ps1" -AppMode standalone
-
-    Author:   praetoriani
-    Version:  1.00.00   Date: 20.08.2026
-    ============================================================================
 #>
 
 [CmdletBinding()]
 param(
-    # Mandatory in both modes. This is the script that will actually be
-    # executed inside the hidden, redirected child process - WTF.Console
-    # itself never runs any workload code, it purely hosts and supervises it.
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$ScriptPath,
 
-    # 'framework'  -> resource paths are resolved against the WinTwin.Fusion
-    #                 root (one level above PS.Tweak.Tools).
-    # 'standalone' -> resource paths are resolved against a local ".\wtf.data"
-    #                 folder placed next to this script (portable mode).
     [Parameter(Mandatory = $false)]
     [ValidateSet('framework', 'standalone')]
     [string]$AppMode = 'framework',
 
-    # Optional fixed window size "WIDTHxHEIGHT", e.g. "640x480".
-    # Framework mode only - standalone mode is always resizable and always
-    # starts at 800x600 regardless of this parameter.
     [Parameter(Mandatory = $false)]
     [ValidatePattern('^\d{2,5}x\d{2,5}$')]
     [string]$WinSize,
 
-    # Free-form tag (e.g. "mount", "unmount") written into the framework's
-    # process database (Core\db\dbprocess.json) so other framework tools can
-    # see what WTF.Console is currently doing. Framework mode only; ignored
-    # in standalone mode since there is no shared process database there.
     [Parameter(Mandatory = $false)]
     [string]$Action,
 
-    # Overrides the default UI language ("en-us" / "de-de") that would
-    # otherwise be taken from wtf.config.json's appconfig.defaultlanguage.
     [Parameter(Mandatory = $false)]
-    [string]$Language
+    [string]$Language,
+
+    [Parameter(Mandatory = $false)]
+    [string]$LogFilePath
 )
 
-# ────────────────────────────────────────────────────────────────────────────
-#  0) BASIC ENVIRONMENT SETUP
-#     Load the WPF assemblies that XamlReader / Window / TextBox etc. need.
-#     These ship with Windows itself, so no external dependency is required.
-# ────────────────────────────────────────────────────────────────────────────
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
@@ -105,40 +78,22 @@ Add-Type -AssemblyName PresentationFramework
 Add-Type -AssemblyName PresentationCore
 Add-Type -AssemblyName WindowsBase
 
-# Folder that contains THIS script (PS.Tweak.Tools\ in framework mode, or the
-# root of the portable copy in standalone mode).
 $ScriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 
-# ────────────────────────────────────────────────────────────────────────────
-#  1) RESOLVE RUNTIME PATHS (framework vs. standalone)
-#
-#     This function is the single place that decides where WTF.Console loads
-#     its UI (XAML), language files, config and shared PowerShell modules
-#     from, depending on -AppMode. Everything downstream just uses $Paths.*
-#     and never needs to branch on $AppMode again for path questions.
-# ────────────────────────────────────────────────────────────────────────────
 function Resolve-WtfPaths {
     param([string]$Mode, [string]$Root)
 
     $result = [ordered]@{
         Mode           = $Mode
-        UiXaml         = $null   # full path to wtf.console.main.xml
-        LangDir        = $null   # folder containing the wtf.console.*.json language files
-        ConfigJson     = $null   # full path to wtf.config.json
-        LogDir         = $null   # folder VPDLX-style log files get written to
-        FrameworkRoot  = $null   # WinTwin.Fusion root (framework mode only, used for Core\db)
-        ModulesDir     = $null   # folder containing OPSreturn / WinTwin.FXcore / PSAppCoreLib / VPDLX
+        UiXaml         = $null
+        LangDir        = $null
+        ConfigJson     = $null
+        LogDir         = $null
+        FrameworkRoot  = $null
+        ModulesDir     = $null
     }
 
     if ($Mode -eq 'standalone') {
-        # Portable mode: everything lives under ".\wtf.data" next to this
-        # script. This folder is expected to be a self-contained mirror of
-        # the relevant slice of the WinTwin.Fusion root - see wtf.readme.md
-        # for the recommended layout (wtf.data\ui, wtf.data\lang,
-        # wtf.data\wtf.config.json, and importantly wtf.data\Lib\... for the
-        # shared modules). This is what makes a standalone copy of
-        # WTF.Console fully portable: copy the folder, run the script,
-        # nothing else needs to be installed.
         $appData = Join-Path $Root 'wtf.data'
         if (-not (Test-Path -LiteralPath $appData)) {
             throw "Standalone mode requires a '.\wtf.data' folder next to WTF.Console.ps1, but it was not found at: $appData"
@@ -147,15 +102,9 @@ function Resolve-WtfPaths {
         $result.LangDir    = Join-Path $appData 'lang'
         $result.ConfigJson = Join-Path $appData 'wtf.config.json'
         $result.LogDir     = Join-Path $appData 'logs'
-        # Standalone mode also uses the shared PowerShell modules - they are
-        # simply expected to have been copied into ".\wtf.data\Lib" instead
-        # of being loaded from a full framework installation.
         $result.ModulesDir = Join-Path $appData 'Lib'
     }
     else {
-        # Framework mode: PS.Tweak.Tools\WTF.Console.ps1 -> ..\ is the
-        # WinTwin.Fusion root, so every shared resource is resolved relative
-        # to that root instead of a local copy.
         $frameworkRoot = Split-Path -Parent $Root
         $result.FrameworkRoot = $frameworkRoot
         $result.UiXaml        = Join-Path $frameworkRoot 'Core\ui\wtf.console.main.xml'
@@ -169,13 +118,6 @@ function Resolve-WtfPaths {
 
 $Paths = Resolve-WtfPaths -Mode $AppMode -Root $ScriptRoot
 
-# ────────────────────────────────────────────────────────────────────────────
-#  2) VALIDATE MANDATORY SCRIPT PARAMETER
-#     Fail fast, with a friendly message box, before any UI is built at all,
-#     if the target script does not exist. Resolve-Path afterwards turns a
-#     relative path into an absolute one, since the child process will be
-#     started with its own working directory context.
-# ────────────────────────────────────────────────────────────────────────────
 if (-not (Test-Path -LiteralPath $ScriptPath -PathType Leaf)) {
     [System.Windows.MessageBox]::Show(
         "The specified script file could not be found:`n$ScriptPath",
@@ -187,14 +129,6 @@ if (-not (Test-Path -LiteralPath $ScriptPath -PathType Leaf)) {
 }
 $ScriptPath = (Resolve-Path -LiteralPath $ScriptPath).ProviderPath
 
-# ────────────────────────────────────────────────────────────────────────────
-#  3) LOAD SHARED POWERSHELL MODULES
-#     Identical logic for both modes: $Paths.ModulesDir already points to
-#     either "<FrameworkRoot>\Lib" (framework mode) or ".\wtf.data\Lib"
-#     (standalone mode) - see Resolve-WtfPaths above. WTF.Console does not
-#     hard-fail if a module is missing; it just falls back to writing plain
-#     text log lines instead of using Write-VpdlxLog (see Write-WtfLog below).
-# ────────────────────────────────────────────────────────────────────────────
 $UseFrameworkModules = $false
 if ($Paths.ModulesDir -and (Test-Path -LiteralPath $Paths.ModulesDir)) {
     $moduleNames = @('OPSreturn', 'WinTwin.FXcore', 'PSAppCoreLib', 'VPDLX')
@@ -212,13 +146,6 @@ if ($Paths.ModulesDir -and (Test-Path -LiteralPath $Paths.ModulesDir)) {
     }
 }
 
-# ────────────────────────────────────────────────────────────────────────────
-#  4) LOAD CONFIGURATION (wtf.config.json)
-#     Read the program's own config (version/author/website/defaults). This
-#     is intentionally tolerant: if the file is missing or malformed, we warn
-#     and continue with sensible hard-coded defaults further down instead of
-#     aborting the whole tool.
-# ────────────────────────────────────────────────────────────────────────────
 $Config = $null
 if (Test-Path -LiteralPath $Paths.ConfigJson) {
     try {
@@ -232,46 +159,29 @@ if (Test-Path -LiteralPath $Paths.ConfigJson) {
 $DefaultLanguage = if ($Config -and $Config.appconfig.defaultlanguage) { $Config.appconfig.defaultlanguage } else { 'en-us' }
 $SelectedLanguage = if ($Language) { $Language } else { $DefaultLanguage }
 
-# Logging is an explicit opt-in via wtf.config.json (console.logging) and is
-# only ever consulted in framework mode - a portable standalone copy has no
-# guarantee that its "wtf.data\logs" location is desired/writable, so we
-# deliberately keep standalone mode silent by default.
 $LoggingEnabled = $false
-if ($AppMode -eq 'framework' -and $Config -and $Config.PSObject.Properties.Name -contains 'console') {
-    $LoggingEnabled = [bool]$Config.console.logging
+if ($LogFilePath) {
+    $LoggingEnabled = $true
+}
+elseif ($AppMode -eq 'framework' -and $Config -and $Config.PSObject.Properties.Name -contains 'console') {
+    $LoggingEnabled = [bool]::Parse([string]$Config.console.logging)
 }
 
-# ────────────────────────────────────────────────────────────────────────────
-#  5) LOAD LANGUAGE FILE
-# ────────────────────────────────────────────────────────────────────────────
 function Get-WtfLangStrings {
     param([string]$LangDir, [string]$LangCode)
 
     $langFile = Join-Path $LangDir "wtf.console.$LangCode.json"
     if (-not (Test-Path -LiteralPath $langFile)) {
-        # Fallback / safety net: if $LangCode does not resolve to an existing
-        # file - e.g. because wtf.config.json's "defaultlanguage" contains a
-        # typo, an unsupported language code, or -Language was passed a
-        # value for which no language file exists at all - we always fall
-        # back to English (en-us) as the guaranteed-to-exist baseline
-        # language, rather than failing to start the UI entirely.
         $langFile = Join-Path $LangDir 'wtf.console.en-us.json'
     }
     if (Test-Path -LiteralPath $langFile) {
         return (Get-Content -LiteralPath $langFile -Raw | ConvertFrom-Json)
     }
-    # Even the en-us fallback is missing - Get-WtfString below is written to
-    # tolerate $Lang being $null by returning the raw lookup key untranslated.
     return $null
 }
 
 $Lang = Get-WtfLangStrings -LangDir $Paths.LangDir -LangCode $SelectedLanguage
 
-# Small helper that resolves a dotted key path (e.g. "status.finishedOk")
-# against the loaded language object and optionally applies
-# [string]::Format-style {0}/{1} placeholders. If the key or the whole
-# language file is missing, it degrades gracefully by returning $Path itself
-# so the UI never shows a blank string - just an unlocalized fallback token.
 function Get-WtfString {
     param([string]$Path, [object[]]$FormatArgs)
     $segments = $Path.Split('.')
@@ -287,25 +197,30 @@ function Get-WtfString {
     return $node
 }
 
-# ────────────────────────────────────────────────────────────────────────────
-#  6) INITIALIZE LOGGING (VPDLX, framework mode only)
-#     Builds the log file name from console.defaultlog in wtf.config.json,
-#     replacing the "[DATETIME]" placeholder with the current timestamp, and
-#     writes an initial "session started" line either via the framework's
-#     own VPDLX module (if it was imported successfully above) or via a
-#     plain Add-Content fallback.
-# ────────────────────────────────────────────────────────────────────────────
-$LogFilePath = $null
-if ($AppMode -eq 'framework' -and $LoggingEnabled) {
+if (-not $LogFilePath -and $AppMode -eq 'framework' -and $LoggingEnabled) {
     try {
         if (-not (Test-Path -LiteralPath $Paths.LogDir)) {
             New-Item -ItemType Directory -Path $Paths.LogDir -Force | Out-Null
         }
         $stamp = Get-Date -Format 'yyyyMMdd-HHmm'
         $logNamePattern = if ($Config -and $Config.console.defaultlog) { $Config.console.defaultlog } else { '[DATETIME].wtf.console.log' }
+        if ($Action -and $Config -and $Config.console.logfile -and $Config.console.logfile.PSObject.Properties.Name -contains $Action) {
+            $logNamePattern = $Config.console.logfile.$Action
+        }
         $logFileName = $logNamePattern -replace '\[DATETIME\]', $stamp
         $LogFilePath = Join-Path $Paths.LogDir $logFileName
+    }
+    catch {
+        Write-Warning (Get-WtfString -Path 'messages.logfileInitFailed' -FormatArgs @($_.Exception.Message))
+    }
+}
 
+if ($LogFilePath) {
+    try {
+        $logDir = Split-Path -Parent $LogFilePath
+        if ($logDir -and -not (Test-Path -LiteralPath $logDir)) {
+            New-Item -ItemType Directory -Path $logDir -Force | Out-Null
+        }
         if (Get-Command -Name 'Write-VpdlxLog' -ErrorAction SilentlyContinue) {
             Write-VpdlxLog -Path $LogFilePath -Message 'WTF.Console session started.' -Level 'Info'
         }
@@ -318,9 +233,6 @@ if ($AppMode -eq 'framework' -and $LoggingEnabled) {
     }
 }
 
-# Thin wrapper used everywhere else in this script instead of calling
-# Write-VpdlxLog / Add-Content directly. Silently does nothing if logging
-# was never initialized above (e.g. disabled, or standalone mode).
 function Write-WtfLog {
     param([string]$Message, [string]$Level = 'Info')
     if (-not $LogFilePath) { return }
@@ -335,13 +247,6 @@ function Write-WtfLog {
     catch { }
 }
 
-# ────────────────────────────────────────────────────────────────────────────
-#  7) LOAD XAML UI
-#     WTF.Console never defines its UI inline in PowerShell - the entire
-#     window is described in wtf.console.main.xml and loaded here via
-#     XamlReader. FindName() then pulls out every named control we need to
-#     wire up event handlers for further down.
-# ────────────────────────────────────────────────────────────────────────────
 if (-not (Test-Path -LiteralPath $Paths.UiXaml)) {
     [System.Windows.MessageBox]::Show(
         "The required UI definition file could not be found:`n$($Paths.UiXaml)",
@@ -369,14 +274,6 @@ $BtnClear        = $Window.FindName('BtnClear')
 $StatusText      = $Window.FindName('StatusText')
 $StatusInfo      = $Window.FindName('StatusInfo')
 
-# ────────────────────────────────────────────────────────────────────────────
-#  8) APPLY LOCALIZATION + MODE-SPECIFIC UI ADJUSTMENTS
-#     Push every localized string from the loaded language file into the
-#     corresponding control, then adjust window chrome/size based on
-#     -AppMode: framework mode is Close+Minimize-only and fixed-size unless
-#     -WinSize was passed; standalone mode always gets a resizable
-#     Close+Minimize+Maximize window starting at 800x600.
-# ────────────────────────────────────────────────────────────────────────────
 $Window.Title            = Get-WtfString -Path 'window.title'
 $TitleBarText.Text       = Get-WtfString -Path 'window.title'
 $LblPrompt.Text          = Get-WtfString -Path 'labels.prompt'
@@ -390,7 +287,6 @@ $appVersion = if ($Config -and $Config.appinfo.version) { $Config.appinfo.versio
 $StatusInfo.Text         = "WTF.Console $appVersion"
 
 if ($AppMode -eq 'framework') {
-    # Framework mode: no Maximize button, fixed size unless -WinSize is given
     $BtnMaximize.Visibility = [System.Windows.Visibility]::Collapsed
     $Window.ResizeMode      = [System.Windows.ResizeMode]::CanMinimize
 
@@ -407,24 +303,14 @@ if ($AppMode -eq 'framework') {
     }
 }
 else {
-    # Standalone mode: always resizable, always starts at 800x600
     $Window.Width  = 800
     $Window.Height = 600
     $Window.ResizeMode = [System.Windows.ResizeMode]::CanResize
 }
 
-# ────────────────────────────────────────────────────────────────────────────
-#  9) WINDOW CHROME BEHAVIOR (drag, minimize, maximize, close)
-#     Because WindowStyle="None" is used in the XAML (frameless window), we
-#     have to implement drag-to-move and double-click-to-maximize ourselves
-#     on the custom title bar panel.
-# ────────────────────────────────────────────────────────────────────────────
 $TitleBarPanel.Add_MouseLeftButtonDown({
     param($sender, $e)
     if ($e.ClickCount -eq 2 -and $AppMode -eq 'standalone') {
-        # Double-click on the title bar toggles maximize/restore - only
-        # meaningful in standalone mode, since framework mode has no
-        # Maximize button/state to toggle in the first place.
         if ($Window.WindowState -eq [System.Windows.WindowState]::Maximized) {
             $Window.WindowState = [System.Windows.WindowState]::Normal
         }
@@ -438,7 +324,6 @@ $TitleBarPanel.Add_MouseLeftButtonDown({
 })
 
 $BtnMinimize.Add_Click({ $Window.WindowState = [System.Windows.WindowState]::Minimized })
-
 $BtnMaximize.Add_Click({
     if ($Window.WindowState -eq [System.Windows.WindowState]::Maximized) {
         $Window.WindowState = [System.Windows.WindowState]::Normal
@@ -448,32 +333,29 @@ $BtnMaximize.Add_Click({
     }
 })
 
-# ────────────────────────────────────────────────────────────────────────────
-#  10) OUTPUT WATCHING (framework mode only) - reacts to defined patterns
-#      Standalone mode intentionally skips all of this: there is no shared
-#      Core\db\dbprocess.json to report state into when running as a
-#      portable, framework-independent copy.
-# ────────────────────────────────────────────────────────────────────────────
 $ProcessDbPath = $null
 if ($AppMode -eq 'framework' -and $Paths.FrameworkRoot) {
     $ProcessDbPath = Join-Path $Paths.FrameworkRoot 'Core\db\dbprocess.json'
 }
 
-# Inspects a single line of console output and classifies it as a trigger
-# event ('error' / 'success' / $null = no match). This is currently a simple
-# placeholder pattern set - extend it once the exact console signatures of
-# the watched operations (aria2 progress lines, DISM completion markers,
-# USMT exit banners, etc.) have been finalized for each calling tool.
 function Test-WtfWatchTriggers {
-    param([string]$Line)
-    if ($Line -match '(?i)error') { return 'error' }
-    if ($Line -match '(?i)^100%|completed successfully') { return 'success' }
-    return $null
+    param([string]$Line, [string]$ActionCode)
+
+    switch ($ActionCode) {
+        'mount' {
+            if ($Line -match '(?i)error' -or $Line -match '(?i)failed' -or $Line -match '(?i)fehler') { return 'error' }
+            if ($Line -match '(?i)the operation completed successfully' -or $Line -match '(?i)der vorgang wurde erfolgreich beendet') { return 'success' }
+            if ($Line -match '(?i)mounting image' -or $Line -match '(?i)abbild wird bereitgestellt') { return 'running' }
+            return $null
+        }
+        default {
+            if ($Line -match '(?i)error') { return 'error' }
+            if ($Line -match '(?i)^100%|completed successfully') { return 'success' }
+            return $null
+        }
+    }
 }
 
-# Persists the current state of the supervised process into the framework's
-# shared process database (Core\db\dbprocess.json) as a small JSON document,
-# so other framework tools/UIs can poll what WTF.Console is currently doing.
 function Write-WtfProcessState {
     param([string]$State, [int]$ExitCode = -1)
     if (-not $ProcessDbPath) { return }
@@ -485,6 +367,7 @@ function Write-WtfProcessState {
         $entry = [ordered]@{
             action    = $Action
             script    = $ScriptPath
+            logfile   = $LogFilePath
             state     = $State
             exitcode  = $ExitCode
             timestamp = (Get-Date -Format 'u')
@@ -496,13 +379,6 @@ function Write-WtfProcessState {
     }
 }
 
-# ────────────────────────────────────────────────────────────────────────────
-#  11) START REDIRECTED CONSOLE PROCESS
-#      This is the heart of WTF.Console: a hidden powershell.exe child
-#      process running -ScriptPath, with all three standard streams
-#      redirected so we can pump its output into the UI and forward user
-#      input back into it, instead of ever showing a native console window.
-# ────────────────────────────────────────────────────────────────────────────
 $psi = New-Object System.Diagnostics.ProcessStartInfo
 $psi.FileName               = 'powershell.exe'
 $psi.Arguments              = "-NoLogo -NoProfile -ExecutionPolicy Bypass -File `"$ScriptPath`""
@@ -511,14 +387,12 @@ $psi.RedirectStandardOutput = $true
 $psi.RedirectStandardError  = $true
 $psi.UseShellExecute        = $false
 $psi.CreateNoWindow         = $true
+$psi.WorkingDirectory       = Split-Path -Parent $ScriptPath
 
 $Proc = New-Object System.Diagnostics.Process
 $Proc.StartInfo = $psi
 $Proc.EnableRaisingEvents = $true
 
-# Appends a single line of text to the terminal output box on the UI thread
-# and scrolls it into view. All process event handlers below run on
-# background threads, so every UI touch must go through $Window.Dispatcher.
 function Append-TerminalLine {
     param([string]$Text)
     $Window.Dispatcher.Invoke({
@@ -534,7 +408,7 @@ $Proc.add_OutputDataReceived({
         Write-WtfLog -Message $evt.Data -Level 'Output'
 
         if ($AppMode -eq 'framework') {
-            $trigger = Test-WtfWatchTriggers -Line $evt.Data
+            $trigger = Test-WtfWatchTriggers -Line $evt.Data -ActionCode $Action
             if ($trigger) { Write-WtfProcessState -State $trigger }
         }
     }
@@ -546,13 +420,13 @@ $Proc.add_ErrorDataReceived({
         $prefix = Get-WtfString -Path 'console.errorPrefix'
         Append-TerminalLine -Text "$prefix$($evt.Data)"
         Write-WtfLog -Message $evt.Data -Level 'Error'
+        if ($AppMode -eq 'framework') {
+            Write-WtfProcessState -State 'error'
+        }
     }
 })
 
 $Proc.add_Exited({
-    # Fires once the child process terminates on its own (i.e. the wrapped
-    # script finished). Disables further input, since sending commands to a
-    # dead process would be meaningless.
     $exitCode = $Proc.ExitCode
     $Window.Dispatcher.Invoke({
         $msgKey = if ($exitCode -eq 0) { 'status.finishedOk' } else { 'status.finishedFail' }
@@ -569,13 +443,13 @@ $Proc.add_Exited({
 try {
     $StatusText.Text = Get-WtfString -Path 'status.starting'
     $Proc.Start() | Out-Null
-    # BeginOutputReadLine/BeginErrorReadLine switch the redirected streams
-    # into asynchronous line-based reading, which is what triggers the
-    # OutputDataReceived/ErrorDataReceived events registered above.
     $Proc.BeginOutputReadLine()
     $Proc.BeginErrorReadLine()
     $StatusText.Text = Get-WtfString -Path 'status.running' -FormatArgs @($Proc.Id)
     Write-WtfLog -Message (Get-WtfString -Path 'console.processStarted' -FormatArgs @($Proc.Id, $ScriptPath)) -Level 'Info'
+    if ($LogFilePath) {
+        Write-WtfLog -Message (Get-WtfString -Path 'console.logFileInUse' -FormatArgs @($LogFilePath)) -Level 'Info'
+    }
     if ($AppMode -eq 'framework') { Write-WtfProcessState -State 'running' }
 }
 catch {
@@ -588,12 +462,6 @@ catch {
     exit 1
 }
 
-# ────────────────────────────────────────────────────────────────────────────
-#  12) INPUT HANDLING (send commands to redirected StandardInput)
-#      The $SendCommand scriptblock is shared between the Send button click
-#      and the Enter key inside the input box, so both paths behave
-#      identically.
-# ────────────────────────────────────────────────────────────────────────────
 $SendCommand = {
     if (-not $Proc.HasExited -and $InputBox.Text.Length -gt 0) {
         $cmdText = $InputBox.Text
@@ -612,7 +480,6 @@ $SendCommand = {
 }
 
 $BtnSend.Add_Click($SendCommand)
-
 $InputBox.Add_KeyDown({
     param($sender, $e)
     if ($e.Key -eq [System.Windows.Input.Key]::Enter) {
@@ -620,17 +487,7 @@ $InputBox.Add_KeyDown({
     }
 })
 
-$BtnClear.Add_Click({
-    # Only clears the visible terminal textbox - has no effect on the
-    # running process itself (see wtf.readme.md / clearTooltip string).
-    $TerminalOutput.Clear()
-})
-
-# ────────────────────────────────────────────────────────────────────────────
-#  13) CLOSE HANDLING - terminate child process cleanly, close log
-#      Closing the window while the child process is still running prompts
-#      for confirmation first, since closing implies killing that process.
-# ────────────────────────────────────────────────────────────────────────────
+$BtnClear.Add_Click({ $TerminalOutput.Clear() })
 $BtnClose.Add_Click({ $Window.Close() })
 
 $Window.Add_Closing({
@@ -654,10 +511,4 @@ $Window.Add_Closing({
     }
 })
 
-# ────────────────────────────────────────────────────────────────────────────
-#  14) SHOW WINDOW
-#      ShowDialog() blocks this script until the window is closed, which is
-#      exactly what we want since WTF.Console is meant to be launched as its
-#      own process/window and not embedded into another UI.
-# ────────────────────────────────────────────────────────────────────────────
 [void]$Window.ShowDialog()

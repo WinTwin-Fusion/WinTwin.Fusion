@@ -35,6 +35,7 @@
         "processStarted":    "[WTF.Console] Process started (PID {0}): {1}",
         "processExited":     "[WTF.Console] Process exited with code {0}.",
         "userInputEcho":     "> {0}",
-        "errorPrefix":       "[ERROR] "
+        "errorPrefix":       "[ERROR] ",
+        "logFileInUse":      "[WTF.Console] Log file: {0}"
     }
 }
