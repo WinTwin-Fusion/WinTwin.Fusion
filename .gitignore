@@ -7,3 +7,5 @@ wim.mounter.cmd
 create.checksum.ps1
 wintwin.fusion.logo.afphoto
 wintwin.fusion.logo.only.png
+Lib/WinTwin.FXcore/copy-all-files.cmd
+Lib/WinTwin.FXcore/unblock-all-files.cmd
