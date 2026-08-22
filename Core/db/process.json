@@ -1,10 +1,27 @@
 {
-    "mount": {
-        "state": "false",
-        "image": {
-            "file": "",
-            "name": "",
-            "index": ""
-        }
+    "running": {
+        "proc-name": "",
+        "proc-path": "",
+        "action-id": "",
+        "cmdparams": "",
+        "job-start": "",
+        "job-state": ""
+    },
+
+    "lastjob": {
+        "proc-name": "",
+        "proc-path": "",
+        "action-id": "",
+        "cmdparams": "",
+        "job-start": "",
+        "job-state": "",
+        "job-ended": ""
+    },
+
+    "linedup": {
+        "proc-name": "",
+        "proc-path": "",
+        "action-id": "",
+        "cmdparams": "",
     }
 }
