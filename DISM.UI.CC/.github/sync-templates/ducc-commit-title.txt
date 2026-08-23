@@ -1,0 +1,1 @@
+chore(sync): synchronize ${COMPONENT_NAME} from ${SOURCE_COMMIT_SHORT}
