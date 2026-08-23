@@ -1,102 +1,136 @@
 function wtfLoadJSONC {
     <#
     .SYNOPSIS
-        Reads a JSONC file, strips comments, and returns its parsed content.
+    Loads and parses a JSONC (JSON with Comments) file into a PowerShell object.
 
     .DESCRIPTION
-        wtfLoadJSONC validates the -JSONfile parameter, ensures the target file exists, reads its
-        raw text content, strips both // line comments and /* */ block comments (while respecting
-        string literals so that '//' or '/*' occurring inside a JSON string value are preserved),
-        and converts the resulting plain JSON via ConvertFrom-Json. On any failure an OPSreturn
-        error object is returned.
+    The wtfLoadJSONC function reads a JSONC file (e.g. jobaction.jsonc), strips
+    single-line ('//') and block ('/* ... */') comments using a small state-machine
+    based scanner (NOT a naive regex), and then parses the remaining, pure-JSON
+    content exactly like wtfLoadJSON. The state machine tracks whether the scanner
+    is currently inside a double-quoted string (including escaped quotes) so that
+    '//' or '/*' occurring inside actual string values is never mistaken for a
+    comment and stripped by accident.
 
-    .PARAMETER JSONfile
-        Full path to the .jsonc file to read.
+    .PARAMETER Path
+    Full path to the JSONC file to load.
 
-    .OUTPUTS
-        PSCustomObject { .code, .msg, .data }
-        .data = the parsed JSON content (PSCustomObject / array) on success.
+    .PARAMETER Depth
+    Maximum depth passed to ConvertFrom-Json. Default is 20.
 
     .EXAMPLE
-        $r = wtfLoadJSONC -JSONfile 'C:\WinTwin.Fusion\Core\db\jobaction.jsonc'
+    $result = wtfLoadJSONC -Path "C:\WinTwin.Fusion\Core\db\jobaction.jsonc"
+    if ($result.code -eq 0) { $jobActions = $result.data }
 
     .NOTES
-        Dependencies: OPSreturn.
-        Comment-stripping is performed with a small state machine (not a single greedy regex) so
-        that '//' or '/* */' sequences that appear inside quoted string values are not stripped.
+    Part of: WinTwin.FXcore
+    See also: wtfLoadJSON, wtfWriteJSON
     #>
 
     [CmdletBinding()]
-    [OutputType([PSCustomObject])]
     param(
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $true)]
         [AllowEmptyString()]
-        [string]$JSONfile = ""
+        [string]$Path,
+
+        [Parameter(Mandatory = $false)]
+        [int]$Depth = 20
     )
 
-    if ([string]::IsNullOrWhiteSpace($JSONfile)) {
-        return (OPSreturn -Code fail -Message "wtfLoadJSONC failed! Parameter 'JSONfile' is required and must not be empty.")
+    if ([string]::IsNullOrEmpty($Path)) {
+        return (OPSreturn -Code -1 -Message "Parameter 'Path' is required but was not provided or is empty")
     }
 
-    if (-not (Test-Path -Path $JSONfile -PathType Leaf)) {
-        return (OPSreturn -Code fail -Message "wtfLoadJSONC failed! File not found: '$JSONfile'.")
+    if (-not (Test-Path -Path $Path -PathType Leaf)) {
+        return (OPSreturn -Code -1 -Message "JSONC file not found: $Path")
     }
 
     try {
-        $RawContent = Get-Content -Path $JSONfile -Raw -Encoding UTF8 -ErrorAction Stop
+        $raw = Get-Content -Path $Path -Raw -Encoding UTF8 -ErrorAction Stop
     }
     catch {
-        return (OPSreturn -Code fail -Message "wtfLoadJSONC failed! Could not read file '$JSONfile': $($_.Exception.Message)" -Exception $_.Exception)
+        return (OPSreturn -Code -1 -Message "Could not read file '$Path': $($_.Exception.Message)" -Exception $_.Exception)
     }
 
-    # Strip // and /* */ comments while respecting string literals.
-    try {
-        $sb          = [System.Text.StringBuilder]::new()
-        $len         = $RawContent.Length
-        $inString    = $false
-        $inLineCmt   = $false
-        $inBlockCmt  = $false
-        $escapeNext  = $false
+    if ([string]::IsNullOrWhiteSpace($raw)) {
+        return (OPSreturn -Code -1 -Message "JSONC file '$Path' is empty")
+    }
 
-        for ($i = 0; $i -lt $len; $i++) {
-            $c  = $RawContent[$i]
-            $nc = if ($i + 1 -lt $len) { $RawContent[$i + 1] } else { [char]0 }
+    # --- State-machine based comment stripper ---
+    # States: Normal, InString, InLineComment, InBlockComment
+    $sb          = [System.Text.StringBuilder]::new()
+    $len         = $raw.Length
+    $inString    = $false
+    $inLineComm  = $false
+    $inBlockComm = $false
+    $escapeNext  = $false
 
-            if ($inLineCmt) {
-                if ($c -eq "`n") { $inLineCmt = $false; [void]$sb.Append($c) }
-                continue
+    for ($i = 0; $i -lt $len; $i++) {
+        $ch  = $raw[$i]
+        $next = if ($i + 1 -lt $len) { $raw[$i + 1] } else { [char]0 }
+
+        if ($inLineComm) {
+            if ($ch -eq "`n") {
+                $inLineComm = $false
+                [void]$sb.Append($ch)
             }
-            if ($inBlockCmt) {
-                if ($c -eq '*' -and $nc -eq '/') { $inBlockCmt = $false; $i++ }
-                continue
-            }
-            if ($inString) {
-                [void]$sb.Append($c)
-                if ($escapeNext) { $escapeNext = $false }
-                elseif ($c -eq '\') { $escapeNext = $true }
-                elseif ($c -eq '"') { $inString = $false }
-                continue
-            }
-
-            if ($c -eq '"') { $inString = $true; [void]$sb.Append($c); continue }
-            if ($c -eq '/' -and $nc -eq '/') { $inLineCmt = $true; $i++; continue }
-            if ($c -eq '/' -and $nc -eq '*') { $inBlockCmt = $true; $i++; continue }
-
-            [void]$sb.Append($c)
+            continue
         }
 
-        $CleanJSON = $sb.ToString()
+        if ($inBlockComm) {
+            if ($ch -eq '*' -and $next -eq '/') {
+                $inBlockComm = $false
+                $i++  # skip the trailing '/'
+            }
+            continue
+        }
+
+        if ($inString) {
+            [void]$sb.Append($ch)
+            if ($escapeNext) {
+                $escapeNext = $false
+            }
+            elseif ($ch -eq '\') {
+                $escapeNext = $true
+            }
+            elseif ($ch -eq '"') {
+                $inString = $false
+            }
+            continue
+        }
+
+        # Normal state
+        if ($ch -eq '"') {
+            $inString = $true
+            [void]$sb.Append($ch)
+            continue
+        }
+        if ($ch -eq '/' -and $next -eq '/') {
+            $inLineComm = $true
+            $i++
+            continue
+        }
+        if ($ch -eq '/' -and $next -eq '*') {
+            $inBlockComm = $true
+            $i++
+            continue
+        }
+
+        [void]$sb.Append($ch)
     }
-    catch {
-        return (OPSreturn -Code fail -Message "wtfLoadJSONC failed! Error while stripping comments from '$JSONfile': $($_.Exception.Message)" -Exception $_.Exception)
+
+    $cleaned = $sb.ToString()
+
+    if ([string]::IsNullOrWhiteSpace($cleaned)) {
+        return (OPSreturn -Code -1 -Message "JSONC file '$Path' contained no usable JSON content after comment stripping")
     }
 
     try {
-        $ParsedContent = $CleanJSON | ConvertFrom-Json -ErrorAction Stop
+        $obj = $cleaned | ConvertFrom-Json -Depth $Depth -ErrorAction Stop
     }
     catch {
-        return (OPSreturn -Code fail -Message "wtfLoadJSONC failed! File '$JSONfile' does not contain valid JSON after comment-stripping: $($_.Exception.Message)" -Exception $_.Exception)
+        return (OPSreturn -Code -1 -Message "File '$Path' does not contain valid JSON after comment stripping: $($_.Exception.Message)" -Exception $_.Exception)
     }
 
-    return (OPSreturn -Code success -Message "wtfLoadJSONC: File '$JSONfile' loaded and converted successfully." -Data $ParsedContent)
+    return (OPSreturn -Code 0 -Message "JSONC file loaded successfully: $Path" -Data $obj)
 }

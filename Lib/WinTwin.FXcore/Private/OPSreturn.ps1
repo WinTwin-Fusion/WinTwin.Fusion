@@ -1,47 +1,22 @@
-<#
-.SYNOPSIS
-    OPSreturn - Creates a standardized return object for operation status reporting (WinTwin.FXcore internal copy).
-.DESCRIPTION
-    WinTwin.FXcore must work without a hard dependency on the external OPSreturn module, so this
-    private, module-internal copy mirrors the public OPSreturn module (see:
-    https://github.com/praetoriani/PowerShell.Mods/tree/main/OPSreturn) as closely as possible.
-
-    Compared to the original (pre-rework) FXcore implementation, this version adds:
-    - An [OPScode] enum instead of a plain [ValidateSet(0,-1)] int, giving every function access
-      to the full severity range (success/info/debug/timeout/warn/fail/error/critical/fatal)
-      instead of only success/fail.
-    - An optional -Exception parameter to pass a more detailed error object to the caller.
-    - Automatic caller-name resolution via the call stack (`source`).
-    - An optional timestamp (`timecode`), toggled via $script:conf['timestamp'].
-
-    BACKWARD COMPATIBILITY: All existing FXcore functions call `OPSreturn -Code 0 ...` or
-    `OPSreturn -Code -1 ...`. Because [OPScode]::success = 0 and [OPScode]::fail = -1, PowerShell's
-    parameter binder implicitly converts these existing integer arguments to the matching enum
-    values, so no other FXcore function had to be changed for this rework.
-.NOTES
-    Creation Date : 28.03.2026
-    Last Update   : 23.08.2026
-    Origin        : Adapted from the standalone OPSreturn PowerShell module (Praetoriani).
-#>
-
 # ____________________________________________________________________________________________________
-#  → ENUMERATION
+#  → ENUMERATION CLASS
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-# Only declare the enum if it hasn't already been declared (module re-import safety).
-if (-not ([System.Management.Automation.PSTypeName]'OPScode').Type) {
-    Add-Type -TypeDefinition @'
-public enum OPScode {
-    success  = 0,
-    info     = 1,
-    debug    = 2,
-    timeout  = 3,
-    warn     = 4,
-    fail     = -1,
-    error    = -2,
-    critical = -3,
-    fatal    = -4
-}
-'@ -ErrorAction SilentlyContinue
+# NOTE: 'success' (0) and 'fail' (-1) map 1:1 onto the two integer codes used by every existing
+# WinTwin.FXcore function ("OPSreturn -Code 0 ..." / "OPSreturn -Code -1 ..."). Because PowerShell
+# implicitly converts a plain [int] argument into the matching enum value, ALL existing call sites in
+# this module keep working completely unchanged after this upgrade. The additional enum members
+# (info/debug/timeout/warn/error/critical/fatal) are purely additive and only used by newly written
+# or newly adapted functions - never required by old ones.
+enum OPScode {
+    success     = 0
+    info        = 1
+    debug       = 2
+    timeout     = 3
+    warn        = 4
+    fail        = -1
+    error       = -2
+    critical    = -3
+    fatal       = -4
 }
 
 function OPSreturn {
@@ -49,25 +24,59 @@ function OPSreturn {
     .SYNOPSIS
     Creates a standardized return object for operation status reporting.
 
+    .DESCRIPTION
+    The OPSreturn function creates a consistent PSCustomObject for returning operation
+    status information across all module functions. It provides a uniform interface for
+    success/failure reporting with an optional data payload.
+
+    ‼ BACKWARD COMPATIBILITY NOTE (aligned with the upstream OPSreturn PowerShell module,
+    see https://github.com/praetoriani/PowerShell.Mods/tree/main/OPSreturn):
+    This version extends the original FXcore-internal OPSreturn (which only exposed
+    'code' / 'msg' / 'data' using plain integers 0 / -1) with the richer, enum-based
+    schema of the standalone OPSreturn module (state / exception / source / timecode),
+    WITHOUT removing or renaming any existing field. Every existing call of the shape
+    "OPSreturn -Code 0 -Message '...'" or "OPSreturn -Code -1 -Message '...' " continues
+    to work unmodified, because:
+      - the -Code parameter still accepts plain integers 0 and -1 (auto-converted to the
+        OPScode enum values 'success' and 'fail'),
+      - the object returned still contains .code and .msg with their original meaning
+        and .data with its original semantics,
+      - all NEW fields (.state, .exception, .source, .timecode) are pure ADDITIONS. Old
+        consumers that only ever read .code / .msg / .data are completely unaffected.
+
     .PARAMETER Code
-    Status code. One of the OPScode enum values (success, info, debug, timeout, warn, fail, error,
-    critical, fatal). Also accepts the historic integer values 0 (success) / -1 (fail) used by
-    existing FXcore functions. Default is 'fail'.
+    Status code. Accepts either an [OPScode] enum member (success/info/debug/timeout/
+    warn/fail/error/critical/fatal) or one of the two legacy plain integers 0 (success)
+    / -1 (fail) used by pre-upgrade FXcore code. Default is 'fail' (-1).
 
     .PARAMETER Message
-    Short message describing the operation result or error. Default is empty string.
+    Detailed message describing the operation result or error. Default is empty string.
 
     .PARAMETER Data
-    Optional data payload to return with the status object. Default is $null.
+    Optional data payload to return with the status object. Can contain any type of
+    data (strings, arrays, objects, binary data, etc.). Default is $null.
 
     .PARAMETER Exception
-    Optional exception object / detailed error information to return alongside Message.
+    Optional exception object or additional detail (e.g. $_.Exception) to pass to the
+    caller for deeper diagnostics. Default is $null. New in this version; purely
+    additive and safe to omit.
 
     .EXAMPLE
-    return OPSreturn -Code fail -Message "Config file not found: $Path"
+    OPSreturn -Code 0 -Message "Operation completed successfully"
+    Legacy call style - still fully supported.
 
     .EXAMPLE
-    return OPSreturn -Code 0 -Message "Operation completed successfully" -Data $result
+    OPSreturn -Code -1 -Message "File not found: C:\test.txt"
+    Legacy call style - still fully supported.
+
+    .EXAMPLE
+    OPSreturn -Code ([OPScode]::warn) -Message "Partial success" -Exception $_.Exception
+    New, enum-based call style with extended diagnostics.
+
+    .NOTES
+    This is an internal helper function used by all public module functions to ensure
+    consistent return value structure throughout the WinTwin.FXcore module.
+    Aligned with: https://github.com/praetoriani/PowerShell.Mods/tree/main/OPSreturn
     #>
 
     [CmdletBinding()]
@@ -89,28 +98,27 @@ function OPSreturn {
         $Exception = $null
     )
 
+    # Auto-resolve the name of the calling function via the PowerShell call stack.
+    # Index [0] = OPSreturn itself, Index [1] = direct caller.
     [string]$callerSrc = try {
         $callStack = Get-PSCallStack
-        if ($callStack.Count -gt 2) { $callStack[2].Command }
-        elseif ($callStack.Count -gt 1) { $callStack[1].Command }
+        if ($callStack.Count -gt 1) { $callStack[1].Command }
         else { '<unknown>' }
     }
     catch {
         '<unknown>'
     }
 
-    [bool]$useTimestamp = $true
-    if ($null -ne $script:conf -and $script:conf.ContainsKey('timestamp')) {
-        $useTimestamp = [bool]$script:conf['timestamp']
-    }
-
+    # Create and return standardized status object.
+    # 'code' / 'msg' / 'data' preserve the exact original FXcore contract.
+    # 'state' / 'exception' / 'source' / 'timecode' are additive, non-breaking extensions.
     return [PSCustomObject]@{
-        code      = [int]$Code
-        state     = $Code.ToString()
-        msg       = $Message
-        data      = $Data
-        exception = $Exception
-        source    = $callerSrc
-        timecode  = if ($useTimestamp) { (Get-Date).ToString('dd.MM.yyyy ; HH:mm:ss.fff') } else { '<notused>' }
+        code        = [int]$Code
+        msg         = $Message
+        data        = $Data
+        state       = $Code.ToString()
+        exception   = $Exception
+        source      = $callerSrc
+        timecode    = (Get-Date).ToString('dd.MM.yyyy ; HH:mm:ss.fff')
     }
 }
