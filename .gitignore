@@ -7,7 +7,7 @@ wim.mounter.cmd
 create.checksum.ps1
 wintwin.fusion.logo.afphoto
 wintwin.fusion.logo.only.png
-**/DISM.UI.CC/
+#**/DISM.UI.CC/
 **/PS.Tweak.Tools/
 **/USMT.Composer/
 /PS.Tweak.Tools
