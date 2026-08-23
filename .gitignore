@@ -13,3 +13,5 @@ wintwin.fusion.logo.only.png
 /PS.Tweak.Tools
 PS.Tweak.Tools/wtf.license.md
 DISM.UI.CC/LICENSE.md
+Lib/WinTwin.FXcore/copy-all-files.cmd
+Lib/WinTwin.FXcore/unblock-all-files.cmd
