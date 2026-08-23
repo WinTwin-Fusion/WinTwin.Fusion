@@ -1,5 +1,5 @@
 ================================================================================
- USMT.Composer (part of WinTwin Fusion Framework)
+ USMT.Composer
  NOTICE FILE  |  LICENSE.md
 ================================================================================
 
@@ -11,19 +11,25 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied.
 
 This NOTICE file must be preserved and included in all copies or substantial
-portions of this software, as required by the WinTwin.FXcore License
+portions of this software, as required by the USMT.Composer License
 
 --------------------------------------------------------------------------------
  📖 ABOUT THIS PROJECT
 --------------------------------------------------------------------------------
 
-TO BE DOCUMENTED
+USMT.Composer is a core component of the WinTwin.Fusion framework and a highly
+important, useful addition to the framework's ecosystem. USMT.Composer makes it
+possible to back up data and settings from installed programs and subsequently
+restore these backups on another system (provided that the same applications
+included in the backup are also installed on the target system).
+Additionally, USMT.Composer can back up essential user account data and settings
+(such as Taskbar and Start menu configurations).
 
 --------------------------------------------------------------------------------
  🌍 ORIGIN
 --------------------------------------------------------------------------------
 
-First published : 06.04.2026
+First published : 23.04.2026
 Origin          : Munich (Bavaria), Germany
 
 Made with 💖 in Munich, Germany.
@@ -33,7 +39,7 @@ Made with 💖 in Munich, Germany.
 --------------------------------------------------------------------------------
 
 Source code and documentation:
-https://github.com/WinTwin-Fusion/DISM.UI.CC
+https://github.com/WinTwin-Fusion/USMT.Composer
 
 
 --------------------------------------------------------------------------------
