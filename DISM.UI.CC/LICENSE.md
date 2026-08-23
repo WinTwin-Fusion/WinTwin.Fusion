@@ -2,7 +2,7 @@
 
 # LICENSE AGREEMENT
 
-This License Agreement for **DISM UI Control Center** was established on **20.08.2026** at **12:02:06 CET** and remains in full legal effect as of this date
+This License Agreement for **DISM UI Control Center** was established on **23.08.2026** at **10:55:03 CET** and remains in full legal effect as of this date
 
 ---
 
@@ -14,7 +14,7 @@ The complete source code, underlying architecture, conceptual design, project na
 
 ## Permitted Use
 
-**DISM UI Control Center** is released strictly for **private, non-commercial use** by individual end users. The term *private use* refers exclusively to personal, non-remunerated usage in a private, domestic environment. Any deployment of **DISM UI Control Center** in a professional, organizational, institutional, or otherwise commercial context is expressly prohibited without prior written authorization from the developer.
+**DISM UI Control Center** DISM UI Control Center is a fundamental and integral part of the WinTwin.Fusion Framework ans is released strictly for **private, non-commercial use** by individual end users. The term *private use* refers exclusively to personal, non-remunerated usage in a private, domestic environment. Any deployment of **DISM UI Control Center** in a professional, organizational, institutional, or otherwise commercial context is expressly prohibited without prior written authorization from the developer.
 
 ---
 
@@ -41,7 +41,7 @@ Violation of any term outlined in this License Agreement may result in immediate
 
 ## Project Availability
 
-**DISM UI Control Center** is a part of **WinTwin Fusion Framework** and is provided on an **as-is basis** and is made available in its current state at the time of each release. The sole official and authoritative source for this project is the following repository:
+**DISM UI Control Center** is provided on an **as-is basis** and is made available in its current state at the time of each release. The sole official and authoritative source for this project is the following repository:
 
 > 🔗 [https://github.com/WinTwin-Fusion/DISM.UI.CC](https://github.com/WinTwin-Fusion/DISM.UI.CC)
 
@@ -77,7 +77,10 @@ By downloading, installing, or otherwise making use of **DISM UI Control Center*
 
 ## Final Provision
 
-A so-called NOTICE file is included with this license. This NOTICE file must always accompany this license file whenever copies of the **DISM UI Control Center** are distributed. Should either or both of these files (LICENSE.md and/or the NOTICE file) be missing, the right to possess and use the **DISM UI Control Center** (or individual programs integrated into this tool) terminates in its entirety. In such an event, the entire **DISM UI Control Center** (including all copies) must be completely and thoroughly removed from the target system.
+**DISM UI Control Center** is a fundamental and integral part of the WinTwin.Fusion Framework and was designed exclusively for it. While using it outside the WinTwin.Fusion Framework is technically possible, it is expressly not recommended. Any use of **DISM UI Control Center** outside the WinTwin.Fusion Framework is at your own risk.
+
+A so-called NOTICE file is included with this license. This NOTICE file must always accompany this license file whenever copies of the **DISM UI Control Center** are distributed. Should either or both of these files (LICENSE.md and/or the NOTICE file) be missing, the right to possess and use the **DISM UI Control Center** (or individual programs integrated into this collection) terminates in its entirety. In such an event, the entire **DISM UI Control Center** (including all copies) must be completely and thoroughly removed from the target system.
+
 ---
 
-*DISM UI Control Center™ · © 2026 by Praetoriani · All rights reserved.*
+*DISM UI Control Center - A part of WinTwin Fusion Framework™ · © 2026 by Praetoriani · All rights reserved.*

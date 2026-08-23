@@ -1,5 +1,5 @@
 ================================================================================
- PS.Tweak.Tools (part of WinTwin Fusion Framework)
+ PS.Tweak.Tools
  NOTICE FILE  |  LICENSE.md
 ================================================================================
 
@@ -11,19 +11,24 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied.
 
 This NOTICE file must be preserved and included in all copies or substantial
-portions of this software, as required by the WinTwin.FXcore License
+portions of this software, as required by the PS.Tweak.Tools License
 
 --------------------------------------------------------------------------------
  📖 ABOUT THIS PROJECT
 --------------------------------------------------------------------------------
 
-TO BE DOCUMENTED
+PS.Tweak.Tools is an integral part of the WinTwin.Fusion Framework.
+It is a collection of various programs (featuring user interfaces) that enable
+the user to perform various tasks and actions via the WinTwin.Fusion Framework.
+This collection includes the following tools:
+
+- WTF.Console:  A very specialized Console Application
 
 --------------------------------------------------------------------------------
  🌍 ORIGIN
 --------------------------------------------------------------------------------
 
-First published : 06.04.2026
+First published : 23.04.2026
 Origin          : Munich (Bavaria), Germany
 
 Made with 💖 in Munich, Germany.

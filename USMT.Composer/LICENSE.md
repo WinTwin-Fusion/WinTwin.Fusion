@@ -2,7 +2,7 @@
 
 # LICENSE AGREEMENT
 
-This License Agreement for **USMT.Composer** was established on **20.08.2026** at **12:02:06 CET** and remains in full legal effect as of this date
+This License Agreement for **USMT.Composer** was established on **23.08.2026** at **11:23:14 CET** and remains in full legal effect as of this date
 
 ---
 
@@ -14,7 +14,7 @@ The complete source code, underlying architecture, conceptual design, project na
 
 ## Permitted Use
 
-**USMT.Composer** is released strictly for **private, non-commercial use** by individual end users. The term *private use* refers exclusively to personal, non-remunerated usage in a private, domestic environment. Any deployment of **USMT.Composer** in a professional, organizational, institutional, or otherwise commercial context is expressly prohibited without prior written authorization from the developer.
+**USMT.Composer** USMT.Composer is a fundamental and integral part of the WinTwin.Fusion Framework ans is released strictly for **private, non-commercial use** by individual end users. The term *private use* refers exclusively to personal, non-remunerated usage in a private, domestic environment. Any deployment of **USMT.Composer** in a professional, organizational, institutional, or otherwise commercial context is expressly prohibited without prior written authorization from the developer.
 
 ---
 
@@ -41,9 +41,9 @@ Violation of any term outlined in this License Agreement may result in immediate
 
 ## Project Availability
 
-**USMT.Composer** is a part of **WinTwin Fusion Framework** and is provided on an **as-is basis** and is made available in its current state at the time of each release. The sole official and authoritative source for this project is the following repository:
+**USMT.Composer** is provided on an **as-is basis** and is made available in its current state at the time of each release. The sole official and authoritative source for this project is the following repository:
 
-> 🔗 [https://github.com/WinTwin-Fusion/DISM.UI.CC](https://github.com/WinTwin-Fusion/DISM.UI.CC)
+> 🔗 [https://github.com/WinTwin-Fusion/USMT.Composer](https://github.com/WinTwin-Fusion/USMT.Composer)
 
 Any copy, mirror, or distribution of **USMT.Composer** obtained through any other source is considered unofficial and may not reflect the latest or unaltered version of the project.
 
@@ -77,7 +77,10 @@ By downloading, installing, or otherwise making use of **USMT.Composer**, the us
 
 ## Final Provision
 
-A so-called NOTICE file is included with this license. This NOTICE file must always accompany this license file whenever copies of the **USMT.Composer** are distributed. Should either or both of these files (LICENSE.md and/or the NOTICE file) be missing, the right to possess and use the **USMT.Composer** (or individual programs integrated into this tool) terminates in its entirety. In such an event, the entire **USMT.Composer** (including all copies) must be completely and thoroughly removed from the target system.
+**USMT.Composer** is a fundamental and integral part of the WinTwin.Fusion Framework and was designed exclusively for it. While using it outside the WinTwin.Fusion Framework is technically possible, it is expressly not recommended. Any use of **USMT.Composer** outside the WinTwin.Fusion Framework is at your own risk.
+
+A so-called NOTICE file is included with this license. This NOTICE file must always accompany this license file whenever copies of the **USMT.Composer** are distributed. Should either or both of these files (LICENSE.md and/or the NOTICE file) be missing, the right to possess and use the **USMT.Composer** (or individual programs integrated into this collection) terminates in its entirety. In such an event, the entire **USMT.Composer** (including all copies) must be completely and thoroughly removed from the target system.
+
 ---
 
-*USMT.Composer™ · © 2026 by Praetoriani · All rights reserved.*
+*USMT.Composer - A part of WinTwin Fusion Framework™ · © 2026 by Praetoriani · All rights reserved.*

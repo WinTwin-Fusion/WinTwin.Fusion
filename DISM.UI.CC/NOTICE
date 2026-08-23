@@ -1,5 +1,5 @@
 ================================================================================
- DISM UI Control Center (part of WinTwin Fusion Framework)
+ DISM UI Control Center
  NOTICE FILE  |  LICENSE.md
 ================================================================================
 
@@ -11,19 +11,26 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied.
 
 This NOTICE file must be preserved and included in all copies or substantial
-portions of this software, as required by the WinTwin.FXcore License
+portions of this software, as required by the DISM.UI.Control Center License
 
 --------------------------------------------------------------------------------
  📖 ABOUT THIS PROJECT
 --------------------------------------------------------------------------------
 
-TO BE DOCUMENTED
+The DISM UI Control Center is a key component of the WinTwin.Fusion Framework.
+It provides essential functions that enable the end user to work with Windows
+image files via the Framework. All tools feature a graphical user interface
+that simplifies the process of performing tasks and actions involving Windows
+image files. Below is a list of the tools included in the DISM UI Control Center:
+
+- wim.mounter:  Tool to mount *.wim-Files
+- wim.unmount:  Tool to unmount *.wim-Files
 
 --------------------------------------------------------------------------------
  🌍 ORIGIN
 --------------------------------------------------------------------------------
 
-First published : 06.04.2026
+First published : 23.04.2026
 Origin          : Munich (Bavaria), Germany
 
 Made with 💖 in Munich, Germany.
