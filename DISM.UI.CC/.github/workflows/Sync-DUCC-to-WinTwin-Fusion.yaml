@@ -252,6 +252,7 @@ jobs:
         run: |
           rsync -av \
             --exclude=".git" \
+            --exclude=".github  " \
             --exclude=".gitignore" \
             --exclude="ducc.wm.changelog.md" \
             source/ \
@@ -573,7 +574,7 @@ jobs:
         if: steps.changes.outputs.has_changes == 'true'
         working-directory: framework
         env:
-          GH_TOKEN: ${{ secrets.FRAMEWORK_SYNC_TOKEN }}
+          GH_TOKEN: ${{ secrets.TOKEN_WINTWIN_FUSION_PR_DUCC }}
         run: |
           PR_TITLE="$(cat .sync_pr_title.txt)"
 

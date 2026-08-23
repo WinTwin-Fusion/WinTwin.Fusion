@@ -2,13 +2,13 @@
   "component": "DISM.UI.CC",
   "sourceRepository": "WinTwin-Fusion/DISM.UI.CC",
   "sourceBranch": "main",
-  "sourceCommit": "d1400cfab815f8921a60ee504934251100377315",
-  "sourceCommitShort": "d1400cf",
+  "sourceCommit": "6931728d3cbac1b84e20140c75ff4a86d53abcab",
+  "sourceCommitShort": "6931728",
   "sourcePullRequest": {
-    "number": 5,
-    "title": "Force sync target files in workflow",
+    "number": 6,
+    "title": "Adjust DUCC sync workflow",
     "mergedBy": "praetoriani",
-    "mergedAt": "2026-08-23T21:04:07Z"
+    "mergedAt": "2026-08-23T21:21:41Z"
   },
   "targetRepository": "WinTwin-Fusion/WinTwin.Fusion",
   "targetBaseBranch": "main",
@@ -20,7 +20,7 @@
   ],
   "syncedBy": "GitHub Actions",
   "workflow": "Sync DISM.UI.CC to WinTwin.Fusion",
-  "workflowRunId": "32666359763",
-  "workflowRunNumber": "3",
-  "syncDate": "2026-08-23T21:04:20Z"
+  "workflowRunId": "32667280070",
+  "workflowRunNumber": "4",
+  "syncDate": "2026-08-23T21:21:52Z"
 }
