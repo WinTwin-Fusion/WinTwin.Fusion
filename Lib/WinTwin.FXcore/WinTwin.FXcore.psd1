@@ -14,7 +14,7 @@
 RootModule = 'WinTwin.FXcore.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.00.06'
+ModuleVersion = '1.00.07'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Desktop', 'Core')
@@ -89,7 +89,19 @@ FunctionsToExport = @(
         'GetAppxPackages',
         'RemAppxPackages',
         'AddAppxPackages',
-        'AppxPackageLookUp'
+        'AppxPackageLookUp',
+
+        # JSON helpers (generic, schema-agnostic)
+        'wtfLoadJSON',
+        'wtfLoadJSONC',
+        'wtfWriteJSON',
+
+        # jobaction.json read/write helpers
+        'wtfGetJobAction',
+        'wtfSetJobAction',
+
+        # Console window state control
+        'wtfSetCMDstate'
 )
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
@@ -145,7 +157,13 @@ FileList = @(
     'Public\GetAppxPackages.ps1',
     'Public\RemAppxPackages.ps1',
     'Public\AddAppxPackages.ps1',
-    'Public\AppxPackageLookUp.ps1'
+    'Public\AppxPackageLookUp.ps1',
+    'Public\wtfLoadJSON.ps1',
+    'Public\wtfLoadJSONC.ps1',
+    'Public\wtfWriteJSON.ps1',
+    'Public\wtfGetJobAction.ps1',
+    'Public\wtfSetJobAction.ps1',
+    'Public\wtfSetCMDstate.ps1'
 )
 
 # Private data to pass to the module specified in RootModule/ModuleToProcess. This may also contain a PSData hashtable with additional module metadata used by PowerShell.
@@ -161,6 +179,38 @@ PrivateData = @{
 
         # ReleaseNotes of this module
         ReleaseNotes = @'
+v1.00.07
+‾‾‾‾‾‾‾‾‾‾
+OPSreturn (Private):      Aligned with the standalone OPSreturn PowerShell module
+                          (github.com/praetoriani/PowerShell.Mods/tree/main/OPSreturn).
+                          Added OPScode enum (success/info/debug/timeout/warn/fail/
+                          error/critical/fatal) and additive .state/.exception/
+                          .source/.timecode fields. FULLY BACKWARD COMPATIBLE:
+                          all existing "OPSreturn -Code 0/-1 ..." calls throughout
+                          this module continue to work unchanged; .code/.msg/.data
+                          retain their original meaning.
+wtfLoadJSON:              NEW function. Generic, schema-agnostic JSON file loader
+                          with existence/syntax validation, returned via OPSreturn.
+wtfLoadJSONC:             NEW function. Generic JSONC (JSON with Comments) loader.
+                          Uses a string-aware state-machine comment stripper (not a
+                          naive regex) so '//' or '/*' inside actual string values
+                          is never stripped by accident.
+wtfWriteJSON:             NEW function. Generic JSON/JSONC writer. Supports both
+                          whole-object replacement and single key-path patching
+                          (dot-separated, e.g. "path.root") without disturbing
+                          sibling data.
+wtfGetJobAction:          NEW function. Reads a job/action node (or single field)
+                          from Core\db\jobaction.json, resolving the file location
+                          via Core\config.json (path.root + path.appdb.actions).
+wtfSetJobAction:          NEW function. Writes a single field of a job/action node
+                          in Core\db\jobaction.json, using the same path resolution
+                          logic as wtfGetJobAction and wtfWriteJSON internally.
+wtfSetCMDstate:           NEW function. Shows/Hides/Minimizes/Maximizes the current
+                          console window via a small, self-contained P/Invoke
+                          wrapper around user32.dll!ShowWindow. Intended to replace
+                          duplicated, tool-internal console-visibility helpers
+                          (e.g. in wim.mounter.fx.ps1).
+
 v1.00.06
 ‾‾‾‾‾‾‾‾‾‾
 Rebranding from  WinISO.ScriptFXLib  to  WinTwin.FXcore.
