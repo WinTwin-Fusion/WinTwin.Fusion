@@ -14,9 +14,43 @@
 [![Platform](https://img.shields.io/badge/platform-Windows%2011-lightgrey)](https://www.microsoft.com/windows)
 
 
+## Requirements & Dependencies
+
+### Software
+
+| Dependency | Min. Version | Notes |
+|---|---|---|
+| **Windows OS** | Windows 11 (24H2 or 25H2) | — |
+| **PowerShell** | 5.1 or 7.x+ | [PowerShell GitHub](https://github.com/PowerShell/PowerShell/releases) |
+| **.NET Framework** | 4.7.2 (PS 5.x Desktop) | [Microsoft .NET](https://dotnet.microsoft.com/en-us/download/dotnet-framework/net472) |
+| **DISM** | Windows 10 1809+ built-in | `%SystemRoot%\System32\dism.exe` |
+| **DISM PowerShell module** | built-in | Ships with Windows |
+| **robocopy.exe** | built-in | Ships with Windows |
+| **oscdimg.exe** | ADK component | See [Further Reading](#further-reading) |
+
+### Privileges
+
+All DISM, ISO-mount, and UUP build operations **require administrator privileges**.
+Add `#requires -RunAsAdministrator` to any calling script.
+
+---
+
+## Further Reading
+
+| Resource | Link |
+|---|---|
+<!--| **Developer Guide** (full function reference) | [DEVGUIDE.md](DEVGUIDE.md) |-->
+<!--| **Changelog** (version history) | [CHANGELOG.md](CHANGELOG.md) |-->
+| **PowerShell Releases** | [github.com/PowerShell/PowerShell/releases](https://github.com/PowerShell/PowerShell/releases) |
+| **.NET Framework 4.8** | [dotnet.microsoft.com](https://dotnet.microsoft.com/en-us/download/dotnet-framework) |
+| **Windows ADK** (includes oscdimg) | [learn.microsoft.com/windows-hardware/get-started/adk-install](https://learn.microsoft.com/en-us/windows-hardware/get-started/adk-install) |
+| **UUP Dump** | [uupdump.net](https://uupdump.net) |
+| **WinTwin.FXcore on GitHub** | [github.com/praetoriani/PowerShell.Mods/tree/main/WinTwin.FXcore](https://github.com/praetoriani/PowerShell.Mods/tree/main/WinTwin.FXcore) |
+
+---
+
 <!--
 [![License](https://img.shields.io/badge/license-Personal%20%26%20Corporate%20Use-green)](LICENSE)
--->
 
 ---
 
@@ -53,27 +87,6 @@ integrate cleanly into larger automation pipelines.
 > For a full function reference with parameters, examples, and module-scope internals,
 > see **[DEVGUIDE.md](DEVGUIDE.md)**.
 > For a full version history, see **[CHANGELOG.md](CHANGELOG.md)**.
-
----
-
-## Requirements & Dependencies
-
-### Software
-
-| Dependency | Min. Version | Notes |
-|---|---|---|
-| **Windows OS** | Windows 10 / Windows 11 | — |
-| **PowerShell** | 5.1 or 7.x+ | [PowerShell GitHub](https://github.com/PowerShell/PowerShell/releases) |
-| **.NET Framework** | 4.7.2 (PS 5.x Desktop) | [Microsoft .NET](https://dotnet.microsoft.com/en-us/download/dotnet-framework/net472) |
-| **DISM** | Windows 10 1809+ built-in | `%SystemRoot%\System32\dism.exe` |
-| **DISM PowerShell module** | built-in | Ships with Windows |
-| **robocopy.exe** | built-in | Ships with Windows |
-| **oscdimg.exe** | ADK component | See [Further Reading](#further-reading) |
-
-### Privileges
-
-All DISM, ISO-mount, and UUP build operations **require administrator privileges**.
-Add `#requires -RunAsAdministrator` to any calling script.
 
 ---
 
@@ -326,19 +339,6 @@ UnMountWIMimage -MountPoint 'C:\WinISO\MountPoint' -Action 'commit'
 > usage, refer to **[DEVGUIDE.md](DEVGUIDE.md)**.
 
 ---
+-->
 
-## Further Reading
-
-| Resource | Link |
-|---|---|
-| **Developer Guide** (full function reference) | [DEVGUIDE.md](DEVGUIDE.md) |
-| **Changelog** (version history) | [CHANGELOG.md](CHANGELOG.md) |
-| **PowerShell Releases** | [github.com/PowerShell/PowerShell/releases](https://github.com/PowerShell/PowerShell/releases) |
-| **.NET Framework 4.8** | [dotnet.microsoft.com](https://dotnet.microsoft.com/en-us/download/dotnet-framework) |
-| **Windows ADK** (includes oscdimg) | [learn.microsoft.com/windows-hardware/get-started/adk-install](https://learn.microsoft.com/en-us/windows-hardware/get-started/adk-install) |
-| **UUP Dump** | [uupdump.net](https://uupdump.net) |
-| **WinTwin.FXcore on GitHub** | [github.com/praetoriani/PowerShell.Mods/tree/main/WinTwin.FXcore](https://github.com/praetoriani/PowerShell.Mods/tree/main/WinTwin.FXcore) |
-
----
-
-*Module by [Praetoriani](https://github.com/praetoriani) — Licensed for personal and corporate use.*
+*WinTwin.FXcore - A part of WinTwin.Fusion Framework · © 2026 by Praetoriani · All rights reserved.*
