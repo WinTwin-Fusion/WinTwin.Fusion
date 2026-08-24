@@ -75,4 +75,4 @@ By downloading, installing, or otherwise making use of **WinTwin.FXcore**, the u
 
 ---
 
-*WinTwin.FXcore™ · © 2026 by Praetoriani · All rights reserved.*
+*WinTwin.FXcore - A part of WinTwin.Fusion Framework · © 2026 by Praetoriani · All rights reserved.*
