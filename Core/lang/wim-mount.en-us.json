@@ -18,7 +18,7 @@
     },
     "dialogs": {
         "fileDialogTitle":      "Select a Windows Image file",
-        "fileDialogFilterName": "Windows Image files (*.wim)",
+        "fileDialogFilterName": "Windows Image Files",
         "folderDialogTitle":    "Select the mount point directory"
     },
     "status": {

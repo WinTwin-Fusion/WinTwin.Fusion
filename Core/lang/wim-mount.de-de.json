@@ -18,7 +18,7 @@
     },
     "dialogs": {
         "fileDialogTitle":      "Windows Image Datei auswählen",
-        "fileDialogFilterName": "Windows Image Dateien (*.wim)",
+        "fileDialogFilterName": "Windows Image Dateien",
         "folderDialogTitle":    "Mount Point Verzeichnis auswählen"
     },
     "status": {
