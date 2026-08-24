@@ -1,0 +1,25 @@
+{
+  "component": "WinTwin.XUI",
+  "sourceRepository": "WinTwin-Fusion/WinTwin.XUI",
+  "sourceBranch": "main",
+  "sourceCommit": "a95ba481407c6a9bf55aa2af55d378543dda9e18",
+  "sourceCommitShort": "a95ba48",
+  "sourcePullRequest": {
+    "number": 2,
+    "title": "Workflow Update",
+    "mergedBy": "praetoriani",
+    "mergedAt": "2026-08-24T21:35:07Z"
+  },
+  "targetRepository": "WinTwin-Fusion/WinTwin.Fusion",
+  "targetBaseBranch": "main",
+  "targetSyncBranch": "WTXUI-Component-Update",
+  "targetPath": "Lib/WinTwin.XUI",
+  "excludedFiles": [
+    ".gitignore"
+  ],
+  "syncedBy": "GitHub Actions",
+  "workflow": "Sync WinTwin.XUI to WinTwin.Fusion",
+  "workflowRunId": "32780276812",
+  "workflowRunNumber": "2",
+  "syncDate": "2026-08-24T21:35:27Z"
+}
