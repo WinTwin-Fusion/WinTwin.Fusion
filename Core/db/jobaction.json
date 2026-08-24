@@ -17,7 +17,6 @@
             "uupdname": "win11_pro_en-us_amd64_25H2_retail.zip",
             "finished": true
         },
-        "action-id": "uupd-catch",
         "created":   "21.08.2026 ; 10:17:44",
         "jobdone":   "21.08.2026 ; 10:19:55",
         "finished":  true,
@@ -25,7 +24,6 @@
     },
 
     "uupd-compose": {
-        "action-id": "uupd-compose",
         "zipfile":  "C:\\WinTwin.Fusion\\UUPD\\win11_pro_en-us_amd64_25H2_retail.zip",
         "isopath":  "C:\\WinTwin.Fusion\\UUPD",
         "isoname":  "Windows11-25H2-PRO-EN-US-AMD64-WINTWIN-EDITION.iso",
@@ -36,7 +34,6 @@
     },
 
     "uupd-isodump": {
-        "action-id": "uupd-isodump",
         "isofile": "C:\\WinTwin.Fusion\\UUPD\\Windows11-25H2-PRO-EN-US-AMD64-WINTWIN-EDITION.iso",
         "output":  "C:\\WinTwin.Fusion\\RawISO",
         "wimonly": true,
@@ -47,7 +44,6 @@
     },
     
     "wim-mount": {
-        "action-id": "wim-mount",
         "path":    "C:\\WinTwin.Fusion\\Mount",
         "imgfile": "C:\\WinTwin.Fusion\\RawISO\\install.wim",
         "index":   "1",
@@ -68,7 +64,6 @@
     },
     
     "eject": {
-        "action-id": "wim-eject",
         "path":    "C:\\WinTwin.Fusion\\Mount",
         "imgfile": "C:\\WinTwin.Fusion\\RawISO\\install.wim",
         "index":   "1",
