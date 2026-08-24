@@ -1,0 +1,619 @@
+name: Sync USMT.Composer to WinTwin.Fusion
+
+# =============================================================================
+# Workflow: Sync USMT.Composer to WinTwin.Fusion
+# =============================================================================
+#
+# Zweck:
+#   Dieser Workflow synchronisiert nach einem Pull-Request-Merge in die main-
+#   Branch des Komponenten-Repositories WinTwin-Fusion/USMT.Composer alle Dateien
+#   in das Framework-Repository WinTwin-Fusion/WinTwin.Fusion.
+#
+# Quelle:
+#   Repository: WinTwin-Fusion/USMT.Composer
+#   Branch:     main
+#
+# Ziel:
+#   Repository: WinTwin-Fusion/WinTwin.Fusion
+#   Branch:     USMTC-Component-Update
+#   Zielpfad:   ./USMT.Composer
+#
+# Ausgeschlossen vom Sync:
+#   - .git
+#   - .gitignore
+#
+# Zusätzlich:
+#   - erzeugt .usmtc-sync.json im Zielordner
+#   - erzeugt dynamischen Commit-Body aus Template
+#   - listet tatsächlich geänderte Dateien im Commit-Body auf
+#   - pusht nach USMTC-Component-Update
+#   - erstellt oder aktualisiert automatisch einen Pull Request nach main
+#
+# Benötigtes Repository Secret im USMT.Composer Repository:
+#   FRAMEWORK_SYNC_TOKEN
+#
+# Benötigte Rechte des Tokens auf WinTwin-Fusion/WinTwin.Fusion:
+#   Contents:      Read and write
+#   Pull requests: Read and write
+#
+# =============================================================================
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
+
+# =============================================================================
+# Globale Workflow-Konfiguration
+# =============================================================================
+
+env:
+  # Name der Komponente.
+  COMPONENT_NAME: USMT.Composer
+
+  # Source-Repository: Hier liegt der führende Komponenten-Code.
+  SOURCE_REPOSITORY: WinTwin-Fusion/USMT.Composer
+  SOURCE_BRANCH: main
+
+  # Target-Repository: Hier soll die Komponente in ein Unterverzeichnis
+  # synchronisiert werden.
+  TARGET_REPOSITORY: WinTwin-Fusion/WinTwin.Fusion
+  TARGET_BASE_BRANCH: main
+  TARGET_SYNC_BRANCH: USMTC-Component-Update
+  TARGET_PATH: USMT.Composer
+
+  # Template-Dateien im Source-Repository.
+  COMMIT_TITLE_TEMPLATE: .github/sync-templates/usmtc-commit-title.txt
+  COMMIT_BODY_TEMPLATE: .github/sync-templates/usmtc-commit-body.md
+
+# =============================================================================
+# Minimale Rechte für den Standard-GITHUB_TOKEN im Source-Repository.
+#
+# Wichtig:
+#   Für den Cross-Repo-Push und das Erstellen des Pull Requests im Zielrepository
+#   wird NICHT dieser Token verwendet, sondern secrets.FRAMEWORK_SYNC_TOKEN.
+# =============================================================================
+
+permissions:
+  contents: read
+  pull-requests: read
+
+# =============================================================================
+# Concurrency
+#
+# Verhindert, dass mehrere USMTC-Syncs gleichzeitig dieselbe Zielbranch verändern.
+# =============================================================================
+
+concurrency:
+  group: usmtc-component-update-sync
+  cancel-in-progress: false
+
+jobs:
+  sync-usmtc-to-framework:
+    name: Sync USMT.Composer into WinTwin.Fusion
+
+    runs-on: ubuntu-latest
+
+    # -------------------------------------------------------------------------
+    # Der Workflow soll nur laufen, wenn der geschlossene Pull Request wirklich
+    # gemerged wurde.
+    #
+    # Wenn ein Pull Request nur geschlossen, aber nicht gemerged wurde, wird der
+    # Job übersprungen.
+    # -------------------------------------------------------------------------
+    if: github.event.pull_request.merged == true
+
+    steps:
+      # -----------------------------------------------------------------------
+      # 1. Source-Repository auschecken
+      #
+      # Dieses Repository ist WinTwin-Fusion/USMT.Composer.
+      #
+      # Wichtig:
+      #   Wir checken bewusst main aus, damit exakt der Stand synchronisiert wird,
+      #   der nach dem Merge tatsächlich auf main liegt.
+      #
+      # Lokaler Pfad im Actions-Runner:
+      #   ./source
+      # -----------------------------------------------------------------------
+
+      - name: Checkout source repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.SOURCE_REPOSITORY }}
+          ref: ${{ env.SOURCE_BRANCH }}
+          path: source
+          fetch-depth: 0
+
+      # -----------------------------------------------------------------------
+      # 2. Tatsächlichen Source-Commit ermitteln
+      #
+      # Bei pull_request Events kann GITHUB_SHA je nach Kontext verwirrend sein.
+      # Deshalb ermitteln wir den tatsächlichen HEAD-Commit von source/main
+      # direkt aus dem ausgecheckten Repository.
+      # -----------------------------------------------------------------------
+
+      - name: Resolve source commit
+        id: source_commit
+        run: |
+          SOURCE_COMMIT="$(git -C source rev-parse HEAD)"
+          SOURCE_COMMIT_SHORT="$(git -C source rev-parse --short HEAD)"
+
+          echo "sha=${SOURCE_COMMIT}" >> "$GITHUB_OUTPUT"
+          echo "short_sha=${SOURCE_COMMIT_SHORT}" >> "$GITHUB_OUTPUT"
+
+      # -----------------------------------------------------------------------
+      # 3. Framework-Repository auschecken
+      #
+      # Dieses Repository ist WinTwin-Fusion/WinTwin.Fusion.
+      #
+      # Lokaler Pfad im Actions-Runner:
+      #   ./framework
+      #
+      # Das bedeutet:
+      #   ./framework
+      # entspricht:
+      #   https://github.com/WinTwin-Fusion/WinTwin.Fusion
+      #
+      # Später entspricht:
+      #   ./framework/USMT.Composer
+      # dem Zielordner:
+      #   WinTwin.Fusion/USMT.Composer
+      # -----------------------------------------------------------------------
+
+      - name: Checkout WinTwin.Fusion repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.TARGET_REPOSITORY }}
+          ref: ${{ env.TARGET_BASE_BRANCH }}
+          token: ${{ secrets.WINTWIN_FUSION_COMPONENT_SYNC }}
+          path: framework
+          fetch-depth: 0
+
+      # -----------------------------------------------------------------------
+      # 4. Git-Identität konfigurieren
+      #
+      # Diese Angaben erscheinen später im Commit des Zielrepositories.
+      # -----------------------------------------------------------------------
+
+      - name: Configure Git identity
+        run: |
+          git config --global user.name "WinTwin Fusion Framework Bot"
+          git config --global user.email "wintwin.fusion.framework@actions.github.com"
+
+      # -----------------------------------------------------------------------
+      # 5. Zielbranch vorbereiten
+      #
+      # Strategie:
+      #   Die Branch USMTC-Component-Update wird immer frisch auf Basis von
+      #   origin/main des Framework-Repositories aufgebaut.
+      #
+      # Vorteil:
+      #   Die Branch bleibt eine reine Automations-Branch.
+      #
+      # Wichtig:
+      #   Manuelle Änderungen auf USMTC-Component-Update sollten vermieden werden,
+      #   da diese Branch vom Workflow aktualisiert wird.
+      # -----------------------------------------------------------------------
+
+      - name: Prepare target update branch
+        working-directory: framework
+        run: |
+          git fetch origin "${TARGET_BASE_BRANCH}"
+
+          git checkout -B "${TARGET_SYNC_BRANCH}" "origin/${TARGET_BASE_BRANCH}"
+
+      # -----------------------------------------------------------------------
+      # 6. Zielordner im Framework vorbereiten
+      #
+      # Ziel:
+      #   ./framework/USMT.Composer
+      #
+      # Falls dieser Ordner noch nicht existiert, wird er erstellt.
+      # Falls er existiert, wird er vollständig entfernt und anschließend neu
+      # aus dem Source-Repository aufgebaut.
+      #
+      # Dadurch werden auch Dateien im Ziel entfernt, die in USMT.Composer/main
+      # gelöscht wurden.
+      # -----------------------------------------------------------------------
+
+      - name: Prepare target component directory
+        run: |
+          TARGET_DIRECTORY="framework/${TARGET_PATH}"
+
+          echo "Preparing target directory: ${TARGET_DIRECTORY}"
+
+          rm -rf "${TARGET_DIRECTORY}"
+          mkdir -p "${TARGET_DIRECTORY}"
+
+      # -----------------------------------------------------------------------
+      # 7. Dateien aus USMT.Composer nach WinTwin.Fusion/USMT.Composer synchronisieren
+      #
+      # Quelle:
+      #   ./source/
+      #
+      # Ziel:
+      #   ./framework/USMT.Composer/
+      #
+      # Ausnahmen:
+      #   .git
+      #   .gitignore
+      #   ducc.wm.changelog.md
+      #
+      # Hinweis:
+      #   .github wird absichtlich NICHT ausgeschlossen, weil du ausdrücklich
+      #   "alle Dateien außer ..." genannt hast.
+      # -----------------------------------------------------------------------
+
+      - name: Synchronize component files
+        run: |
+          rsync -av \
+            --exclude=".git" \
+            --exclude=".github  " \
+            --exclude=".gitignore" \
+            source/ \
+            "framework/${TARGET_PATH}/"
+
+      # -----------------------------------------------------------------------
+      # 8. Sync-Metadaten-Datei erzeugen
+      #
+      # Datei:
+      #   ./framework/USMT.Composer/.usmtc-sync.json
+      #
+      # Bedeutung:
+      #   Diese Datei landet nach Commit und Push im Zielrepository unter:
+      #
+      #   WinTwin-Fusion/WinTwin.Fusion
+      #   └── USMT.Composer
+      #       └── .usmtc-sync.json
+      #
+      # Der Ordner framework/USMT.Composer existiert zu diesem Zeitpunkt garantiert,
+      # weil er in Schritt 6 per mkdir -p erstellt wurde.
+      # -----------------------------------------------------------------------
+
+      - name: Create sync metadata file
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_MERGED_BY: ${{ github.event.pull_request.merged_by.login }}
+          PR_MERGED_AT: ${{ github.event.pull_request.merged_at }}
+          SOURCE_COMMIT: ${{ steps.source_commit.outputs.sha }}
+          SOURCE_COMMIT_SHORT: ${{ steps.source_commit.outputs.short_sha }}
+        run: |
+          python <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          from datetime import datetime, timezone
+
+          target_path = Path("framework") / os.environ["TARGET_PATH"]
+          target_path.mkdir(parents=True, exist_ok=True)
+
+          metadata = {
+              "component": os.environ["COMPONENT_NAME"],
+              "sourceRepository": os.environ["SOURCE_REPOSITORY"],
+              "sourceBranch": os.environ["SOURCE_BRANCH"],
+              "sourceCommit": os.environ["SOURCE_COMMIT"],
+              "sourceCommitShort": os.environ["SOURCE_COMMIT_SHORT"],
+              "sourcePullRequest": {
+                  "number": int(os.environ["PR_NUMBER"]),
+                  "title": os.environ["PR_TITLE"],
+                  "mergedBy": os.environ["PR_MERGED_BY"],
+                  "mergedAt": os.environ["PR_MERGED_AT"]
+              },
+              "targetRepository": os.environ["TARGET_REPOSITORY"],
+              "targetBaseBranch": os.environ["TARGET_BASE_BRANCH"],
+              "targetSyncBranch": os.environ["TARGET_SYNC_BRANCH"],
+              "targetPath": os.environ["TARGET_PATH"],
+              "excludedFiles": [
+                  ".gitignore"
+              ],
+              "syncedBy": "GitHub Actions",
+              "workflow": os.environ["GITHUB_WORKFLOW"],
+              "workflowRunId": os.environ["GITHUB_RUN_ID"],
+              "workflowRunNumber": os.environ["GITHUB_RUN_NUMBER"],
+              "syncDate": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+          }
+
+          metadata_file = target_path / ".usmtc-sync.json"
+          metadata_file.write_text(
+              json.dumps(metadata, indent=2, ensure_ascii=False) + "\n",
+              encoding="utf-8"
+          )
+
+          print(f"Metadata written to: {metadata_file}")
+          PY
+
+      # -----------------------------------------------------------------------
+      # 9. Änderungen vormerken und Dateiliste erzeugen
+      #
+      # In diesem Schritt wird:
+      #   - der Zielordner USMT.Composer dem Git-Index hinzugefügt
+      #   - geprüft, ob überhaupt Änderungen vorhanden sind
+      #   - eine Markdown-Liste der tatsächlich geänderten Dateien erzeugt
+      #
+      # Die Datei:
+      #   ./framework/.sync_changed_files.md
+      #
+      # wird nur temporär im Actions-Runner verwendet und nicht committet.
+      # -----------------------------------------------------------------------
+
+      - name: Stage changes and generate changed file summary
+        id: changes
+        working-directory: framework
+        run: |
+          git add "${TARGET_PATH}" -f
+
+          if git diff --cached --quiet; then
+            echo "No changes detected after synchronisation."
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "has_changes=true" >> "$GITHUB_OUTPUT"
+
+          python <<'PY'
+          import subprocess
+          from pathlib import Path
+
+          result = subprocess.run(
+              ["git", "diff", "--cached", "--name-status"],
+              check=True,
+              text=True,
+              capture_output=True
+          )
+
+          added = []
+          modified = []
+          deleted = []
+          renamed = []
+          other = []
+
+          for line in result.stdout.splitlines():
+              if not line.strip():
+                  continue
+
+              parts = line.split("\t")
+              status = parts[0]
+
+              if status.startswith("R") and len(parts) >= 3:
+                  renamed.append(f"- {parts[1]} → {parts[2]}")
+                  continue
+
+              file_path = parts[-1]
+
+              if status == "A":
+                  added.append(f"- {file_path}")
+              elif status == "M":
+                  modified.append(f"- {file_path}")
+              elif status == "D":
+                  deleted.append(f"- {file_path}")
+              else:
+                  other.append(f"- {status} {file_path}")
+
+          def section(title, items):
+              if items:
+                  return f"### {title}\n\n" + "\n".join(items) + "\n"
+              return f"### {title}\n\n_None_\n"
+
+          markdown = "\n".join([
+              section("Added", added),
+              section("Modified", modified),
+              section("Deleted", deleted),
+              section("Renamed", renamed),
+              section("Other", other),
+          ])
+
+          Path(".sync_changed_files.md").write_text(markdown, encoding="utf-8")
+          print(markdown)
+          PY
+
+      # -----------------------------------------------------------------------
+      # 10. Commit- und PR-Templates rendern
+      #
+      # Es werden die Template-Dateien aus dem Source-Repository verwendet:
+      #
+      #   source/.github/sync-templates/usmtc-commit-title.txt
+      #   source/.github/sync-templates/usmtc-commit-body.md
+      #
+      # Unterstützte Platzhalter:
+      #   ${COMPONENT_NAME}
+      #   ${SOURCE_REPOSITORY}
+      #   ${SOURCE_BRANCH}
+      #   ${SOURCE_COMMIT}
+      #   ${SOURCE_COMMIT_SHORT}
+      #   ${TARGET_REPOSITORY}
+      #   ${TARGET_BRANCH}
+      #   ${TARGET_BASE_BRANCH}
+      #   ${TARGET_PATH}
+      #   ${PR_NUMBER}
+      #   ${PR_TITLE}
+      #   ${MERGED_BY}
+      #   ${MERGED_AT}
+      #   ${CHANGED_FILES}
+      #   ${RUN_ID}
+      #   ${RUN_NUMBER}
+      #   ${CURRENT_DATE}
+      #
+      # Ergebnisdateien im Framework-Arbeitsverzeichnis:
+      #   .sync_commit_title.txt
+      #   .sync_commit_body.md
+      #   .sync_commit_message.txt
+      #   .sync_pr_title.txt
+      #   .sync_pr_body.md
+      #
+      # Diese Dateien sind temporär und werden nicht committet.
+      # -----------------------------------------------------------------------
+
+      - name: Render commit and pull request templates
+        if: steps.changes.outputs.has_changes == 'true'
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_MERGED_BY: ${{ github.event.pull_request.merged_by.login }}
+          PR_MERGED_AT: ${{ github.event.pull_request.merged_at }}
+          SOURCE_COMMIT: ${{ steps.source_commit.outputs.sha }}
+          SOURCE_COMMIT_SHORT: ${{ steps.source_commit.outputs.short_sha }}
+        run: |
+          python <<'PY'
+          import os
+          from pathlib import Path
+          from datetime import datetime, timezone
+
+          title_template_path = Path("source") / os.environ["COMMIT_TITLE_TEMPLATE"]
+          body_template_path = Path("source") / os.environ["COMMIT_BODY_TEMPLATE"]
+          changed_files_path = Path("framework") / ".sync_changed_files.md"
+
+          title_template = title_template_path.read_text(encoding="utf-8")
+          body_template = body_template_path.read_text(encoding="utf-8")
+          changed_files = changed_files_path.read_text(encoding="utf-8")
+
+          values = {
+              "COMPONENT_NAME": os.environ["COMPONENT_NAME"],
+              "SOURCE_REPOSITORY": os.environ["SOURCE_REPOSITORY"],
+              "SOURCE_BRANCH": os.environ["SOURCE_BRANCH"],
+              "SOURCE_COMMIT": os.environ["SOURCE_COMMIT"],
+              "SOURCE_COMMIT_SHORT": os.environ["SOURCE_COMMIT_SHORT"],
+              "TARGET_REPOSITORY": os.environ["TARGET_REPOSITORY"],
+              "TARGET_BRANCH": os.environ["TARGET_SYNC_BRANCH"],
+              "TARGET_BASE_BRANCH": os.environ["TARGET_BASE_BRANCH"],
+              "TARGET_PATH": os.environ["TARGET_PATH"],
+              "PR_NUMBER": os.environ["PR_NUMBER"],
+              "PR_TITLE": os.environ["PR_TITLE"],
+              "MERGED_BY": os.environ["PR_MERGED_BY"],
+              "MERGED_AT": os.environ["PR_MERGED_AT"],
+              "CHANGED_FILES": changed_files,
+              "RUN_ID": os.environ["GITHUB_RUN_ID"],
+              "RUN_NUMBER": os.environ["GITHUB_RUN_NUMBER"],
+              "CURRENT_DATE": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
+          }
+
+          def render(template: str) -> str:
+              rendered = template
+              for key, value in values.items():
+                  rendered = rendered.replace("${" + key + "}", str(value))
+              return rendered.strip() + "\n"
+
+          commit_title = render(title_template).strip()
+          commit_body = render(body_template)
+
+          pr_title = f"Sync USMT.Composer component update from {values['SOURCE_COMMIT_SHORT']}"
+          pr_body = commit_body
+
+          framework_dir = Path("framework")
+
+          (framework_dir / ".sync_commit_title.txt").write_text(commit_title + "\n", encoding="utf-8")
+          (framework_dir / ".sync_commit_body.md").write_text(commit_body, encoding="utf-8")
+          (framework_dir / ".sync_pr_title.txt").write_text(pr_title + "\n", encoding="utf-8")
+          (framework_dir / ".sync_pr_body.md").write_text(pr_body, encoding="utf-8")
+
+          commit_message = commit_title + "\n\n" + commit_body
+          (framework_dir / ".sync_commit_message.txt").write_text(commit_message, encoding="utf-8")
+
+          print("Commit title:")
+          print(commit_title)
+          print("")
+          print("Commit body:")
+          print(commit_body)
+          PY
+
+      # -----------------------------------------------------------------------
+      # 11. Commit im Framework-Repository erzeugen
+      #
+      # Es werden nur Änderungen unter TARGET_PATH, also USMT.Composer, committet.
+      # Die temporären .sync_* Dateien bleiben untracked und werden nicht Teil
+      # des Commits.
+      # -----------------------------------------------------------------------
+
+      - name: Create sync commit
+        if: steps.changes.outputs.has_changes == 'true'
+        working-directory: framework
+        run: |
+          git commit -F ".sync_commit_message.txt"
+
+      # -----------------------------------------------------------------------
+      # 12. Update-Branch in das Framework-Repository pushen
+      #
+      # Ziel:
+      #   WinTwin-Fusion/WinTwin.Fusion
+      #   Branch: USMTC-Component-Update
+      #
+      # Da die Branch bewusst eine Automations-Branch ist, wird sie mit
+      # --force-with-lease aktualisiert. Das ist sicherer als --force, weil Git
+      # prüft, ob sich der Remote-Zweig unerwartet verändert hat.
+      # -----------------------------------------------------------------------
+
+      - name: Push update branch
+        if: steps.changes.outputs.has_changes == 'true'
+        working-directory: framework
+        run: |
+          git push origin "HEAD:${TARGET_SYNC_BRANCH}" --force-with-lease
+
+      # -----------------------------------------------------------------------
+      # 13. Pull Request erstellen oder aktualisieren
+      #
+      # Der Workflow erstellt automatisch einen Pull Request:
+      #
+      #   USMTC-Component-Update → main
+      #
+      # Falls bereits ein offener Pull Request für diese Branch existiert, wird
+      # kein zweiter PR erstellt. Stattdessen wird der existierende PR mit dem
+      # aktuellen Titel und Body aktualisiert.
+      #
+      # Wichtig:
+      #   Dafür braucht FRAMEWORK_SYNC_TOKEN zusätzlich:
+      #   Pull requests: Read and write
+      # -----------------------------------------------------------------------
+
+      - name: Create or update pull request
+        if: steps.changes.outputs.has_changes == 'true'
+        working-directory: framework
+        env:
+          GH_TOKEN: ${{ secrets.WINTWIN_FUSION_COMPONENT_SYNC }}
+        run: |
+          PR_TITLE="$(cat .sync_pr_title.txt)"
+
+          EXISTING_PR_NUMBER="$(
+            gh pr list \
+              --repo "${TARGET_REPOSITORY}" \
+              --head "WinTwin-Fusion:${TARGET_SYNC_BRANCH}" \
+              --base "${TARGET_BASE_BRANCH}" \
+              --state open \
+              --json number \
+              --jq '.[0].number'
+          )"
+
+          if [ -n "${EXISTING_PR_NUMBER}" ]; then
+            echo "Existing pull request found: #${EXISTING_PR_NUMBER}"
+            echo "Updating pull request."
+
+            gh pr edit "${EXISTING_PR_NUMBER}" \
+              --repo "${TARGET_REPOSITORY}" \
+              --title "${PR_TITLE}" \
+              --body-file ".sync_pr_body.md"
+          else
+            echo "No existing pull request found."
+            echo "Creating new pull request."
+
+            gh pr create \
+              --repo "${TARGET_REPOSITORY}" \
+              --base "${TARGET_BASE_BRANCH}" \
+              --head "${TARGET_SYNC_BRANCH}" \
+              --title "${PR_TITLE}" \
+              --body-file ".sync_pr_body.md"
+          fi
+
+      # -----------------------------------------------------------------------
+      # 14. Abschlussmeldung bei fehlenden Änderungen
+      #
+      # Wenn sich durch den Sync keine Änderungen ergeben haben, wird weder ein
+      # Commit erzeugt noch eine Branch gepusht noch ein Pull Request erstellt.
+      # -----------------------------------------------------------------------
+
+      - name: No changes summary
+        if: steps.changes.outputs.has_changes == 'false'
+        run: |
+          echo "No changes were detected in ${TARGET_REPOSITORY}/${TARGET_PATH}."
+          echo "No commit, no push and no pull request were created."
