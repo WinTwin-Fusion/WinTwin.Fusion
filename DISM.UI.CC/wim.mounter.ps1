@@ -298,8 +298,16 @@ function Clear-FieldError {
     $TextBox.BorderBrush = $normalBorder
 }
 
+#$btnClose.Add_Click({ $window.Close() })
+#$titleBarPanel.Add_MouseLeftButtonDown({ param($senderObj, $eventArgs) $window.DragMove() })
+
 $btnClose.Add_Click({ $window.Close() })
-$titleBarPanel.Add_MouseLeftButtonDown({ param($senderObj, $eventArgs) $window.DragMove() })
+$titleBarPanel.Add_MouseLeftButtonDown({
+    param($senderObj, $mouseEventArgs)
+    $window.DragMove()
+})
+
+
 
 $btnOpenImage.Add_Click({
     Clear-FieldError -TextBox $txtImageFile
@@ -436,12 +444,13 @@ exit 0
 
         # Launch the WTF.Console Process
         # Typical wim.mounter hand-off after the tool has cleared process.json:
-        $launch = wtfxLaunchConsole -Script $scriptFile `
-                                    -Mode framework `
-                                    -Action $script:app['jobid'] `
-                                    -Logging $true `
-                                    -Logfile $logFilePath `
-                                    -FrameworkRoot $WinTwin['root']
+        #$launch = wtfxLaunchConsole -Script $scriptFile `
+        wtfxLaunchConsole -Script $scriptFile `
+                          -Mode framework `
+                          -Action $script:app['jobid'] `
+                          -Logging $true `
+                          -Logfile $logFilePath `
+                          -FrameworkRoot $WinTwin['root']
 
         $statusText.Text = $apptxt.status.launchingConsole
         # Close & Exit win.mounter
