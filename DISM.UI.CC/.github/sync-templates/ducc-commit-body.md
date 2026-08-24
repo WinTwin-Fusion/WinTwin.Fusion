@@ -1,19 +1,21 @@
-# DISM.UI.CC Component Synchronization
+# ⚙️ DISM.UI.CC Component Synchronization
 
-## Summary
+## 📋 Summary
 
-This automated update synchronizes the `${COMPONENT_NAME}` component from the source repository into the WinTwin.Fusion framework repository.
+This is an automated WinTwin.Fusion Framework component synchronization.<br>
+Following component was automatically synchronized into the WinTwin.Fusion Framework:<br>
+`${COMPONENT_NAME}` <br>
 
 ---
 
-## Source
+## 📂 Source
 
 Repository: `${SOURCE_REPOSITORY}` <br>
 Branch: `${SOURCE_BRANCH}` <br>
 Commit: `${SOURCE_COMMIT}` <br>
 Short Commit: `${SOURCE_COMMIT_SHORT}` <br>
 
-## Source Pull Request
+## ↖️ Source Pull Request
 
 Pull Request: `#${PR_NUMBER}` <br>
 Title: `${PR_TITLE}` <br>
@@ -21,7 +23,7 @@ Merged By: `${MERGED_BY}` <br>
 Merged At: `${MERGED_AT}` <br>
 
 
-## Target
+## 🎯 Target
 
 Repository: `${TARGET_REPOSITORY}` <br>
 Base Branch: `${TARGET_BASE_BRANCH}` <br>
@@ -30,13 +32,13 @@ Target Path: `${TARGET_PATH}` <br>
 
 ---
 
-## Synchronised Files
+## 🔄️ Synchronised Files
 
 ${CHANGED_FILES}
 
 ---
 
-## Excluded Files
+## 🛑 Excluded Files
 
 The following files were intentionally excluded from the synchronization:
 <!--
@@ -46,9 +48,9 @@ The following files were intentionally excluded from the synchronization:
 
 ---
 
-## Sync Metadata
+## 📝 Sync Metadata
 
 A metadata file was generated at:
 
 ```text
-${TARGET_PATH}/.wintwin-sync.json
+${TARGET_PATH}/.ducc-sync.json
