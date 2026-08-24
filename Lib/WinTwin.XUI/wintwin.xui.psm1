@@ -13,8 +13,8 @@
     → Start using the Module    
 .NOTES
     Creation Date : 23.08.2026
-    Last Update   : 23.08.2026
-    Version       : 1.00.00
+    Last Update   : 24.08.2026
+    Version       : 1.00.01
     Author        : Praetoriani (a.k.a. M.Sczepanski)
     Website       : https://github.com/WinTwin-Fusion/WinTwin.XUI
 
@@ -33,6 +33,15 @@ $script:root = $PSScriptRoot # ← This is the root directory of the module (nee
 
 function LoadCoreConfig () {
 
+    [CmdletBinding()]
+    [OutputType([PSCustomObject])]
+    param(
+        [Parameter(Mandatory = $false)]
+        [AllowEmptyString()]
+        [string]$mode
+    )
+
+    # ... to be continued ...
 }
 
 # ____________________________________________________________________________________________________
