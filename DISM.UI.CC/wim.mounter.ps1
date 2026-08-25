@@ -123,7 +123,7 @@ catch {
 #--------------------------------------------------------------------------------
 # Hide Console Window -> Using Function from WinTwin.FXcore
 #--------------------------------------------------------------------------------
-#wtfxSetCMDstate -State Hide
+wtfxSetCMDstate -State Hide
 
 
 #--------------------------------------------------------------------------------
@@ -310,7 +310,7 @@ $titleBarPanel.Add_MouseLeftButtonDown({
 
 $btnOpenImage.Add_Click({
     Clear-FieldError -TextBox $txtImageFile
-    $filePicker = xuiSelectFile -Title $apptxt.dialogs.fileDialogTitle -Filter $apptxt.dialogs.fileDialogFilterName+"|*.wim"
+    $filePicker = xuiSelectFile -Title $apptxt.dialogs.fileDialogTitle -Filter "$($apptxt.dialogs.fileDialogFilterName)|*.wim"
     if ($filePicker.code -eq 0) { $txtImageFile.Text = $filePicker.data.Path } else { $txtImageFile.Text = "" }
 })
 
@@ -454,6 +454,8 @@ exit 0
         $statusText.Text = $apptxt.status.launchingConsole
         # Close & Exit win.mounter
         $window.Close()
+        wtfxSetCMDstate -State Show
+        exit 0
     }
     catch {
         $btnMount.IsEnabled       = $true
@@ -484,4 +486,5 @@ $window.Add_Loaded({
 })
 
 $window.ShowDialog() | Out-Null
+wtfxSetCMDstate -State Show
 exit 0
