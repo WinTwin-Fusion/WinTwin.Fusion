@@ -94,7 +94,8 @@ if ([string]::IsNullOrWhiteSpace($Language)) {
     $Language = $script:rootcfg.appconfig.defaultlanguage
 }
 
-Write-Host "DEBUGGING INFORMATION:\n» "+$WinTwin['console']
+Write-Host "DEBUGGING INFORMATION: "`n$script:rootcfg.path.root
+Write-Host "DEBUGGING INFORMATION: "`n$WinTwin['console']
 
 #--------------------------------------------------------------------------------
 # Try to load required Libraries from the WinTwin.Fusion Framework
@@ -125,14 +126,12 @@ catch {
 #--------------------------------------------------------------------------------
 # Hide Console Window -> Using Function from WinTwin.FXcore
 #--------------------------------------------------------------------------------
-wtfxSetCMDstate -State Hide
+#wtfxSetCMDstate -State Hide
 
 
 #--------------------------------------------------------------------------------
 # Time to load the other JSON Config files (using Functions from WinTwin.FXcore)
 #--------------------------------------------------------------------------------
-
-Write-Host "DEBUGGING INFORMATION:\n» "+$script:app['jobaxnConf']
 
 $result = wtfxLoadJSON -Path $script:app['jobaxnConf']
 if ($result.code -eq 0) { $script:jobconf = $result.data }
