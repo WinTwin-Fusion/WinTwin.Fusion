@@ -5,7 +5,7 @@
         "devname":      "praetoriani",
         "website":      "https://github.com/praetoriani/WinTwin.Fusion",
         "datecreate":   "18.08.2026",
-        "dateupdate":   "20.08.2026"
+        "dateupdate":   "25.08.2026"
     },
 
     "appconfig": {
@@ -13,9 +13,9 @@
     },
 
     "path": {
-        "root":        "C:\\WinISO",
+        "root":        "C:\\WinTwin.Fusion",
+        "lib":         "\\Lib",
         "lang":        "\\Core\\lang",
-        "lib":         "\\Core\\lib",
         "logs":        "\\Core\\logs",
         "appui":       "\\Core\\ui",
         "fonts":       "\\Core\\fonts",
