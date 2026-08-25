@@ -100,7 +100,7 @@ function xuiSelectFile {
     $owner  = $null
     $dialog = $null
     try {
-        $owner  = Get-XuiDialogOwner
+        $owner  = xui-GetDialogOwner
         $dialog = New-Object System.Windows.Forms.OpenFileDialog
         $dialog.Title            = $(if ([string]::IsNullOrWhiteSpace($Title)) { 'Select a file' } else { $Title })
         $dialog.Filter           = $resolvedFilter

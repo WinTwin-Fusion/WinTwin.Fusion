@@ -71,7 +71,7 @@ function xuiSelectFolder {
     $owner  = $null
     $dialog = $null
     try {
-        $owner  = Get-XuiDialogOwner
+        $owner  = xui-GetDialogOwner
         $dialog = New-Object System.Windows.Forms.FolderBrowserDialog
         $dialog.Description         = $(if ([string]::IsNullOrWhiteSpace($Title)) { 'Select a folder' } else { $Title })
         $dialog.ShowNewFolderButton = $ShowNewFolderButton
