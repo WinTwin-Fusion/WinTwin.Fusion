@@ -42,7 +42,7 @@ $script:app = @{
     jobid      = "wim-mount"
     configRoot = "..\core\config.json"
     jobaxnConf = "..\core\db\jobaction.json"
-    configTool = Join-Path $global:approot "config.json"
+    configTool = Join-Path $global:approot "dism.config.json"
 #    fxfile     = ""
 #    fxpath     = ""
 #    xuifile    = ""
@@ -51,7 +51,6 @@ $script:app = @{
 #    lngfile    = ""
 #    lngpath    = ""
 }
-
 
 #--------------------------------------------------------------------------------
 # Pre-Load the config.json from the WinTwin.Fusion Framework
@@ -65,7 +64,7 @@ $script:app = @{
 
 # 1st Step: We're going to check that the file exists
 if (-not (Test-Path -LiteralPath $script:app['configRoot'])) {
-    Write-Error "ducc.wim.mounter: Configuration file not found: $script:app['configRoot']"
+    Write-Error "ducc.wim.mounter: Configuration file not found:`n$($script:app['configRoot'])"
     exit 1
 }
 
@@ -74,7 +73,7 @@ try {
     $script:rootcfg = Get-Content -LiteralPath $script:app['configRoot'] -Raw | ConvertFrom-Json -ErrorAction Stop
 }
 catch {
-    Write-Error "ducc.wim.mounter: Failed to parse "+$script:app['configRoot']+"\n$($_.Exception.Message)"
+    Write-Error "ducc.wim.mounter: Failed to parse $($script:app['configRoot'])\n$($_.Exception.Message)"
     exit 1
 }
 
@@ -94,9 +93,6 @@ if ([string]::IsNullOrWhiteSpace($Language)) {
     $Language = $script:rootcfg.appconfig.defaultlanguage
 }
 
-Write-Host "DEBUGGING INFORMATION: "`n$script:rootcfg.path.root
-Write-Host "DEBUGGING INFORMATION: "`n$WinTwin['console']
-
 #--------------------------------------------------------------------------------
 # Try to load required Libraries from the WinTwin.Fusion Framework
 #--------------------------------------------------------------------------------
@@ -107,7 +103,7 @@ $script:LibWTXUI = Join-Path $WinTwin['lib'] $script:rootcfg.lib.WinTwinXUI
 
 foreach ($requiredModulePath in @($script:LibOPSR, $script:LibPSACL, $script:LibWTFXC)) {
     if (-not (Test-Path -LiteralPath $requiredModulePath -PathType Leaf)) {
-        Write-Error "ducc.wim.mounter: Required module manifest not found:`n$requiredModulePath"
+        Write-Error "ducc.wim.mounter: Required module manifest not found:`n$($requiredModulePath)"
         exit 1
     }
 }
@@ -116,6 +112,7 @@ try {
     Import-Module $script:LibOPSR -Force -ErrorAction Stop
     Import-Module $script:LibPSACL -Force -ErrorAction Stop
     Import-Module $script:LibWTFXC -Force -ErrorAction Stop
+    Import-Module $script:LibWTXUI -Force -ErrorAction Stop
 }
 catch {
     Write-Error "ducc.wim.mounter: Failed to import required framework modules.`n$($_.Exception.Message)"
@@ -132,35 +129,33 @@ catch {
 #--------------------------------------------------------------------------------
 # Time to load the other JSON Config files (using Functions from WinTwin.FXcore)
 #--------------------------------------------------------------------------------
-
 $result = wtfxLoadJSON -Path $script:app['jobaxnConf']
 if ($result.code -eq 0) { $script:jobconf = $result.data }
 else {
-    Write-Error "ducc.wim.mounter: "+$return.message
+    Write-Error "ducc.wim.mounter: $($result.message)"
     exit 1
 }
 
 $result = wtfxLoadJSON -Path $script:app['configTool']
 if ($result.code -eq 0) { $script:toolcfg = $result.data }
 else {
-    Write-Error "ducc.wim.mounter: "+$return.message
+    Write-Error "ducc.wim.mounter: $($result.message)"
     exit 1
 }
-
 
 #--------------------------------------------------------------------------------
 # With the content from the JSON-Files, we have to configure some more vars
 #--------------------------------------------------------------------------------
 # Get the real action-id from the internal dism.config.json
-$Script:app['jobid']  = $script:toolcfg.apptool."action-id"
+$Script:app['jobid']  = $($script:toolcfg.apptool."wim-mount"."action-id")
 # wim-mount-internal function library
-$script:app['fxfile']  = $script:app['jobid']+".fx.ps1"
+$script:app['fxfile']  = "$($script:app['jobid']).fx.ps1"
 $script:app['fxpath']  = Join-Path $global:approot $script:app['fxfile']
 # wim-mount XML-UI File
-$script:app['xuifile'] = $script:app['jobid']+".main.xml"
-$script:app['xuipath'] = Join-Path $WinTwin['xmlui'] $script:app['fxfile']
+$script:app['xuifile'] = "$($script:app['jobid']).main.xml"
+$script:app['xuipath'] = Join-Path "$($WinTwin['xmlui'])" "$($script:app['xuifile'])"
 # wim-mount Language File
-$script:app['lngfile'] = $Script:app['jobid']+"."+$Language+".json"
+$script:app['lngfile'] = "$($Script:app['jobid']).$($Language).json"
 $script:app['lngpath'] = Join-Path $WinTwin['lang'] $script:app['lngfile']
 
 $script:app['wimIndex'] = [int]$script:jobconf."wim-mount".index
@@ -168,19 +163,20 @@ $script:app['wimIndex'] = [int]$script:jobconf."wim-mount".index
 
 #--------------------------------------------------------------------------------
 # Try to load the wim-mounter-internal function library
+# → DEPRECATED. WE DON'T NEET wim.mounter.fx.ps1 ANYMORE!
+#   ALL FUNCTIONS WERE MIGRATED TO THE FRAMEWORK LIBRARIES
 #--------------------------------------------------------------------------------
-if (-not (Test-Path -LiteralPath $script:app['fxpath'])) {
-    Write-Error "ducc.wim.mounter: Function library directory not found:\n"+$script:app['fxpath']
-    exit 1
-}
-
-try {
-    . $script:app['fxpath']
-}
-catch {
-    Write-Error "ducc.wim.mounter: Failed to dot-source "+$script:app['fxpath']+"\n$($_.Exception.Message)"
-    exit 1
-}
+#if ([string]::IsNullOrWhiteSpace($fxPath) -or -not (Test-Path -LiteralPath $fxPath -PathType Container)) {
+#    Write-Error "ducc.wim.mounter: Function library directory not found: '$fxPath'"
+#    exit 1
+#}
+#try {
+#    . $script:app['fxpath']
+#}
+#catch {
+#    Write-Error "ducc.wim.mounter: Failed to dot-source $script:app['fxpath']\n$($_.Exception.Message)"
+#    exit 1
+#}
 
 
 #--------------------------------------------------------------------------------
@@ -199,7 +195,7 @@ Add-Type -AssemblyName System.Xml
 $result = wtfxLoadJSON -Path $script:app['lngpath']
 if ($result.code -eq 0) { $apptxt = $result.data }
 else {
-    Write-Error "ducc.wim.mounter: "+$return.message
+    Write-Error "ducc.wim.mounter: $($result.message)"
     exit 1
 }
 
@@ -259,7 +255,7 @@ $btnMount.Content            = $apptxt.buttons.mount
 $btnCancel.Content           = $apptxt.buttons.cancel
 $btnExit.Content             = $apptxt.buttons.exit
 $statusText.Text             = $apptxt.status.ready
-$statusInfo.Text             = $script:toolcfg.appinfo.name+" ("+$script:toolcfg.appinfo.version+")"
+$statusInfo.Text             = "$($script:toolcfg.appinfo.name) ($($script:toolcfg.appinfo.version))"
 
 if (Test-Path -LiteralPath $global:appicon) {
     try {
@@ -359,7 +355,7 @@ $btnMount.Add_Click({
 
     if (-not (Test-Path -LiteralPath $WinTwin['console'] -PathType Leaf)) {
         [System.Windows.MessageBox]::Show(
-            "WTF.Console.ps1 was not found:\n"+$WinTwin['console'],
+            "WTF.Console.ps1 was not found:`n$($WinTwin['console'])",
             'DISM.UI.CC - wim.mounter',
             [System.Windows.MessageBoxButton]::OK,
             [System.Windows.MessageBoxImage]::Error
