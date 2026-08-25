@@ -58,11 +58,11 @@
     },
 
     "lib": {
-        "OPSreturn":     "\\Lib\\OPSreturn\\OPSreturn.psd1",
-        "PSAppCoreLib":  "\\Lib\\PSAppCoreLib\\PSAppCoreLib.psd1",
-        "VPDLX":         "\\Lib\\VPDLX\\VPDLX.psd1",
-        "WinTwinFXcore": "\\Lib\\WinTwin.FXcore\\WinTwin.FXcore.psd1",
-        "WinTwinXUI":    "\\Lib\\WinTwin.XUI\\wintwin.xui.psd1"
+        "OPSreturn":     "\\OPSreturn\\OPSreturn.psd1",
+        "PSAppCoreLib":  "\\PSAppCoreLib\\PSAppCoreLib.psd1",
+        "VPDLX":         "\\VPDLX\\VPDLX.psd1",
+        "WinTwinFXcore": "\\WinTwin.FXcore\\WinTwin.FXcore.psd1",
+        "WinTwinXUI":    "\\WinTwin.XUI\\wintwin.xui.psd1"
     },
 
     "framework": {
