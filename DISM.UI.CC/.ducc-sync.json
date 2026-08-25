@@ -2,13 +2,13 @@
   "component": "DISM.UI.CC",
   "sourceRepository": "WinTwin-Fusion/DISM.UI.CC",
   "sourceBranch": "main",
-  "sourceCommit": "9dc572ae9029492ef0db10f35f0a4133938193d2",
-  "sourceCommitShort": "9dc572a",
+  "sourceCommit": "b145683d986b67570f3b852ecd1e1d5913496581",
+  "sourceCommitShort": "b145683",
   "sourcePullRequest": {
-    "number": 14,
-    "title": "wim.mounter update/fix",
+    "number": 15,
+    "title": "Updated wim.mounter",
     "mergedBy": "praetoriani",
-    "mergedAt": "2026-08-25T14:27:19Z"
+    "mergedAt": "2026-08-25T21:20:35Z"
   },
   "targetRepository": "WinTwin-Fusion/WinTwin.Fusion",
   "targetBaseBranch": "main",
@@ -20,7 +20,7 @@
   ],
   "syncedBy": "GitHub Actions",
   "workflow": "Sync DISM.UI.CC to WinTwin.Fusion",
-  "workflowRunId": "32859600279",
-  "workflowRunNumber": "12",
-  "syncDate": "2026-08-25T14:27:38Z"
+  "workflowRunId": "32900493629",
+  "workflowRunNumber": "13",
+  "syncDate": "2026-08-25T21:20:49Z"
 }
