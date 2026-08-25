@@ -1,4 +1,4 @@
-﻿function GetLatestPowerShellSetup {
+function GetLatestPowerShellSetup {
     <#
     .SYNOPSIS
         Downloads the latest PowerShell release from GitHub and optionally installs it silently.

@@ -1,4 +1,4 @@
-﻿function wtfxWriteLogmsg {
+function wtfxWriteLogmsg {
     <#
     .SYNOPSIS
     Writes messages to a log file with timestamps and severity flags.

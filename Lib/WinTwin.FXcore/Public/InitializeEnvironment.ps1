@@ -1,4 +1,4 @@
-﻿function InitializeEnvironment {
+function InitializeEnvironment {
     <#
     .SYNOPSIS
         InitializeEnvironment - Creates or repairs the WinISO working environment.

@@ -1,4 +1,4 @@
-﻿﻿function LoadRegistryHive {
+﻿function LoadRegistryHive {
     <#
     .SYNOPSIS
         Loads one or all offline registry hives from the mounted WIM image into the

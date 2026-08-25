@@ -1,4 +1,4 @@
-﻿﻿function RegistryHiveAdd {
+﻿function RegistryHiveAdd {
     <#
     .SYNOPSIS
         Adds a new registry key and/or value to a loaded offline registry hive.

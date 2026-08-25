@@ -1,4 +1,4 @@
-﻿﻿function UnloadRegistryHive {
+﻿function UnloadRegistryHive {
     <#
     .SYNOPSIS
         Unloads one or all currently loaded offline registry hives from the live registry.

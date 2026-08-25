@@ -1,4 +1,4 @@
-﻿﻿function RegistryHiveRem {
+﻿function RegistryHiveRem {
     <#
     .SYNOPSIS
         Removes an existing registry key and/or value from a loaded offline registry hive.

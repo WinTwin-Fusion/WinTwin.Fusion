@@ -1,4 +1,4 @@
-﻿﻿function RegistryHiveQuery {
+﻿function RegistryHiveQuery {
     <#
     .SYNOPSIS
         Queries registry keys and/or values from a loaded offline registry hive.
