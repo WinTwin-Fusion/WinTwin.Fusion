@@ -81,12 +81,12 @@ catch {
 # 3rd Step: Assign important values from the global config.json
 $WinTwin = @{
     root    = $script:rootcfg.path.root
-    xmlui   = Join-Path $WinTwin['root'] $script:rootcfg.path.appui
-    lang    = Join-Path $WinTwin['root'] $script:rootcfg.path.lang
-    lib     = Join-Path $WinTwin['root'] $script:rootcfg.path.lib
-    export  = Join-Path $WinTwin['root'] $script:rootcfg.path.export
-    logs    = Join-Path $WinTwin['root'] $script:rootcfg.path.logs
-    console = Join-Path $WinTwin['root'] $script:rootcfg.path.pstools.console
+    xmlui   = Join-Path $script:rootcfg.path.root $script:rootcfg.path.appui
+    lang    = Join-Path $script:rootcfg.path.root $script:rootcfg.path.lang
+    lib     = Join-Path $script:rootcfg.path.root $script:rootcfg.path.lib
+    export  = Join-Path $script:rootcfg.path.root $script:rootcfg.path.export
+    logs    = Join-Path $script:rootcfg.path.root $script:rootcfg.path.logs
+    console = Join-Path $script:rootcfg.path.root $script:rootcfg.path.pstools.console
 }
 
 # 4th Step: Fallback, if no language has been passed through command line
