@@ -1,4 +1,4 @@
-﻿function UnMountWIMimage {
+function UnMountWIMimage {
     <#
     .SYNOPSIS
         Dismounts a currently active WIM image from a DISM mount point.

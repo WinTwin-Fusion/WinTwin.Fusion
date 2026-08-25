@@ -1,4 +1,4 @@
-﻿function CreateUUPDiso {
+function CreateUUPDiso {
     <#
     .SYNOPSIS
         Runs uup_download_windows.cmd and monitors the full ISO creation process.

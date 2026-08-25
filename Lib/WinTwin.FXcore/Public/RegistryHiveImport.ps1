@@ -1,4 +1,4 @@
-﻿﻿function RegistryHiveImport {
+﻿function RegistryHiveImport {
     <#
     .SYNOPSIS
         Imports a validated .reg file into a loaded offline registry hive.

@@ -1,4 +1,4 @@
-﻿﻿function RegistryHiveExport {
+﻿function RegistryHiveExport {
     <#
     .SYNOPSIS
         Exports a registry key branch from a loaded offline hive to a .reg file.

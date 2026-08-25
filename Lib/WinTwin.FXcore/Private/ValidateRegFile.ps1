@@ -1,4 +1,4 @@
-﻿﻿function ValidateRegFile {
+﻿function ValidateRegFile {
     <#
     .SYNOPSIS
         (Private) Validates that a .reg file is syntactically correct and optionally
