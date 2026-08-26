@@ -14,7 +14,7 @@
 RootModule = 'WinTwin.FXcore.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.00.09'
+ModuleVersion = '1.00.10'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Desktop', 'Core')
@@ -70,6 +70,12 @@ FunctionsToExport = @(
         # jobaction.json read/write helpers
         'wtfxGetJobAction',
         'wtfxSetJobAction',
+
+        # process.json read/write helpers (NEU)
+        'wtfxRegisterProcess',
+        'wtfxUnregisterProcess',
+        'wtfxCheckProcess',
+        'wtfxKillProcess',
 
         # WTF.Console helpers
         'wtfxConsoleScript',
@@ -139,6 +145,10 @@ FileList = @(
     'Public\wtfxSystemMessageBox.ps1',
     'Public\wtfxSystemMessageBox.ps1',
     'Public\wtfxGetPSExecutable.ps1',
+    'Public\wtfxRegisterProcess.ps1',
+    'Public\wtfxUnregisterProcess.ps1',
+    'Public\wtfxCheckProcess.ps1',
+    'Public\wtfxKillProcess.ps1',
     'Public\wtfxLoadJSONC.ps1',
     'Public\wtfxWriteJSON.ps1',
     'Public\wtfxGetJobAction.ps1',
@@ -201,6 +211,16 @@ PrivateData = @{
 
         # ReleaseNotes of this module
         ReleaseNotes = @'
+
+
+v1.00.10
+‾‾‾‾‾‾‾‾‾‾
+Added following functions:
+wtfxRegisterProcess       Registers a new process (if possible) inside process.json
+wtfxUnregisterProcess     Unregisters a known and finished process from the processprocess.json
+wtfxCheckProcess          Checks if a process is registered in process.json and validates if the process is running
+wtfxKillProcess           Checks if a process is registered in process.json and kills it (unregisters it afterwards)
+
 v1.00.09
 ‾‾‾‾‾‾‾‾‾‾
 Added following functions:
