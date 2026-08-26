@@ -233,15 +233,15 @@ if ($LogFilePath) {
     }
 }
 
-function Write-WtfLog {
+function global:Write-WtfLog {
     param([string]$Message, [string]$Level = 'Info')
-    if (-not $LogFilePath) { return }
+    if (-not $global:LogFilePath) { return }
     try {
         if (Get-Command -Name 'Write-VpdlxLog' -ErrorAction SilentlyContinue) {
-            Write-VpdlxLog -Path $LogFilePath -Message $Message -Level $Level
+            Write-VpdlxLog -Path $global:LogFilePath -Message $Message -Level $Level
         }
         else {
-            Add-Content -LiteralPath $LogFilePath -Value "[$(Get-Date -Format 'u')] [$Level] $Message"
+            Add-Content -LiteralPath $global:LogFilePath -Value "[$(Get-Date -Format 'u')] [$Level] $Message"
         }
     }
     catch { }
@@ -261,18 +261,18 @@ if (-not (Test-Path -LiteralPath $Paths.UiXaml)) {
 $reader = New-Object System.Xml.XmlNodeReader $xamlDoc
 $Window = [Windows.Markup.XamlReader]::Load($reader)
 
-$TitleBarPanel   = $Window.FindName('TitleBarPanel')
-$TitleBarText    = $Window.FindName('TitleBarText')
-$BtnMinimize     = $Window.FindName('BtnMinimize')
-$BtnMaximize     = $Window.FindName('BtnMaximize')
-$BtnClose        = $Window.FindName('BtnClose')
-$TerminalOutput  = $Window.FindName('TerminalOutput')
-$InputBox        = $Window.FindName('InputBox')
-$LblPrompt       = $Window.FindName('LblPrompt')
-$BtnSend         = $Window.FindName('BtnSend')
-$BtnClear        = $Window.FindName('BtnClear')
-$StatusText      = $Window.FindName('StatusText')
-$StatusInfo      = $Window.FindName('StatusInfo')
+$global:TitleBarPanel   = $Window.FindName('TitleBarPanel')
+$global:TitleBarText    = $Window.FindName('TitleBarText')
+$global:BtnMinimize     = $Window.FindName('BtnMinimize')
+$global:BtnMaximize     = $Window.FindName('BtnMaximize')
+$global:BtnClose        = $Window.FindName('BtnClose')
+$global:TerminalOutput  = $Window.FindName('TerminalOutput')
+$global:InputBox        = $Window.FindName('InputBox')
+$global:LblPrompt       = $Window.FindName('LblPrompt')
+$global:BtnSend         = $Window.FindName('BtnSend')
+$global:BtnClear        = $Window.FindName('BtnClear')
+$global:StatusText      = $Window.FindName('StatusText')
+$global:StatusInfo      = $Window.FindName('StatusInfo')
 
 $Window.Title            = Get-WtfString -Path 'window.title'
 $TitleBarText.Text       = Get-WtfString -Path 'window.title'
@@ -283,7 +283,7 @@ $BtnMinimize.ToolTip     = Get-WtfString -Path 'buttons.minimizeTooltip'
 $BtnMaximize.ToolTip     = Get-WtfString -Path 'buttons.maximizeTooltip'
 $BtnClose.ToolTip        = Get-WtfString -Path 'buttons.closeTooltip'
 $StatusText.Text         = Get-WtfString -Path 'status.ready'
-$appVersion = if ($Config -and $Config.appinfo.version) { $Config.appinfo.version } else { 'v1.00.00' }
+$global:appVersion = if ($Config -and $Config.appinfo.version) { $Config.appinfo.version } else { 'v1.00.00' }
 $StatusInfo.Text         = "WTF.Console $appVersion"
 
 if ($AppMode -eq 'framework') {
@@ -338,9 +338,8 @@ if ($AppMode -eq 'framework' -and $Paths.FrameworkRoot) {
     $ProcessDbPath = Join-Path $Paths.FrameworkRoot 'Core\db\dbprocess.json'
 }
 
-function Test-WtfWatchTriggers {
+function global:Test-WtfWatchTriggers {
     param([string]$Line, [string]$ActionCode)
-
     switch ($ActionCode) {
         'mount' {
             if ($Line -match '(?i)error' -or $Line -match '(?i)failed' -or $Line -match '(?i)fehler') { return 'error' }
@@ -353,29 +352,6 @@ function Test-WtfWatchTriggers {
             if ($Line -match '(?i)^100%|completed successfully') { return 'success' }
             return $null
         }
-    }
-}
-
-function Write-WtfProcessState {
-    param([string]$State, [int]$ExitCode = -1)
-    if (-not $ProcessDbPath) { return }
-    try {
-        $dbDir = Split-Path -Parent $ProcessDbPath
-        if (-not (Test-Path -LiteralPath $dbDir)) {
-            New-Item -ItemType Directory -Path $dbDir -Force | Out-Null
-        }
-        $entry = [ordered]@{
-            action    = $Action
-            script    = $ScriptPath
-            logfile   = $LogFilePath
-            state     = $State
-            exitcode  = $ExitCode
-            timestamp = (Get-Date -Format 'u')
-        }
-        $entry | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath $ProcessDbPath -Encoding UTF8
-    }
-    catch {
-        Write-WtfLog -Message "Failed to update process database: $($_.Exception.Message)" -Level 'Warn'
     }
 }
 
@@ -393,14 +369,38 @@ $Proc = New-Object System.Diagnostics.Process
 $Proc.StartInfo = $psi
 $Proc.EnableRaisingEvents = $true
 
-function Append-TerminalLine {
+function global:Write-WtfProcessState {
+    param([string]$State, [int]$ExitCode = -1)
+    if (-not $global:ProcessDbPath) { return }
+    try {
+        $dbDir = Split-Path -Parent $global:ProcessDbPath
+        if (-not (Test-Path -LiteralPath $dbDir)) {
+            New-Item -ItemType Directory -Path $dbDir -Force | Out-Null
+        }
+        $entry = [ordered]@{
+            action    = $global:Action
+            script    = $ScriptPath
+            logfile   = $global:LogFilePath
+            state     = $State
+            exitcode  = $ExitCode
+            timestamp = (Get-Date -Format 'u')
+        }
+        $entry | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath $global:ProcessDbPath -Encoding UTF8
+    }
+    catch {
+        Write-WtfLog -Message "Failed to update process database: $($_.Exception.Message)" -Level 'Warn'
+    }
+}
+
+function global:Append-TerminalLine {
     param([string]$Text)
-    $Window.Dispatcher.Invoke({
-        $TerminalOutput.AppendText($Text + "`r`n")
-        $TerminalOutput.ScrollToEnd()
+    $global:Window.Dispatcher.Invoke({
+        $global:TerminalOutput.AppendText($Text + "`r`n")
+        $global:TerminalOutput.ScrollToEnd()
     })
 }
 
+# --- Event-Registration: Register-ObjectEvent instead of add_OutputDataReceived ---
 $null = Register-ObjectEvent -InputObject $Proc -EventName 'OutputDataReceived' -Action {
     if ($null -ne $EventArgs.Data) {
         Append-TerminalLine -Text $EventArgs.Data
