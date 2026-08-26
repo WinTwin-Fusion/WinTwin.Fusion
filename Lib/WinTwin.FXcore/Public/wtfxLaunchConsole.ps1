@@ -175,7 +175,8 @@ function wtfxLaunchConsole {
             return (OPSreturn -Code fail -Message "wtfxLaunchConsole failed! Core\\config.json was not found under FrameworkRoot '$resolvedFrameworkRoot'.")
         }
 
-        $configResult = wtfxLoadJSON -JSONfile (Join-Path $resolvedFrameworkRoot 'Core\config.json')
+            
+        $configResult = wtfxLoadJSON -Path (Join-Path $resolvedFrameworkRoot 'Core\config.json')
         if ($configResult.code -ne 0) {
             return (OPSreturn -Code fail -Message "wtfxLaunchConsole failed! Could not load Core\\config.json: $($configResult.msg)" -Exception $configResult.exception)
         }
@@ -211,7 +212,7 @@ function wtfxLaunchConsole {
             $processDbPath = Join-Path $resolvedFrameworkRoot 'Core\db\process.json'
         }
 
-        $processResult = wtfxLoadJSON -JSONfile $processDbPath
+        $processResult = wtfxLoadJSON -Path $processDbPath
         if ($processResult.code -ne 0) {
             return (OPSreturn -Code fail -Message "wtfxLaunchConsole failed! Could not load process.json: $($processResult.msg)" -Exception $processResult.exception)
         }

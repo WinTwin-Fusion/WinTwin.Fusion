@@ -6,7 +6,7 @@ function wtfxGetJobAction {
 
     .DESCRIPTION
     The wtfxGetJobAction function resolves the path to Core\db\jobaction.json via
-    Core\config.json (path.root + path.appdb.actions), loads it with wtfLoadJSON,
+    Core\config.json (path.root + path.appdb.actions), loads it with wtfxLoadJSON,
     and returns either the full node for a given -ActionId (e.g. "wim-mount") or,
     if -Field is also supplied, only that single field's value (e.g. "path" or
     "logfile"). This is the read counterpart to wtfSetJobAction and is the
@@ -37,7 +37,7 @@ function wtfxGetJobAction {
 
     .NOTES
     Part of: WinTwin.FXcore
-    See also: wtfSetJobAction, wtfLoadJSON
+    See also: wtfSetJobAction, wtfxLoadJSON
     #>
 
     [CmdletBinding()]
@@ -63,7 +63,7 @@ function wtfxGetJobAction {
     }
 
     $configPath = Join-Path -Path $FrameworkRoot -ChildPath 'Core\config.json'
-    $configResult = wtfLoadJSON -Path $configPath
+    $configResult = wtfxLoadJSON -Path $configPath
     if ($configResult.code -ne 0) {
         return (OPSreturn -Code -1 -Message "Could not load Core\config.json: $($configResult.msg)" -Exception $configResult.exception)
     }
@@ -83,7 +83,7 @@ function wtfxGetJobAction {
     # relativeActionsPath is stored with a leading backslash, e.g. "\Core\db\jobaction.json"
     $jobActionPath = Join-Path -Path $FrameworkRoot -ChildPath ($relativeActionsPath.TrimStart('\'))
 
-    $jobActionResult = wtfLoadJSON -Path $jobActionPath
+    $jobActionResult = wtfxLoadJSON -Path $jobActionPath
     if ($jobActionResult.code -ne 0) {
         return (OPSreturn -Code -1 -Message "Could not load jobaction.json: $($jobActionResult.msg)" -Exception $jobActionResult.exception)
     }

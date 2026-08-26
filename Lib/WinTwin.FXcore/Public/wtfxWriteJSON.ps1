@@ -11,7 +11,7 @@ function wtfxWriteJSON {
       1) Whole-object mode (no -KeyPath given): the -Value parameter is serialized
          and completely replaces the file content. Use this when you already hold a
          fully assembled object in memory (e.g. after modifying the result of
-         wtfLoadJSON / wtfLoadJSONC).
+         wtfxLoadJSON / wtfLoadJSONC).
 
       2) Key-path mode (-KeyPath given): only the single nested property addressed
          by a dot-separated path (e.g. "path.root" or "wim-mount.path") is replaced
@@ -53,7 +53,7 @@ function wtfxWriteJSON {
 
     .NOTES
     Part of: WinTwin.FXcore
-    See also: wtfLoadJSON, wtfLoadJSONC
+    See also: wtfxLoadJSON, wtfLoadJSONC
     #>
 
     [CmdletBinding()]
