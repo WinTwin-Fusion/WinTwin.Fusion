@@ -162,24 +162,6 @@ $script:app['wimIndex'] = [int]$script:jobconf."wim-mount".index
 
 
 #--------------------------------------------------------------------------------
-# Try to load the wim-mounter-internal function library
-# → DEPRECATED. WE DON'T NEET wim.mounter.fx.ps1 ANYMORE!
-#   ALL FUNCTIONS WERE MIGRATED TO THE FRAMEWORK LIBRARIES
-#--------------------------------------------------------------------------------
-#if ([string]::IsNullOrWhiteSpace($fxPath) -or -not (Test-Path -LiteralPath $fxPath -PathType Container)) {
-#    Write-Error "ducc.wim.mounter: Function library directory not found: '$fxPath'"
-#    exit 1
-#}
-#try {
-#    . $script:app['fxpath']
-#}
-#catch {
-#    Write-Error "ducc.wim.mounter: Failed to dot-source $script:app['fxpath']\n$($_.Exception.Message)"
-#    exit 1
-#}
-
-
-#--------------------------------------------------------------------------------
 # Load additional Libraries (Required to build the UI)
 #--------------------------------------------------------------------------------
 Add-Type -AssemblyName PresentationFramework
@@ -354,12 +336,9 @@ $btnMount.Add_Click({
     }
 
     if (-not (Test-Path -LiteralPath $WinTwin['console'] -PathType Leaf)) {
-        [System.Windows.MessageBox]::Show(
-            "WTF.Console.ps1 was not found:`n$($WinTwin['console'])",
-            'DISM.UI.CC - wim.mounter',
-            [System.Windows.MessageBoxButton]::OK,
-            [System.Windows.MessageBoxImage]::Error
-        ) | Out-Null
+        $null = wtfxSystemMessageBox -smbTitle 'DISM.UI.CC - wim.mounter' `
+        -smbText "WTF.Console.ps1 was not found:`n$($WinTwin['console'])" `
+        -smbIcon Error -smbButtons OK
         return
     }
 
@@ -369,6 +348,7 @@ $btnMount.Add_Click({
     $btnBrowseMount.IsEnabled = $false
     $chkCreateMountPoint.IsEnabled = $false
     $statusText.Text          = $apptxt.status.mounting
+    #$statusText.Text = $apptxt.status.launchingConsole
 
     try {
         # Create the Mount-Script for WTF.Console
@@ -386,6 +366,7 @@ Write-Output ('Create path : {0}' -f '$createMountPoint')
     '$script:LibOPSR',
     '$script:LibPSACL',
     '$script:LibWTFXC'
+    '$script:LibWTXUI'
 ) | Where-Object { -not [string]::IsNullOrWhiteSpace(`$_) }
 
 foreach (`$modulePath in `$moduleCandidates) {
@@ -396,32 +377,46 @@ foreach (`$modulePath in `$moduleCandidates) {
 }
 
 if ($CreateMountPoint -and -not (Test-Path -LiteralPath '$($mountDir.Replace("'", "''"))')) {
-    Write-Output 'Mount point does not exist. Creating directory via CreateNewDir...'
-    `$createResult = CreateNewDir -Path '$($mountDir.Replace("'", "''"))' -Force -Confirm:`$false
+    Write-Output 'Mount point does not exist. Creating directory via wtfxCreateNewDir...'
+    `$createResult = wtfxCreateNewDir -Path '$($mountDir.Replace("'", "''"))' -Force
     if (`$createResult.code -ne 0) {
-        throw ('CreateNewDir failed: {0}' -f `$createResult.msg)
+        throw ('wtfxCreateNewDir failed: {0}' -f `$createResult.msg)
     }
 }
 
-Write-Output 'Mounting image via MountWIMimage...'
-`$mountResult = MountWIMimage -WIMimage '$($imagePath.Replace("'", "''"))' -IndexNo $script:app['wimIndex'] -MountPoint '$($mountDir.Replace("'", "''"))'
-if (`$mountResult.code -ne 0) {
-    throw `$mountResult.msg
-}
+wtfxCreateNewDir -Path $WinTwin['export'] -Force
 
-Write-Output `$mountResult.msg
+Write-Output 'Mounting image via MountWIMimage...'
+#`$mountResult = MountWIMimage -WIMimage '$($imagePath.Replace("'", "''"))' -IndexNo $($script:app['wimIndex']) -MountPoint '$($mountDir.Replace("'", "''"))'
+#if (`$mountResult.code -ne 0) {
+#    throw `$mountResult.msg
+#}
+#Write-Output `$mountResult.msg
+
+#DISM /Mount-Wim /WimFile:'$($imagePath.Replace("'", "''")) /Index:$($script:app['wimIndex']) /MountDir:$($mountDir.Replace("'", "''"))
+
+Write-Output 'Running (faked) Mount-Script.'
+Sleep 3.0
+Write-Output 'Done.'
+
 Write-Output 'The operation completed successfully.'
 exit 0
 "@
         
-        $scriptFile = Join-Path $WinTwin['export'] $script:toolcfg.apptool."wim-mount".console[1]
+        # Write the generated console script to a file (path defined in dism.congif.json)
+        $scriptFile = Join-Path "$($WinTwin['export'])" "$($script:toolcfg.apptool."wim-mount".require.console[1])"
         $result = wtfxConsoleScript -ScriptPath $scriptFile `
                                    -ScriptType ps1 `
                                    -ScriptData $scriptContent
-        if ($result.code -eq 0) { $result.data.Path }
+        if ($result.code -eq 0) {
+            # ONLY FOR DEBUGGING            
+            $null = wtfxSystemMessageBox -smbTitle 'DISM.UI.CC - wim.mounter' `
+            -smbText "Following console script was created:`n$($script:toolcfg.apptool."wim-mount".require.console[1])`nReturn from 'wtfxConsoleScript':`n$($result.data.Path)" `
+            -smbIcon Information -smbButtons OK
+        }
         
         if (-not (Test-Path -LiteralPath $WinTwin['logs'])) {
-            $createLogDir = CreateNewDir -Path $WinTwin['logs'] -Force -Confirm:$false
+            $createLogDir = wtfxCreateNewDir -Path $WinTwin['logs']
             if ($createLogDir.code -ne 0 -and -not (Test-Path -LiteralPath $WinTwin['logs'] -PathType Container)) {
                 throw $createLogDir.msg
             }
@@ -443,19 +438,35 @@ exit 0
 
         # Launch the WTF.Console Process
         # Typical wim.mounter hand-off after the tool has cleared process.json:
-        #$launch = wtfxLaunchConsole -Script $scriptFile `
-        wtfxLaunchConsole -Script $scriptFile `
+        $launch = wtfxLaunchConsole -Script $scriptFile `
                           -Mode framework `
                           -Action $script:app['jobid'] `
                           -Logging $true `
                           -Logfile $logFilePath `
                           -FrameworkRoot $WinTwin['root']
 
-        $statusText.Text = $apptxt.status.launchingConsole
-        # Close & Exit win.mounter
-        $window.Close()
-        wtfxSetCMDstate -State Show
-        exit 0
+        # Looks like there was an error while launching WTF.Console
+        if ($launch.code -ne 0) {
+            #throw $launch.msg
+            $btnMount.IsEnabled       = $true
+            $btnCancel.IsEnabled      = $true
+            $btnOpenImage.IsEnabled   = $true
+            $btnBrowseMount.IsEnabled = $true
+            $chkCreateMountPoint.IsEnabled = $true
+            $statusText.Text          = $apptxt.status.ready
+            # Show a Win32-Dialog
+            $null = wtfxSystemMessageBox -smbTitle 'DISM.UI.CC - wim.mounter' `
+            -smbText "$($launch.msg)" `
+            -smbIcon Error -smbButtons OK
+        }
+        # WTF.Console successfully launched.
+        else {
+            # Close & Exit win.mounter
+            $window.Close()
+            wtfxSetCMDstate -State Show
+            exit 0
+        }
+
     }
     catch {
         $btnMount.IsEnabled       = $true
@@ -464,13 +475,10 @@ exit 0
         $btnBrowseMount.IsEnabled = $true
         $chkCreateMountPoint.IsEnabled = $true
         $statusText.Text          = $apptxt.status.ready
-
-        [System.Windows.MessageBox]::Show(
-            $_.Exception.Message,
-            'DISM.UI.CC - wim.mounter',
-            [System.Windows.MessageBoxButton]::OK,
-            [System.Windows.MessageBoxImage]::Error
-        ) | Out-Null
+        # Show a Win32-Dialog
+        $null = wtfxSystemMessageBox -smbTitle 'DISM.UI.CC - wim.mounter' `
+        -smbText $_.Exception.Message `
+        -smbIcon Error -smbButtons OK
     }
 })
 

@@ -1,10 +1,13 @@
-# ⚙️ DISM.UI.CC Component Synchronization
+# ⚙️ Component Synchronization: DISM.UI.CC → WinTwin.Fusion
 
 ## 📋 Summary
 
-This is an automated WinTwin.Fusion Framework component synchronization.
-Following component was automatically synchronized into the WinTwin.Fusion Framework:
-`${COMPONENT_NAME}` 
+This is an automated component synchronisation report.<br>Synchronization details:
+
+| REPOSITORY 1 | SYNC-DIRECTION | REPOSITORY 2 |
+|:-------------|:--------------:|-------------:|
+| `${COMPONENT_NAME}` | → | `Win.Twin Fusion` |
+
 
 ---
 
