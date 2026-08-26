@@ -2,13 +2,13 @@
   "component": "PS.Tweak.Tools",
   "sourceRepository": "WinTwin-Fusion/PS.Tweak.Tools",
   "sourceBranch": "main",
-  "sourceCommit": "539e63ed41e5883fe3f71e38e54b1a4b88468f35",
-  "sourceCommitShort": "539e63e",
+  "sourceCommit": "b77ffa112762a89525bff7156f75aba0976a7783",
+  "sourceCommitShort": "b77ffa1",
   "sourcePullRequest": {
-    "number": 4,
-    "title": "Workflow updated",
+    "number": 5,
+    "title": "Workflow Update",
     "mergedBy": "praetoriani",
-    "mergedAt": "2026-08-24T21:25:28Z"
+    "mergedAt": "2026-08-26T10:29:25Z"
   },
   "targetRepository": "WinTwin-Fusion/WinTwin.Fusion",
   "targetBaseBranch": "main",
@@ -20,7 +20,7 @@
   ],
   "syncedBy": "GitHub Actions",
   "workflow": "Sync PS.Tweak.Tools to WinTwin.Fusion",
-  "workflowRunId": "32779417116",
-  "workflowRunNumber": "2",
-  "syncDate": "2026-08-24T21:25:50Z"
+  "workflowRunId": "32958507380",
+  "workflowRunNumber": "3",
+  "syncDate": "2026-08-26T10:29:38Z"
 }
