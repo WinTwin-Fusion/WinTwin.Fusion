@@ -79,6 +79,14 @@ Add-Type -AssemblyName PresentationCore
 Add-Type -AssemblyName WindowsBase
 
 $ScriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+# Make the params global available for the isolated scopes
+$global:ScriptPath    = $ScriptPath
+$global:AppMode       = $AppMode
+$global:WinSize       = $WinSize
+$global:Action        = $Action
+$global:Language      = $Language
+$global:LogFilePath   = $LogFilePath
+
 
 function Resolve-WtfPaths {
     param([string]$Mode, [string]$Root)
@@ -260,6 +268,7 @@ if (-not (Test-Path -LiteralPath $Paths.UiXaml)) {
 [xml]$xamlDoc = Get-Content -LiteralPath $Paths.UiXaml -Raw
 $reader = New-Object System.Xml.XmlNodeReader $xamlDoc
 $Window = [Windows.Markup.XamlReader]::Load($reader)
+$global:Window = $Window   # ← Make it global available for the isolated scopes
 
 $global:TitleBarPanel   = $Window.FindName('TitleBarPanel')
 $global:TitleBarText    = $Window.FindName('TitleBarText')
@@ -337,6 +346,8 @@ $ProcessDbPath = $null
 if ($AppMode -eq 'framework' -and $Paths.FrameworkRoot) {
     $ProcessDbPath = Join-Path $Paths.FrameworkRoot 'Core\db\dbprocess.json'
 }
+# Make it global available for the isloated scopes
+$global:ProcessDbPath = $ProcessDbPath
 
 function global:Test-WtfWatchTriggers {
     param([string]$Line, [string]$ActionCode)
