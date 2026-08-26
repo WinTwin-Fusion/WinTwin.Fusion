@@ -2,13 +2,13 @@
   "component": "WinTwin.FXcore",
   "sourceRepository": "WinTwin-Fusion/WinTwin.FXcore",
   "sourceBranch": "main",
-  "sourceCommit": "276000ebecad9e017642ea5ae6cc7b3614df9ef7",
-  "sourceCommitShort": "276000e",
+  "sourceCommit": "cb792afb3d49c8e2d3adea3077760073a233eb11",
+  "sourceCommitShort": "cb792af",
   "sourcePullRequest": {
-    "number": 8,
-    "title": "WTFXC General Update",
+    "number": 9,
+    "title": "Bugfixes",
     "mergedBy": "praetoriani",
-    "mergedAt": "2026-08-26T10:26:46Z"
+    "mergedAt": "2026-08-26T11:47:52Z"
   },
   "targetRepository": "WinTwin-Fusion/WinTwin.Fusion",
   "targetBaseBranch": "main",
@@ -19,7 +19,7 @@
   ],
   "syncedBy": "GitHub Actions",
   "workflow": "Sync WinTwin.FXcore to WinTwin.Fusion",
-  "workflowRunId": "32958282190",
-  "workflowRunNumber": "6",
-  "syncDate": "2026-08-26T10:27:01Z"
+  "workflowRunId": "32965162114",
+  "workflowRunNumber": "7",
+  "syncDate": "2026-08-26T11:48:05Z"
 }

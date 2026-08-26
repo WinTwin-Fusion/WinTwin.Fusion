@@ -23,7 +23,7 @@ function wtfxLoadJSON {
 
     .NOTES
     Part of: WinTwin.FXcore
-    See also: wtfxLoadJSONC, wtfWriteJSON
+    See also: wtfxLoadJSONC, wtfxWriteJSON
     #>
 
     [CmdletBinding()]

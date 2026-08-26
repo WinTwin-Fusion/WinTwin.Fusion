@@ -7,7 +7,7 @@ function wtfxLoadJSONC {
     The wtfxLoadJSONC function reads a JSONC file (e.g. jobaction.jsonc), strips
     single-line ('//') and block ('/* ... */') comments using a small state-machine
     based scanner (NOT a naive regex), and then parses the remaining, pure-JSON
-    content exactly like wtfLoadJSON. The state machine tracks whether the scanner
+    content exactly like wtfxLoadJSON. The state machine tracks whether the scanner
     is currently inside a double-quoted string (including escaped quotes) so that
     '//' or '/*' occurring inside actual string values is never mistaken for a
     comment and stripped by accident.
@@ -24,7 +24,7 @@ function wtfxLoadJSONC {
 
     .NOTES
     Part of: WinTwin.FXcore
-    See also: wtfLoadJSON, wtfWriteJSON
+    See also: wtfxLoadJSON, wtfxWriteJSON
     #>
 
     [CmdletBinding()]

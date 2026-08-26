@@ -9,7 +9,7 @@ function wtfxSetJobAction {
     Core\config.json (path.root + path.appdb.actions) - the exact same resolution
     logic used by wtfGetJobAction, so both functions always agree on the file
     location - and updates a single, dot-separated field (e.g. "path" or
-    "download.location") on the given -ActionId node, using wtfWriteJSON internally
+    "download.location") on the given -ActionId node, using wtfxWriteJSON internally
     in whole-object mode after patching the in-memory object. All other nodes and
     fields in jobaction.json are left completely untouched.
 
@@ -36,7 +36,7 @@ function wtfxSetJobAction {
 
     .NOTES
     Part of: WinTwin.FXcore
-    See also: wtfGetJobAction, wtfWriteJSON
+    See also: wtfGetJobAction, wtfxWriteJSON
     #>
 
     [CmdletBinding()]
@@ -69,7 +69,7 @@ function wtfxSetJobAction {
     }
 
     $configPath = Join-Path -Path $FrameworkRoot -ChildPath 'Core\config.json'
-    $configResult = wtfLoadJSON -Path $configPath
+    $configResult = wtfxLoadJSON -Path $configPath
     if ($configResult.code -ne 0) {
         return (OPSreturn -Code -1 -Message "Could not load Core\config.json: $($configResult.msg)" -Exception $configResult.exception)
     }
@@ -88,7 +88,7 @@ function wtfxSetJobAction {
 
     $jobActionPath = Join-Path -Path $FrameworkRoot -ChildPath ($relativeActionsPath.TrimStart('\'))
 
-    $jobActionResult = wtfLoadJSON -Path $jobActionPath
+    $jobActionResult = wtfxLoadJSON -Path $jobActionPath
     if ($jobActionResult.code -ne 0) {
         return (OPSreturn -Code -1 -Message "Could not load jobaction.json: $($jobActionResult.msg)" -Exception $jobActionResult.exception)
     }
@@ -126,7 +126,7 @@ function wtfxSetJobAction {
         return (OPSreturn -Code -1 -Message "Could not set field '$Field' on action node '$ActionId': $($_.Exception.Message)" -Exception $_.Exception)
     }
 
-    $writeResult = wtfWriteJSON -Path $jobActionPath -Value $db
+    $writeResult = wtfxWriteJSON -Path $jobActionPath -Value $db
     if ($writeResult.code -ne 0) {
         return (OPSreturn -Code -1 -Message "Field '$Field' was updated in memory but could not be persisted: $($writeResult.msg)" -Exception $writeResult.exception)
     }
