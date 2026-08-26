@@ -2,13 +2,13 @@
   "component": "DISM.UI.CC",
   "sourceRepository": "WinTwin-Fusion/DISM.UI.CC",
   "sourceBranch": "main",
-  "sourceCommit": "b145683d986b67570f3b852ecd1e1d5913496581",
-  "sourceCommitShort": "b145683",
+  "sourceCommit": "c556416218dd998d096f75eb677f326a46ea73b3",
+  "sourceCommitShort": "c556416",
   "sourcePullRequest": {
-    "number": 15,
-    "title": "Updated wim.mounter",
+    "number": 16,
+    "title": "Ducc general update",
     "mergedBy": "praetoriani",
-    "mergedAt": "2026-08-25T21:20:35Z"
+    "mergedAt": "2026-08-26T10:33:11Z"
   },
   "targetRepository": "WinTwin-Fusion/WinTwin.Fusion",
   "targetBaseBranch": "main",
@@ -20,7 +20,7 @@
   ],
   "syncedBy": "GitHub Actions",
   "workflow": "Sync DISM.UI.CC to WinTwin.Fusion",
-  "workflowRunId": "32900493629",
-  "workflowRunNumber": "13",
-  "syncDate": "2026-08-25T21:20:49Z"
+  "workflowRunId": "32958825370",
+  "workflowRunNumber": "14",
+  "syncDate": "2026-08-26T10:33:22Z"
 }
