@@ -449,7 +449,8 @@ function wtfxLaunchConsole {
         try {
             # 'pid' may not exist yet as a property on older process.json files -
             # Add-Member with -Force works whether it already exists or not.
-            $processDb.running | Add-Member -MemberType NoteProperty -Name 'processid' -Value $started.Id -Force
+            # Info: -Force was removed (for testing purpose)
+            $processDb.running | Add-Member -MemberType NoteProperty -Name 'processid' -Value $started.Id
             $writePid = wtfxWriteJSON -Path $processDbPath -Value $processDb
             if ($writePid.code -ne 0) {
                 Write-Verbose "wtfxLaunchConsole: WTF.Console started (PID $($started.Id)), but the PID could not be persisted to process.json: $($writePid.msg)"
