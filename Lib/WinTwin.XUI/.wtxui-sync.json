@@ -2,13 +2,13 @@
   "component": "WinTwin.XUI",
   "sourceRepository": "WinTwin-Fusion/WinTwin.XUI",
   "sourceBranch": "main",
-  "sourceCommit": "baccc83c06f0cafdc9a3f24f683e8ca9c1995cd6",
-  "sourceCommitShort": "baccc83",
+  "sourceCommit": "11f87c595ef689798db5875449d6e26f2aee78d8",
+  "sourceCommitShort": "11f87c5",
   "sourcePullRequest": {
-    "number": 3,
-    "title": "Bugfix in xuiSelectFile/xuiSelectFolder",
+    "number": 4,
+    "title": "Workflow Update",
     "mergedBy": "praetoriani",
-    "mergedAt": "2026-08-25T21:17:47Z"
+    "mergedAt": "2026-08-26T10:26:42Z"
   },
   "targetRepository": "WinTwin-Fusion/WinTwin.Fusion",
   "targetBaseBranch": "main",
@@ -19,7 +19,7 @@
   ],
   "syncedBy": "GitHub Actions",
   "workflow": "Sync WinTwin.XUI to WinTwin.Fusion",
-  "workflowRunId": "32900238335",
-  "workflowRunNumber": "3",
-  "syncDate": "2026-08-25T21:17:58Z"
+  "workflowRunId": "32958276546",
+  "workflowRunNumber": "4",
+  "syncDate": "2026-08-26T10:26:55Z"
 }
