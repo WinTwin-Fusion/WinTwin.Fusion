@@ -2,13 +2,13 @@
   "component": "PS.Tweak.Tools",
   "sourceRepository": "WinTwin-Fusion/PS.Tweak.Tools",
   "sourceBranch": "main",
-  "sourceCommit": "59cd9059aa0f23857f4b71d81a2c0fb4b4b11337",
-  "sourceCommitShort": "59cd905",
+  "sourceCommit": "2c24eec81d5bc4ec6fe06834c670fe5a44ed45dd",
+  "sourceCommitShort": "2c24eec",
   "sourcePullRequest": {
-    "number": 7,
-    "title": "Additional code for WTF.Console.ps1",
+    "number": 8,
+    "title": "Fix for isolated scopes in WTF.Console.ps1",
     "mergedBy": "praetoriani",
-    "mergedAt": "2026-08-26T19:53:35Z"
+    "mergedAt": "2026-08-26T20:18:50Z"
   },
   "targetRepository": "WinTwin-Fusion/WinTwin.Fusion",
   "targetBaseBranch": "main",
@@ -20,7 +20,7 @@
   ],
   "syncedBy": "GitHub Actions",
   "workflow": "Sync PS.Tweak.Tools to WinTwin.Fusion",
-  "workflowRunId": "33007559268",
-  "workflowRunNumber": "5",
-  "syncDate": "2026-08-26T19:54:03Z"
+  "workflowRunId": "33009768835",
+  "workflowRunNumber": "6",
+  "syncDate": "2026-08-26T20:19:05Z"
 }
