@@ -1,52 +1,53 @@
-# USMT.Composer Component Synchronization
+# ⚙️ Component Synchronization: USMT.Composer → WinTwin.Fusion
 
-## Summary
+## 📋 Summary
 
-This automated update synchronizes the `${COMPONENT_NAME}` component from the source repository into the WinTwin.Fusion framework repository.
+This is an automated component synchronisation report.<br>Synchronization details:
+
+| REPOSITORY 1 | SYNC-DIRECTION | REPOSITORY 2 |
+|:-------------|:--------------:|-------------:|
+| `${COMPONENT_NAME}` | → | `Win.Twin Fusion` |
+
 
 ---
 
-## Source
+## 📂 Source
 
-Repository: `${SOURCE_REPOSITORY}` <br>
-Branch: `${SOURCE_BRANCH}` <br>
-Commit: `${SOURCE_COMMIT}` <br>
-Short Commit: `${SOURCE_COMMIT_SHORT}` <br>
+Repository: `${SOURCE_REPOSITORY}` 
+Branch: `${SOURCE_BRANCH}` 
+Commit: `${SOURCE_COMMIT}` 
+Short Commit: `${SOURCE_COMMIT_SHORT}` 
 
-## Source Pull Request
+## ↖️ Source Pull Request
 
-Pull Request: `#${PR_NUMBER}` <br>
-Title: `${PR_TITLE}` <br>
-Merged By: `${MERGED_BY}` <br>
-Merged At: `${MERGED_AT}` <br>
+Pull Request: `#${PR_NUMBER}` 
+Title: `${PR_TITLE}` 
+Merged By: `${MERGED_BY}` 
+Merged At: `${MERGED_AT}` 
 
 
-## Target
+## 🎯 Target
 
-Repository: `${TARGET_REPOSITORY}` <br>
-Base Branch: `${TARGET_BASE_BRANCH}` <br>
-Update Branch: `${TARGET_BRANCH}` <br>
-Target Path: `${TARGET_PATH}` <br>
+Repository: `${TARGET_REPOSITORY}` 
+Base Branch: `${TARGET_BASE_BRANCH}` 
+Update Branch: `${TARGET_BRANCH}` 
+Target Path: `${TARGET_PATH}` 
 
 ---
 
-## Synchronised Files
+## 🔄️ Synchronised Files
 
 ${CHANGED_FILES}
 
 ---
 
-## Excluded Files
+## 🛑 Excluded Files
 
 The following files were intentionally excluded from the synchronization:
-<!--
-- `.gitignore`
-- `ducc.wm.changelog.md`
--->
 
 ---
 
-## Sync Metadata
+## 📝 Sync Metadata
 
 A metadata file was generated at:
 
