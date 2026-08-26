@@ -2,8 +2,8 @@
   "component": "DISM.UI.CC",
   "sourceRepository": "WinTwin-Fusion/DISM.UI.CC",
   "sourceBranch": "main",
-  "sourceCommit": "c556416218dd998d096f75eb677f326a46ea73b3",
-  "sourceCommitShort": "c556416",
+  "sourceCommit": "7f966adef129eaa1f5098b07c0e2b5eb406cf3f1",
+  "sourceCommitShort": "7f966ad",
   "sourcePullRequest": {
     "number": 16,
     "title": "Ducc general update",
@@ -22,5 +22,5 @@
   "workflow": "Sync DISM.UI.CC to WinTwin.Fusion",
   "workflowRunId": "32958825370",
   "workflowRunNumber": "14",
-  "syncDate": "2026-08-26T10:33:22Z"
+  "syncDate": "2026-08-26T15:25:47Z"
 }

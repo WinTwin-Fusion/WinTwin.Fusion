@@ -288,8 +288,6 @@ $titleBarPanel.Add_MouseLeftButtonDown({
     $window.DragMove()
 })
 
-
-
 $btnOpenImage.Add_Click({
     Clear-FieldError -TextBox $txtImageFile
     $filePicker = xuiSelectFile -Title $apptxt.dialogs.fileDialogTitle -Filter "$($apptxt.dialogs.fileDialogFilterName)|*.wim"
@@ -358,7 +356,7 @@ Write-Output '========================================'
 Write-Output 'WIM MOUNT JOB STARTED'
 Write-Output '========================================'
 Write-Output ('WIM file    : {0}' -f '$($imagePath.Replace("'", "''"))')
-Write-Output ('Mount dir   : {0}' -f '$($imagePath.Replace("'", "''"))')
+Write-Output ('Mount dir   : {0}' -f '$($mountDir.Replace("'", "''"))')
 Write-Output ('WIM index   : {0}' -f '$($script:app['wimIndex'])')
 Write-Output ('Create path : {0}' -f '$createMountPoint')
 
@@ -408,11 +406,11 @@ exit 0
         $result = wtfxConsoleScript -ScriptPath $scriptFile `
                                    -ScriptType ps1 `
                                    -ScriptData $scriptContent
-        if ($result.code -eq 0) {
-            # ONLY FOR DEBUGGING            
+        if ($result.code -ne 0) {
             $null = wtfxSystemMessageBox -smbTitle 'DISM.UI.CC - wim.mounter' `
-            -smbText "Following console script was created:`n$($script:toolcfg.apptool."wim-mount".require.console[1])`nReturn from 'wtfxConsoleScript':`n$($result.data.Path)" `
-            -smbIcon Information -smbButtons OK
+            -smbText "Error while creating console script!`n$($result.msg)" `
+            #-smbText "Following console script was created:`n$($script:toolcfg.apptool."wim-mount".require.console[1])`nReturn from 'wtfxConsoleScript':`n$($result.data.Path)" `
+            -smbIcon Error -smbButtons OK
         }
         
         if (-not (Test-Path -LiteralPath $WinTwin['logs'])) {
@@ -431,7 +429,7 @@ exit 0
         $logFileName = $logPattern -replace '\[DATETIME\]', $timestamp
         $logFilePath = $logFileName
 
-        $logInitResult = wtfxWriteLogmsg -Logfile $logFilePath -Message 'wim.mounter launched WTF.Console mount workflow.' -Flag INFO -Override 0 -Confirm:$false
+        $logInitResult = wtfxWriteLogmsg -Logfile $logFilePath -Message "wim.mounter launched WTF.Console mount workflow." -Flag "INFO" -Override 1
         if ($logInitResult.code -ne 0) {
             Write-Verbose "ducc.wim.mounter: Failed to precreate log file: $($logInitResult.msg)"
         }
@@ -439,11 +437,11 @@ exit 0
         # Launch the WTF.Console Process
         # Typical wim.mounter hand-off after the tool has cleared process.json:
         $launch = wtfxLaunchConsole -Script $scriptFile `
-                          -Mode framework `
-                          -Action $script:app['jobid'] `
-                          -Logging $true `
-                          -Logfile $logFilePath `
-                          -FrameworkRoot $WinTwin['root']
+                            -Mode framework `
+                            -Action $script:app['jobid'] `
+                            -Logging $true `
+                            -Logfile $logFilePath `
+                            -FrameworkRoot $WinTwin['root']
 
         # Looks like there was an error while launching WTF.Console
         if ($launch.code -ne 0) {
@@ -456,12 +454,13 @@ exit 0
             $statusText.Text          = $apptxt.status.ready
             # Show a Win32-Dialog
             $null = wtfxSystemMessageBox -smbTitle 'DISM.UI.CC - wim.mounter' `
-            -smbText "$($launch.msg)" `
+            -smbText "Error while launching WTF.Console!`n$($launch.msg)" `
             -smbIcon Error -smbButtons OK
         }
         # WTF.Console successfully launched.
         else {
-            # Close & Exit win.mounter
+            # At this point we can use $launch.data.
+            # But for now ... close & Exit win.mounter.
             $window.Close()
             wtfxSetCMDstate -State Show
             exit 0
@@ -477,7 +476,7 @@ exit 0
         $statusText.Text          = $apptxt.status.ready
         # Show a Win32-Dialog
         $null = wtfxSystemMessageBox -smbTitle 'DISM.UI.CC - wim.mounter' `
-        -smbText $_.Exception.Message `
+        -smbText "Error while preparing WTF.Console!`n$($_.Exception.Message)" `
         -smbIcon Error -smbButtons OK
     }
 })
