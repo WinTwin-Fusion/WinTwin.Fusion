@@ -3,6 +3,7 @@
         "proc-name": "",
         "proc-path": "",
         "action-id": "",
+        "processid": "",
         "cmdparams": "",
         "job-start": "",
         "job-state": ""
@@ -22,6 +23,6 @@
         "proc-name": "",
         "proc-path": "",
         "action-id": "",
-        "cmdparams": "",
+        "cmdparams": ""
     }
 }

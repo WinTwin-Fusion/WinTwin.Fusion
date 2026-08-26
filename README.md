@@ -1,7 +1,7 @@
 # WinTwin.Fusion
 
 <p align="center">
-  <img src="./wintwin.fusion.logo.png" alt="WinTwin.Fusion logo" width="420">
+  <img src="./wintwin.fusion.logo.png" alt="WinTwin.Fusion logo" width="600">
 </p>
 
 **A unified Windows 11 imaging, migration and deployment framework, built on PowerShell.**
@@ -13,9 +13,11 @@ installation medium and performing a clean install, all previously installed pro
 settings can be restored, so the user can continue exactly where they left off — just on a freshly
 installed Windows.
 
+<!--
 > **Source code language:** The entire WinTwin.Fusion source code base (this repository and all
 > related repositories) is written in **English**, regardless of the language used in supporting
 > documentation, planning notes or issue discussions.
+-->
 
 ***
 
