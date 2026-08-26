@@ -2,13 +2,13 @@
   "component": "PS.Tweak.Tools",
   "sourceRepository": "WinTwin-Fusion/PS.Tweak.Tools",
   "sourceBranch": "main",
-  "sourceCommit": "b77ffa112762a89525bff7156f75aba0976a7783",
-  "sourceCommitShort": "b77ffa1",
+  "sourceCommit": "e922712fc5b5353c8157d4c6611c396fe563a4be",
+  "sourceCommitShort": "e922712",
   "sourcePullRequest": {
-    "number": 5,
-    "title": "Workflow Update",
+    "number": 6,
+    "title": "Use active PowerShell in console",
     "mergedBy": "praetoriani",
-    "mergedAt": "2026-08-26T10:29:25Z"
+    "mergedAt": "2026-08-26T18:51:34Z"
   },
   "targetRepository": "WinTwin-Fusion/WinTwin.Fusion",
   "targetBaseBranch": "main",
@@ -20,7 +20,7 @@
   ],
   "syncedBy": "GitHub Actions",
   "workflow": "Sync PS.Tweak.Tools to WinTwin.Fusion",
-  "workflowRunId": "32958507380",
-  "workflowRunNumber": "3",
-  "syncDate": "2026-08-26T10:29:38Z"
+  "workflowRunId": "33002012388",
+  "workflowRunNumber": "4",
+  "syncDate": "2026-08-26T18:52:03Z"
 }

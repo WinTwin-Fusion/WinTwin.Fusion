@@ -380,7 +380,7 @@ function Write-WtfProcessState {
 }
 
 $psi = New-Object System.Diagnostics.ProcessStartInfo
-$psi.FileName               = 'powershell.exe'
+$psi.FileName               = (wtfxGetPSExecutable).data.Path
 $psi.Arguments              = "-NoLogo -NoProfile -ExecutionPolicy Bypass -File `"$ScriptPath`""
 $psi.RedirectStandardInput  = $true
 $psi.RedirectStandardOutput = $true
@@ -401,44 +401,40 @@ function Append-TerminalLine {
     })
 }
 
-$Proc.add_OutputDataReceived({
-    param($sender, $evt)
-    if ($null -ne $evt.Data) {
-        Append-TerminalLine -Text $evt.Data
-        Write-WtfLog -Message $evt.Data -Level 'Output'
-
-        if ($AppMode -eq 'framework') {
-            $trigger = Test-WtfWatchTriggers -Line $evt.Data -ActionCode $Action
+$null = Register-ObjectEvent -InputObject $Proc -EventName 'OutputDataReceived' -Action {
+    if ($null -ne $EventArgs.Data) {
+        Append-TerminalLine -Text $EventArgs.Data
+        Write-WtfLog -Message $EventArgs.Data -Level 'Output'
+        if ($global:AppMode -eq 'framework') {
+            $trigger = Test-WtfWatchTriggers -Line $EventArgs.Data -ActionCode $global:Action
             if ($trigger) { Write-WtfProcessState -State $trigger }
         }
     }
-})
+}
 
-$Proc.add_ErrorDataReceived({
-    param($sender, $evt)
-    if ($null -ne $evt.Data) {
-        $prefix = Get-WtfString -Path 'console.errorPrefix'
-        Append-TerminalLine -Text "$prefix$($evt.Data)"
-        Write-WtfLog -Message $evt.Data -Level 'Error'
-        if ($AppMode -eq 'framework') {
+$null = Register-ObjectEvent -InputObject $Proc -EventName 'ErrorDataReceived' -Action {
+    if ($null -ne $EventArgs.Data) {
+        Append-TerminalLine -Text "[ERROR] $($EventArgs.Data)"
+        Write-WtfLog -Message $EventArgs.Data -Level 'Error'
+        if ($global:AppMode -eq 'framework') {
             Write-WtfProcessState -State 'error'
         }
     }
-})
+}
 
-$Proc.add_Exited({
-    $exitCode = $Proc.ExitCode
-    $Window.Dispatcher.Invoke({
+$null = Register-ObjectEvent -InputObject $Proc -EventName 'Exited' -Action {
+    $exitCode = $Sender.ExitCode
+    $global:Window.Dispatcher.Invoke({
         $msgKey = if ($exitCode -eq 0) { 'status.finishedOk' } else { 'status.finishedFail' }
-        $StatusText.Text = Get-WtfString -Path $msgKey -FormatArgs @($exitCode)
-        $InputBox.IsEnabled = $false
-        $BtnSend.IsEnabled  = $false
+        $global:StatusText.Text = Get-WtfString -Path $msgKey -FormatArgs @($exitCode)
+        $global:InputBox.IsEnabled = $false
+        $global:BtnSend.IsEnabled  = $false
     })
     Write-WtfLog -Message "Process exited with code $exitCode." -Level 'Info'
-    if ($AppMode -eq 'framework') {
+    if ($global:AppMode -eq 'framework') {
         Write-WtfProcessState -State 'finished' -ExitCode $exitCode
     }
-})
+}
 
 try {
     $StatusText.Text = Get-WtfString -Path 'status.starting'
