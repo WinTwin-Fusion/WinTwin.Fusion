@@ -56,6 +56,7 @@ FunctionsToExport = @(
 
         # System
         'wtfxSystemMessageBox',
+        'wtfxGetPSExecutable',
 
         # Filesystem
         'wtfxCreateNewDir',
@@ -136,7 +137,8 @@ FileList = @(
     'Public\wtfxCreateNewDir.ps1',
     'Public\wtfxRemoveFolder.ps1',
     'Public\wtfxSystemMessageBox.ps1',
-    'Public\wtfxLoadJSON.ps1',
+    'Public\wtfxSystemMessageBox.ps1',
+    'Public\wtfxGetPSExecutable.ps1',
     'Public\wtfxLoadJSONC.ps1',
     'Public\wtfxWriteJSON.ps1',
     'Public\wtfxGetJobAction.ps1',
@@ -205,6 +207,7 @@ Added following functions:
 wtfxCreateNewDir          Creates a new directory (optional forced)
 wtfxRemoveFolder          Removes a dorectory (optional recursive)
 wtfxSystemMessageBox      Wrapper for classic Win32-Dialog Message Boxes
+wtfxGetPSExecutable       Resolves the full path of the PowerShell executable
 
 v1.00.08
 ‾‾‾‾‾‾‾‾‾‾

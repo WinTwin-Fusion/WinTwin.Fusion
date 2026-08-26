@@ -391,24 +391,76 @@ function wtfxLaunchConsole {
         }
     }
 
+    # --- Get full path to PowerShell ------------------------------------------
+    $psExeResult = wtfxGetPSExecutable
+    if ($psExeResult.code -ne 0) {
+        #return (OPSreturn -Code fail -Message "wtfxLaunchConsole failed! $($psExeResult.msg)" -Exception $psExeResult.exception)
+        $null = wtfxSystemMessageBox -smbTitle 'DISM.UI.CC - wim.mounter' `
+        -smbText "Could not resolve :`n$($psExeCheck.msg)" `
+        -smbIcon Error -smbButtons OK
+
+        # Could not resolve path to the powershell executable.
+        # Return to the UI
+        $btnMount.IsEnabled       = $true
+        $btnCancel.IsEnabled      = $true
+        $btnOpenImage.IsEnabled   = $true
+        $btnBrowseMount.IsEnabled = $true
+        $chkCreateMountPoint.IsEnabled = $true
+        $statusText.Text          = $apptxt.status.ready
+        return
+    }
+    # PowerShell Path could be resolved
+    else { $powershellExe = $psExeResult.data.Path }
+
     # --- Detached launch ------------------------------------------------------
     # Start-Process is used instead of PSAppCoreLib\RunProcess so FXcore stays
     # free of a hard dependency on that module.
     try {
-        $started = Start-Process -FilePath (Join-Path $PSHOME 'powershell.exe') `
-                                 -ArgumentList $argList.ToArray() `
-                                 -WindowStyle Normal `
-                                 -PassThru `
-                                 -ErrorAction Stop
+        $started = Start-Process -FilePath $powershellExe `
+        -ArgumentList $argList.ToArray() `
+        -WindowStyle Normal `
+        -PassThru `
+        -ErrorAction Stop
     }
     catch {
-        return (OPSreturn -Code fail -Message "wtfxLaunchConsole failed! Could not start WTF.Console: $($_.Exception.Message)" -Exception $_.Exception)
+        # Rollback: never leave a stale "running" lock behind after a failed launch.
+        if ($resolvedMode -eq 'framework') {
+            try {
+                $processDb.running.'proc-name' = ''
+                $processDb.running.'proc-path' = ''
+                $processDb.running.'action-id' = ''
+                $processDb.running.cmdparams   = ''
+                $processDb.running.'job-start' = ''
+                $processDb.running.'job-state' = ''
+                if ($processDb.running.PSObject.Properties['pid']) { $processDb.running.processid = 0 }
+                $null = wtfxWriteJSON -Path $processDbPath -Value $processDb
+            }
+            catch { }
+        }
+        return (OPSreturn -Code fail -Message "wtfxLaunchConsole failed! Could not start WTF.Console:`n$($_.Exception.Message)" -Exception $_.Exception)
     }
 
     if ($null -eq $started) {
         return (OPSreturn -Code fail -Message "wtfxLaunchConsole failed! Start-Process returned no process object for WTF.Console.")
     }
 
+    # --- Persist the real PID now that the process actually exists -------------
+    if ($resolvedMode -eq 'framework') {
+        try {
+            # 'pid' may not exist yet as a property on older process.json files -
+            # Add-Member with -Force works whether it already exists or not.
+            $processDb.running | Add-Member -MemberType NoteProperty -Name 'processid' -Value $started.Id -Force
+            $writePid = wtfxWriteJSON -Path $processDbPath -Value $processDb
+            if ($writePid.code -ne 0) {
+                Write-Verbose "wtfxLaunchConsole: WTF.Console started (PID $($started.Id)), but the PID could not be persisted to process.json: $($writePid.msg)"
+            }
+        }
+        catch {
+            Write-Verbose "wtfxLaunchConsole: WTF.Console started (PID $($started.Id)), but the PID could not be persisted to process.json: $($_.Exception.Message)"
+        }
+    }
+
+    # --- Create a Report for the caller ---------------------------------------
     $resultData = [pscustomobject]@{
         ProcessId      = $started.Id
         ConsolePath    = $resolvedConsolePath
@@ -422,5 +474,6 @@ function wtfxLaunchConsole {
         CommandLine    = $commandLine
     }
 
+    # --- Return to Caller -----------------------------------------------------
     return (OPSreturn -Code success -Message "wtfxLaunchConsole: WTF.Console started (PID $($started.Id)) in '$resolvedMode' mode." -Data $resultData)
 }

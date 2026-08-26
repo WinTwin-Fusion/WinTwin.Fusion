@@ -1,0 +1,7 @@
+# EXCLUDE SPECIFIC FILE(S)
+copy-all-files.cmd
+unblock-all-files.cmd
+*.code-workspace
+
+**/_BACKUP/
+**/Documents/
