@@ -82,7 +82,7 @@ function wtfxLaunchConsole {
     .NOTES
         Part of: WinTwin.FXcore
         Replaces: Start-WtfConsoleProcess
-        Depends on: OPSreturn, wtfLoadJSON, wtfWriteJSON, wtfGetJobAction, wtfSetJobAction
+        Depends on: OPSreturn, wtfxLoadJSON, wtfxWriteJSON, wtfxGetJobAction, wtfxSetJobAction
         See also: wtfConsoleScript
     #>
 
@@ -175,7 +175,7 @@ function wtfxLaunchConsole {
             return (OPSreturn -Code fail -Message "wtfxLaunchConsole failed! Core\\config.json was not found under FrameworkRoot '$resolvedFrameworkRoot'.")
         }
 
-        $configResult = wtfLoadJSON -JSONfile (Join-Path $resolvedFrameworkRoot 'Core\config.json')
+        $configResult = wtfxLoadJSON -JSONfile (Join-Path $resolvedFrameworkRoot 'Core\config.json')
         if ($configResult.code -ne 0) {
             return (OPSreturn -Code fail -Message "wtfxLaunchConsole failed! Could not load Core\\config.json: $($configResult.msg)" -Exception $configResult.exception)
         }
@@ -211,7 +211,7 @@ function wtfxLaunchConsole {
             $processDbPath = Join-Path $resolvedFrameworkRoot 'Core\db\process.json'
         }
 
-        $processResult = wtfLoadJSON -JSONfile $processDbPath
+        $processResult = wtfxLoadJSON -JSONfile $processDbPath
         if ($processResult.code -ne 0) {
             return (OPSreturn -Code fail -Message "wtfxLaunchConsole failed! Could not load process.json: $($processResult.msg)" -Exception $processResult.exception)
         }
@@ -226,7 +226,7 @@ function wtfxLaunchConsole {
         }
 
         # --- jobaction.json ---------------------------------------------------
-        $jobResult = wtfGetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId $Action
+        $jobResult = wtfxGetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId $Action
         if ($jobResult.code -ne 0) {
             return (OPSreturn -Code fail -Message "wtfxLaunchConsole failed! Action '$Action' is not defined in jobaction.json: $($jobResult.msg)" -Exception $jobResult.exception)
         }
@@ -365,27 +365,27 @@ function wtfxLaunchConsole {
             return (OPSreturn -Code fail -Message "wtfxLaunchConsole failed! Could not update the in-memory process.json running node: $($_.Exception.Message)" -Exception $_.Exception)
         }
 
-        $writeProcess = wtfWriteJSON -Path $processDbPath -Value $processDb
+        $writeProcess = wtfxWriteJSON -Path $processDbPath -Value $processDb
         if ($writeProcess.code -ne 0) {
             return (OPSreturn -Code fail -Message "wtfxLaunchConsole failed! Could not persist process.json: $($writeProcess.msg)" -Exception $writeProcess.exception)
         }
 
         # Action-specific node: mark the job as started and record its logfile flag.
-        $null = wtfSetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId $Action -Field 'created' -Value $timestampNow
-        $null = wtfSetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId $Action -Field 'state'   -Value $true
+        $null = wtfxSetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId $Action -Field 'created' -Value $timestampNow
+        $null = wtfxSetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId $Action -Field 'state'   -Value $true
         if ($loggingEnabled -and -not [string]::IsNullOrWhiteSpace($resolvedLogfile)) {
-            $null = wtfSetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId $Action -Field 'logfile' -Value @($true, $resolvedLogfile)
+            $null = wtfxSetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId $Action -Field 'logfile' -Value @($true, $resolvedLogfile)
         }
 
         # Shared WTF.Console node so other tools can see who launched the console.
-        $wtfcExists = wtfGetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId 'wtfc'
+        $wtfcExists = wtfxGetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId 'wtfc'
         if ($wtfcExists.code -eq 0) {
-            $null = wtfSetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId 'wtfc' -Field 'script'    -Value $resolvedScript
-            $null = wtfSetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId 'wtfc' -Field 'action-id' -Value $Action
-            $null = wtfSetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId 'wtfc' -Field 'created'   -Value $timestampNow
-            $null = wtfSetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId 'wtfc' -Field 'state'     -Value $true
+            $null = wtfxSetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId 'wtfc' -Field 'script'    -Value $resolvedScript
+            $null = wtfxSetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId 'wtfc' -Field 'action-id' -Value $Action
+            $null = wtfxSetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId 'wtfc' -Field 'created'   -Value $timestampNow
+            $null = wtfxSetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId 'wtfc' -Field 'state'     -Value $true
             if ($loggingEnabled -and -not [string]::IsNullOrWhiteSpace($resolvedLogfile)) {
-                $null = wtfSetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId 'wtfc' -Field 'logfile' -Value @($true, $resolvedLogfile)
+                $null = wtfxSetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId 'wtfc' -Field 'logfile' -Value @($true, $resolvedLogfile)
             }
         }
     }
