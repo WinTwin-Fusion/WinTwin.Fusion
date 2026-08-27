@@ -394,23 +394,9 @@ function wtfxLaunchConsole {
     # --- Get full path to PowerShell ------------------------------------------
     $psExeResult = wtfxGetPSExecutable
     if ($psExeResult.code -ne 0) {
-        #return (OPSreturn -Code fail -Message "wtfxLaunchConsole failed! $($psExeResult.msg)" -Exception $psExeResult.exception)
-        $null = wtfxSystemMessageBox -smbTitle 'DISM.UI.CC - wim.mounter' `
-        -smbText "Could not resolve :`n$($psExeCheck.msg)" `
-        -smbIcon Error -smbButtons OK
-
-        # Could not resolve path to the powershell executable.
-        # Return to the UI
-        $btnMount.IsEnabled       = $true
-        $btnCancel.IsEnabled      = $true
-        $btnOpenImage.IsEnabled   = $true
-        $btnBrowseMount.IsEnabled = $true
-        $chkCreateMountPoint.IsEnabled = $true
-        $statusText.Text          = $apptxt.status.ready
-        return
+        return (OPSreturn -Code fail -Message "wtfxLaunchConsole failed! Could not resolve PowerShell executable: $($psExeResult.msg)" -Exception $psExeResult.exception)
     }
-    # PowerShell Path could be resolved
-    else { $powershellExe = $psExeResult.data.Path }
+    $powershellExe = $psExeResult.data.Path
 
     # --- Detached launch ------------------------------------------------------
     # Start-Process is used instead of PSAppCoreLib\RunProcess so FXcore stays
@@ -450,7 +436,10 @@ function wtfxLaunchConsole {
             # 'pid' may not exist yet as a property on older process.json files -
             # Add-Member with -Force works whether it already exists or not.
             # Info: -Force was removed (for testing purpose)
-            $processDb.running | Add-Member -MemberType NoteProperty -Name 'processid' -Value $started.Id
+            if (-not $processDb.running.PSObject.Properties.Match('processid')) {
+                $processDb.running | Add-Member -MemberType NoteProperty -Name 'processid' -Value $started.Id -Force
+            }
+            # Now we can be sure that 'processid' really exists            
             $writePid = wtfxWriteJSON -Path $processDbPath -Value $processDb
             if ($writePid.code -ne 0) {
                 Write-Verbose "wtfxLaunchConsole: WTF.Console started (PID $($started.Id)), but the PID could not be persisted to process.json: $($writePid.msg)"

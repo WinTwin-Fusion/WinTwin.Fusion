@@ -2,13 +2,13 @@
   "component": "WinTwin.FXcore",
   "sourceRepository": "WinTwin-Fusion/WinTwin.FXcore",
   "sourceBranch": "main",
-  "sourceCommit": "a5da4c6dab4745c4ac669b13d7686ee298839d8a",
-  "sourceCommitShort": "a5da4c6",
+  "sourceCommit": "367126c3d52f24b99ee0e528d9adfe41bfb4b4d7",
+  "sourceCommitShort": "367126c",
   "sourcePullRequest": {
-    "number": 12,
-    "title": "Add process lock management helpers",
+    "number": 13,
+    "title": "Bugfix in wtfxLaunchConsole",
     "mergedBy": "praetoriani",
-    "mergedAt": "2026-08-26T18:51:05Z"
+    "mergedAt": "2026-08-27T09:35:58Z"
   },
   "targetRepository": "WinTwin-Fusion/WinTwin.Fusion",
   "targetBaseBranch": "main",
@@ -19,7 +19,7 @@
   ],
   "syncedBy": "GitHub Actions",
   "workflow": "Sync WinTwin.FXcore to WinTwin.Fusion",
-  "workflowRunId": "33001967215",
-  "workflowRunNumber": "10",
-  "syncDate": "2026-08-26T18:51:21Z"
+  "workflowRunId": "33059302811",
+  "workflowRunNumber": "11",
+  "syncDate": "2026-08-27T09:36:11Z"
 }
