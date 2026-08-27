@@ -1,6 +1,6 @@
 {
     "appinfo": {
-        "name":         "DISM UI Control Center",
+        "appname":      "DISM UI Control Center",
         "version":      "v1.00.02",
         "devname":      "praetoriani",
         "website":      "https://github.com/WinTwin-Fusion/DISM.UI.CC",
@@ -13,6 +13,11 @@
             "appname":   "wim.mounter",
             "action-id": "wim-mount",
             "apppath":   "\\DISM.UI.CC\\wim.mounter.ps1",
+            "xmlui":     "\\Core\\ui\\wim-mount.main.xml",
+            "langfile":  {
+                "en-us": "\\Core\\lang\\wim-mount.en-us.json",
+                "de-de": "\\Core\\lang\\wim-mount.de-de.json"
+            },
             "require":   {
                 "console": [true,"dism.mount.image.ps1"]
             }
