@@ -38,18 +38,10 @@ $global:appicon   = Join-Path $PSScriptRoot "DISM.UI.CC.ico"
 #--------------------------------------------------------------------------------
 # Internal Script vars
 #--------------------------------------------------------------------------------
-$script:app = @{
-    jobid      = "wim-mount"
-    configRoot = "..\core\config.json"
-    jobaxnConf = "..\core\db\jobaction.json"
-    configTool = Join-Path $global:approot "dism.config.json"
-#    fxfile     = ""
-#    fxpath     = ""
-#    xuifile    = ""
-#    xuipath    = ""
-#    wimIndex   = ""
-#    lngfile    = ""
-#    lngpath    = ""
+$config = [pscustomobject]@{
+    framework = "..\core\config.json"
+    jobaction = "..\core\db\jobaction.json"
+    ducctools = Join-Path $global:approot "dism.config.json"
 }
 
 #--------------------------------------------------------------------------------
@@ -63,32 +55,34 @@ $script:app = @{
 #--------------------------------------------------------------------------------
 
 # 1st Step: We're going to check that the file exists
-if (-not (Test-Path -LiteralPath $script:app['configRoot'])) {
-    Write-Error "ducc.wim.mounter: Configuration file not found:`n$($script:app['configRoot'])"
+if (-not (Test-Path -LiteralPath $config.framework)) {
+    Write-Error "ducc.wim.mounter: Configuration file not found:`n$($config.framework)"
     exit 1
 }
 
 # 2nd Step: We're trying to load the content from the config.json
 try {
-    $script:rootcfg = Get-Content -LiteralPath $script:app['configRoot'] -Raw | ConvertFrom-Json -ErrorAction Stop
+    $script:rootcfg = Get-Content -LiteralPath $config.framework -Raw | ConvertFrom-Json -ErrorAction Stop
 }
 catch {
-    Write-Error "ducc.wim.mounter: Failed to parse $($script:app['configRoot'])\n$($_.Exception.Message)"
+    Write-Error "ducc.wim.mounter: Failed to parse $($config.framework)\n$($_.Exception.Message)"
     exit 1
 }
 
 # 3rd Step: Assign important values from the global config.json
-$WinTwin = @{
+$wintwin = [pscustomobject]@{
     root    = $script:rootcfg.path.root
-    xmlui   = Join-Path $script:rootcfg.path.root $script:rootcfg.path.appui
-    lang    = Join-Path $script:rootcfg.path.root $script:rootcfg.path.lang
     lib     = Join-Path $script:rootcfg.path.root $script:rootcfg.path.lib
-    export  = Join-Path $script:rootcfg.path.root $script:rootcfg.path.export
+    lang    = Join-Path $script:rootcfg.path.root $script:rootcfg.path.lang
     logs    = Join-Path $script:rootcfg.path.root $script:rootcfg.path.logs
-    console = Join-Path $script:rootcfg.path.root $script:rootcfg.path.pstools.console
+    xmlui   = Join-Path $script:rootcfg.path.root $script:rootcfg.path.appui
+    fonts   = Join-Path $script:rootcfg.path.root $script:rootcfg.path.fonts
+    export  = Join-Path $script:rootcfg.path.root $script:rootcfg.path.export
 }
+# 4th Step: Assign required Tools for wim.mounter
+$wintwin.console = Join-Path $script:rootcfg.path.root $script:rootcfg.path.pstools.console
 
-# 4th Step: Fallback, if no language has been passed through command line
+# 5th Step: Fallback, if no language has been passed through command line
 if ([string]::IsNullOrWhiteSpace($Language)) {
     $Language = $script:rootcfg.appconfig.defaultlanguage
 }
@@ -96,10 +90,10 @@ if ([string]::IsNullOrWhiteSpace($Language)) {
 #--------------------------------------------------------------------------------
 # Try to load required Libraries from the WinTwin.Fusion Framework
 #--------------------------------------------------------------------------------
-$script:LibOPSR  = Join-Path $WinTwin['lib'] $script:rootcfg.lib.OPSreturn
-$script:LibPSACL = Join-Path $WinTwin['lib'] $script:rootcfg.lib.PSAppCoreLib
-$script:LibWTFXC = Join-Path $WinTwin['lib'] $script:rootcfg.lib.WinTwinFXcore
-$script:LibWTXUI = Join-Path $WinTwin['lib'] $script:rootcfg.lib.WinTwinXUI
+$script:LibOPSR  = Join-Path $wintwin.lib $script:rootcfg.lib.OPSreturn
+$script:LibPSACL = Join-Path $wintwin.lib $script:rootcfg.lib.PSAppCoreLib
+$script:LibWTFXC = Join-Path $wintwin.lib $script:rootcfg.lib.WinTwinFXcore
+$script:LibWTXUI = Join-Path $wintwin.lib $script:rootcfg.lib.WinTwinXUI
 
 foreach ($requiredModulePath in @($script:LibOPSR, $script:LibPSACL, $script:LibWTFXC)) {
     if (-not (Test-Path -LiteralPath $requiredModulePath -PathType Leaf)) {
@@ -119,6 +113,21 @@ catch {
     exit 1
 }
 
+#--------------------------------------------------------------------------------
+# Process-Registration (.\Core\db\process.json)
+#--------------------------------------------------------------------------------
+$processCheck = wtfxCheckProcess -FrameworkRoot $wintwin.root
+if ($processCheck.code -ne 0) {
+    Write-Error "ducc.wim.mounter: Could not verify the framework process lock.`n$($processCheck.msg)"
+    exit 1
+}
+# Running Process detected
+if ($processCheck.data.IsRunning) {
+    $null = wtfxSystemMessageBox -smbTitle 'DISM UI Control Center (wim.mounter)' `
+        -smbText "Another framework process is currently running:`n$($processCheck.data.Running.'proc-name')`n`nPlease wait until it has finished." `
+        -smbIcon Warning -smbButtons OK
+    exit 0
+}
 
 #--------------------------------------------------------------------------------
 # Hide Console Window -> Using Function from WinTwin.FXcore
@@ -129,37 +138,46 @@ wtfxSetCMDstate -State Hide
 #--------------------------------------------------------------------------------
 # Time to load the other JSON Config files (using Functions from WinTwin.FXcore)
 #--------------------------------------------------------------------------------
-$result = wtfxLoadJSON -Path $script:app['jobaxnConf']
-if ($result.code -eq 0) { $script:jobconf = $result.data }
-else {
+# Load the .\Core\db\jobaction.json
+$result = wtfxLoadJSON -Path $config.jobaction
+if($result.code -ne 0) {
     Write-Error "ducc.wim.mounter: $($result.message)"
     exit 1
 }
+$script:jobconf = $result.data
 
-$result = wtfxLoadJSON -Path $script:app['configTool']
-if ($result.code -eq 0) { $script:toolcfg = $result.data }
-else {
+# Load the .\dism.config.json
+$result = wtfxLoadJSON -Path $config.ducctools
+if($result.code -ne 0) {
     Write-Error "ducc.wim.mounter: $($result.message)"
     exit 1
 }
+$script:toolcfg = $result.data
 
 #--------------------------------------------------------------------------------
 # With the content from the JSON-Files, we have to configure some more vars
 #--------------------------------------------------------------------------------
-# Get the real action-id from the internal dism.config.json
-$Script:app['jobid']  = $($script:toolcfg.apptool."wim-mount"."action-id")
-# wim-mount-internal function library
-$script:app['fxfile']  = "$($script:app['jobid']).fx.ps1"
-$script:app['fxpath']  = Join-Path $global:approot $script:app['fxfile']
-# wim-mount XML-UI File
-$script:app['xuifile'] = "$($script:app['jobid']).main.xml"
-$script:app['xuipath'] = Join-Path "$($WinTwin['xmlui'])" "$($script:app['xuifile'])"
-# wim-mount Language File
-$script:app['lngfile'] = "$($Script:app['jobid']).$($Language).json"
-$script:app['lngpath'] = Join-Path $WinTwin['lang'] $script:app['lngfile']
-
-$script:app['wimIndex'] = [int]$script:jobconf."wim-mount".index
-
+# Load informations about DISM UI Control Center
+$ducc = [pscustomobject]@{
+    appname = "$($script:toolcfg.appinfo.appname)"
+    version = "$($script:toolcfg.appinfo.version)"
+    website = "$($script:toolcfg.appinfo.website)"
+    devname = "$($script:toolcfg.appinfo.devname)"
+}
+# Load informations about wim.mounter
+$wimmount = [pscustomobject]@{
+    appname = "$($script:toolcfg.apptool."wim-mount".appname)"
+    acionid = "$($script:toolcfg.apptool."wim-mount"."action-id")"
+    xmlfile = Join-Path "$($wintwin.root)" "$($script:toolcfg.apptool."wim-mount".xmlui)"
+    path    = "$($script:jobconf."wim-mount".path)"
+    wimfile = "$($script:jobconf."wim-mount".imgfile)"
+    index   = "$($script:jobconf."wim-mount".index)"
+    logfile = "$($script:jobconf."wim-mount".logfile[1])"
+}
+# Load the correct language for wim.mounter
+$wimmount.language  = Join-Path "$($wintwin.root)" "$($script:toolcfg.apptool."wim-mount".langfile.$($Language))"
+# Set the name of the Scriptfile for the WTF.Console
+$wimmount.conscript = "$($script:toolcfg.apptool."wim-mount".require.console[1])"
 
 #--------------------------------------------------------------------------------
 # Load additional Libraries (Required to build the UI)
@@ -174,7 +192,7 @@ Add-Type -AssemblyName System.Xml
 # Try to load the language file for wim.mounter
 #--------------------------------------------------------------------------------
 
-$result = wtfxLoadJSON -Path $script:app['lngpath']
+$result = wtfxLoadJSON -Path $wimmount.language
 if ($result.code -eq 0) { $apptxt = $result.data }
 else {
     Write-Error "ducc.wim.mounter: $($result.message)"
@@ -185,7 +203,7 @@ else {
 #--------------------------------------------------------------------------------
 # Try to load the XML-UI (including app icon)
 #--------------------------------------------------------------------------------
-$LoadXML = xuiLoadWindow -XMLfile $script:app['xuipath']
+$LoadXML = xuiLoadWindow -XMLfile $wimmount.xmlfile
 if ($LoadXML.code -eq 0) {
     $window = $LoadXML.data.Window
 }
@@ -237,7 +255,7 @@ $btnMount.Content            = $apptxt.buttons.mount
 $btnCancel.Content           = $apptxt.buttons.cancel
 $btnExit.Content             = $apptxt.buttons.exit
 $statusText.Text             = $apptxt.status.ready
-$statusInfo.Text             = "$($script:toolcfg.appinfo.name) ($($script:toolcfg.appinfo.version))"
+$statusInfo.Text             = "$($ducc.appname) $($ducc.version)"
 
 if (Test-Path -LiteralPath $global:appicon) {
     try {
@@ -333,9 +351,9 @@ $btnMount.Add_Click({
         return
     }
 
-    if (-not (Test-Path -LiteralPath $WinTwin['console'] -PathType Leaf)) {
-        $null = wtfxSystemMessageBox -smbTitle 'DISM.UI.CC - wim.mounter' `
-        -smbText "WTF.Console.ps1 was not found:`n$($WinTwin['console'])" `
+    if (-not (Test-Path -LiteralPath $wintwin.console -PathType Leaf)) {
+        $null = wtfxSystemMessageBox -smbTitle "$($ducc.appname) ($($wimmount.appname))" `
+        -smbText "WTF.Console (PS.Tweak.Tools) was not found:`n$($wintwin.console)" `
         -smbIcon Error -smbButtons OK
         return
     }
@@ -357,7 +375,7 @@ Write-Output 'WIM MOUNT JOB STARTED'
 Write-Output '========================================'
 Write-Output ('WIM file    : {0}' -f '$($imagePath.Replace("'", "''"))')
 Write-Output ('Mount dir   : {0}' -f '$($mountDir.Replace("'", "''"))')
-Write-Output ('WIM index   : {0}' -f '$($script:app['wimIndex'])')
+Write-Output ('WIM index   : {0}' -f '$($wimmount.index)')
 Write-Output ('Create path : {0}' -f '$createMountPoint')
 
 `$moduleCandidates = @(
@@ -382,16 +400,16 @@ if ($CreateMountPoint -and -not (Test-Path -LiteralPath '$($mountDir.Replace("'"
     }
 }
 
-wtfxCreateNewDir -Path $WinTwin['export'] -Force
+wtfxCreateNewDir -Path $($wintwin.console) -Force
 
 Write-Output 'Mounting image via MountWIMimage...'
-#`$mountResult = MountWIMimage -WIMimage '$($imagePath.Replace("'", "''"))' -IndexNo $($script:app['wimIndex']) -MountPoint '$($mountDir.Replace("'", "''"))'
+#`$mountResult = MountWIMimage -WIMimage '$($imagePath.Replace("'", "''"))' -IndexNo $($wimmount.index) -MountPoint '$($mountDir.Replace("'", "''"))'
 #if (`$mountResult.code -ne 0) {
 #    throw `$mountResult.msg
 #}
 #Write-Output `$mountResult.msg
 
-#DISM /Mount-Wim /WimFile:'$($imagePath.Replace("'", "''")) /Index:$($script:app['wimIndex']) /MountDir:$($mountDir.Replace("'", "''"))
+#DISM /Mount-Wim /WimFile:'$($imagePath.Replace("'", "''")) /Index:$($wimmount.index) /MountDir:$($mountDir.Replace("'", "''")) /English
 
 Write-Output 'Running (faked) Mount-Script.'
 Sleep 3.0
@@ -402,29 +420,29 @@ exit 0
 "@
         
         # Write the generated console script to a file (path defined in dism.congif.json)
-        $scriptFile = Join-Path "$($WinTwin['export'])" "$($script:toolcfg.apptool."wim-mount".require.console[1])"
+        $scriptFile = Join-Path "$($wintwin.export)" "$($wimmount.conscript)"
         $result = wtfxConsoleScript -ScriptPath $scriptFile `
                                    -ScriptType ps1 `
                                    -ScriptData $scriptContent
         if ($result.code -ne 0) {
-            $null = wtfxSystemMessageBox -smbTitle 'DISM.UI.CC - wim.mounter' `
+            $null = wtfxSystemMessageBox -smbTitle "$($ducc.appname) ($($wimmount.appname))" `
             -smbText "Error while creating console script!`n$($result.msg)" `
             #-smbText "Following console script was created:`n$($script:toolcfg.apptool."wim-mount".require.console[1])`nReturn from 'wtfxConsoleScript':`n$($result.data.Path)" `
             -smbIcon Error -smbButtons OK
         }
         
-        if (-not (Test-Path -LiteralPath $WinTwin['logs'])) {
-            $createLogDir = wtfxCreateNewDir -Path $WinTwin['logs']
-            if ($createLogDir.code -ne 0 -and -not (Test-Path -LiteralPath $WinTwin['logs'] -PathType Container)) {
+        if (-not (Test-Path -LiteralPath $wintwin.logs)) {
+            $createLogDir = wtfxCreateNewDir -Path $wintwin.logs
+            if ($createLogDir.code -ne 0 -and -not (Test-Path -LiteralPath $wintwin.logs -PathType Container)) {
                 throw $createLogDir.msg
             }
         }
 
         $timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
-        if (($script:jobconf."wim-mount".logfile[0] -eq $true) -and (Test-Path $script:jobconf."wim-mount".logfile[1])) {
-            $logPattern = [string]$script:jobconf."wim-mount".logfile[1]
+        if (($script:jobconf."wim-mount".logfile[0] -eq $true) -and (Test-Path $wimmount.logfile)) {
+            $logPattern = [string]$wimmount.logfile
         } else {
-            $logPattern = Join-Path $WinTwin['logs'] '[DATETIME].wim.mounter.log'
+            $logPattern = Join-Path $wintwin.logs '[DATETIME].wim.mounter.log'
         }
         $logFileName = $logPattern -replace '\[DATETIME\]', $timestamp
         $logFilePath = $logFileName
@@ -433,18 +451,23 @@ exit 0
         if ($logInitResult.code -ne 0) {
             Write-Verbose "ducc.wim.mounter: Failed to precreate log file: $($logInitResult.msg)"
         }
-
+        
+        # Unregister wim.mounter.ps1 befeore launching the console
+        $null = wtfxUnregisterProcess -FrameworkRoot $wintwin.root -ProcessId $PID
         # Launch the WTF.Console Process
         # Typical wim.mounter hand-off after the tool has cleared process.json:
         $launch = wtfxLaunchConsole -Script $scriptFile `
                             -Mode framework `
-                            -Action $script:app['jobid'] `
+                            -Action $wimmount.acionid `
                             -Logging $true `
                             -Logfile $logFilePath `
-                            -FrameworkRoot $WinTwin['root']
+                            -FrameworkRoot $wintwin.root
 
         # Looks like there was an error while launching WTF.Console
         if ($launch.code -ne 0) {
+            # Failed launching WTF.Console. We need to re-register wim.mounter
+            $null = wtfxRegisterProcess -FrameworkRoot $wintwin.root -ProcName 'wim.mounter' `
+            -ProcPath $PSCommandPath -ActionId $wimmount.acionid -ProcessId $PID
             #throw $launch.msg
             $btnMount.IsEnabled       = $true
             $btnCancel.IsEnabled      = $true
@@ -453,17 +476,15 @@ exit 0
             $chkCreateMountPoint.IsEnabled = $true
             $statusText.Text          = $apptxt.status.ready
             # Show a Win32-Dialog
-            $null = wtfxSystemMessageBox -smbTitle 'DISM.UI.CC - wim.mounter' `
+            $null = wtfxSystemMessageBox -smbTitle "$($ducc.appname) ($($wimmount.appname))" `
             -smbText "Error while launching WTF.Console!`n$($launch.msg)" `
             -smbIcon Error -smbButtons OK
         }
         # WTF.Console successfully launched.
         else {
             # At this point we can use $launch.data.
-            # But for now ... close & Exit win.mounter.
+            # But for now ... we just close the window
             $window.Close()
-            wtfxSetCMDstate -State Show
-            exit 0
         }
 
     }
@@ -475,7 +496,7 @@ exit 0
         $chkCreateMountPoint.IsEnabled = $true
         $statusText.Text          = $apptxt.status.ready
         # Show a Win32-Dialog
-        $null = wtfxSystemMessageBox -smbTitle 'DISM.UI.CC - wim.mounter' `
+        $null = wtfxSystemMessageBox -smbTitle "$($ducc.appname) ($($wimmount.appname))" `
         -smbText "Error while preparing WTF.Console!`n$($_.Exception.Message)" `
         -smbIcon Error -smbButtons OK
     }
@@ -493,5 +514,8 @@ $window.Add_Loaded({
 })
 
 $window.ShowDialog() | Out-Null
+# Unregister wim.mounter.ps1 befeore launching the console
+$null = wtfxUnregisterProcess -FrameworkRoot $wintwin.root -ProcessId $PID
+# Show the console again
 wtfxSetCMDstate -State Show
 exit 0
