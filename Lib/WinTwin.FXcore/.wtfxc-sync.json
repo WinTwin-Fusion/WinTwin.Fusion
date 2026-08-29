@@ -2,13 +2,13 @@
   "component": "WinTwin.FXcore",
   "sourceRepository": "WinTwin-Fusion/WinTwin.FXcore",
   "sourceBranch": "main",
-  "sourceCommit": "1038f809152ba3ba7c76624f2ebd4515b2caa809",
-  "sourceCommitShort": "1038f80",
+  "sourceCommit": "35ea5751cfc8938f4e1a3086db1cd106c3849697",
+  "sourceCommitShort": "35ea575",
   "sourcePullRequest": {
-    "number": 15,
-    "title": "Workflow added again",
+    "number": 16,
+    "title": "Re-Upload",
     "mergedBy": "praetoriani",
-    "mergedAt": "2026-08-29T15:37:16Z"
+    "mergedAt": "2026-08-29T15:43:14Z"
   },
   "targetRepository": "WinTwin-Fusion/WinTwin.Fusion",
   "targetBaseBranch": "main",
@@ -19,7 +19,7 @@
   ],
   "syncedBy": "GitHub Actions",
   "workflow": "Sync WinTwin.FXcore to WinTwin.Fusion",
-  "workflowRunId": "33260751942",
-  "workflowRunNumber": "12",
-  "syncDate": "2026-08-29T15:37:31Z"
+  "workflowRunId": "33261015876",
+  "workflowRunNumber": "13",
+  "syncDate": "2026-08-29T15:43:26Z"
 }
