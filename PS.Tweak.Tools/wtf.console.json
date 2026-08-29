@@ -1,0 +1,30 @@
+{
+    "appinfo": {
+        "name":         "WTF.Console",
+        "version":      "v1.01.00",
+        "devname":      "praetoriani",
+        "website":      "https://github.com/WinTwin-Fusion/PS.Tweak.Tools",
+        "datecreate":   "20.08.2026",
+        "dateupdate":   "21.08.2026"
+    },
+
+    "appconfig": {
+        "defaultlanguage": "en-us",
+        "defaultappmode":  "framework",
+        "defaultwinsize":  "800x600"
+    },
+
+    "path": {
+        "standalone": "\\wtf.console.data"
+    },
+
+    "console": {
+        "logging":    true,
+        "defaultlog": "[DATETIME].wtf.console.log",
+        "watchOutputInStandalone": false,
+        "logfile": {
+            "mount": "[DATETIME].wim.mounter.log",
+            "appx":  "[DATETIME].wim.ctrl.msstore.log"
+        }
+    }
+}

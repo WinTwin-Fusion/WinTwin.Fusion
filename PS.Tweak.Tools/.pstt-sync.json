@@ -2,13 +2,13 @@
   "component": "PS.Tweak.Tools",
   "sourceRepository": "WinTwin-Fusion/PS.Tweak.Tools",
   "sourceBranch": "main",
-  "sourceCommit": "de016aae5d861583fcd998a47b797322f9d72ed5",
-  "sourceCommitShort": "de016aa",
+  "sourceCommit": "459b5642a87bd33c53472936d618ebb8c87a7c04",
+  "sourceCommitShort": "459b564",
   "sourcePullRequest": {
-    "number": 10,
-    "title": "Workflow added again",
+    "number": 11,
+    "title": "Re-Upload",
     "mergedBy": "praetoriani",
-    "mergedAt": "2026-08-29T15:24:51Z"
+    "mergedAt": "2026-08-29T15:32:35Z"
   },
   "targetRepository": "WinTwin-Fusion/WinTwin.Fusion",
   "targetBaseBranch": "main",
@@ -20,7 +20,7 @@
   ],
   "syncedBy": "GitHub Actions",
   "workflow": "Sync PS.Tweak.Tools to WinTwin.Fusion",
-  "workflowRunId": "33260191655",
-  "workflowRunNumber": "7",
-  "syncDate": "2026-08-29T15:25:05Z"
+  "workflowRunId": "33260534305",
+  "workflowRunNumber": "8",
+  "syncDate": "2026-08-29T15:32:51Z"
 }
