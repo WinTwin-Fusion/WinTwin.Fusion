@@ -1,0 +1,47 @@
+{
+    "language": "en-us",
+    "window": { "title": "WTF.Console" },
+    "labels": { "prompt": "Cmd:" },
+    "buttons": {
+        "minimizeTooltip": "Minimize",
+        "maximizeTooltip": "Maximize",
+        "restoreTooltip":  "Restore",
+        "closeTooltip":    "Close",
+        "send":            "Send",
+        "clear":           "Clear",
+        "sendTooltip":     "Send the command to the running console process",
+        "clearTooltip":    "Clear the terminal output (does not stop the process)"
+    },
+    "status": {
+        "ready":         "Ready",
+        "starting":      "Starting console process...",
+        "startfailed":   "{0}  Failed starting script {1}",
+        "scriptstarted": "{0}  Script {1} started  (PID: {2})",
+        "scriptrunning": "{0}  Script {1} is currently running ...",
+        "scripterror":   "{0}  Script {1} caused an error!",
+        "scriptdetails": "{0}  Current Script: {1}  (PID: {2})",
+        "sending":       "Sending command...",
+        "finished":      "{0}  Script {1} finished (exitcode: {2})",
+        "finishedOkay":  "{0}  Script {1} successfully finished (exitcode: {2})",
+        "finishedFail":  "{0}  Script {1} finished with errors! (exitcode: {2})",
+        "terminated":    "{0}  Script {1} was terminated by the user.",
+        "notrunning":    "No active process."
+    },
+    "messages": {
+        "missingScriptParam":    "No script file was specified. WTF.Console requires -ScriptPath to be provided.",
+        "scriptNotFound":        "The specified script file could not be found: {0}",
+        "processStartFailed":    "Failed to start the console process: {0}",
+        "processAlreadyRunning": "A console process is already running. Please wait until it finishes or close the window.",
+        "logfileInitFailed":     "Failed to initialize the VPDLX log file: {0}",
+        "confirmCloseRunning":   "A process is still running. Closing this window will terminate it. Continue?",
+        "killprocessfailed":     "Failed terminating current script execution!`nThe Process is still running!",
+        "scriptstartfailed":     "WTF.Console failed starting script {0} in new process!`nPlease check the logfiles for further details.`nPress OK to exit WTF.Console now."
+    },
+    "console": {
+        "processStarted":    "[WTF.Console] Process started (PID {0}): {1}",
+        "processExited":     "[WTF.Console] Process exited with code {0}.",
+        "userInputEcho":     "> {0}",
+        "errorPrefix":       "[ERROR] ",
+        "logFileInUse":      "[WTF.Console] Log file: {0}"
+    }
+}

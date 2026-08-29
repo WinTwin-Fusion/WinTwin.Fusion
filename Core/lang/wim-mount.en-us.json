@@ -1,0 +1,31 @@
+{
+    "language": "en-us",
+    "window": {
+        "title": "DISM.UI.CC - wim.mounter"
+    },
+    "labels": {
+        "instructions": "Please specify a Windows Image (*.wim) file and define a directory\ninto which the image content should be mounted.",
+        "imageFile":     "Image File:",
+        "mountPoint":    "Mount Point:",
+        "createMountPoint": "Create mount point if it does not exist"
+    },
+    "buttons": {
+        "openTooltip":   "Open",
+        "browseTooltip": "Browse",
+        "mount":         "Mount",
+        "cancel":        "Cancel",
+        "exit":          "Exit"
+    },
+    "dialogs": {
+        "fileDialogTitle":      "Select a Windows Image file",
+        "fileDialogFilterName": "Windows Image Files",
+        "folderDialogTitle":    "Select the mount point directory"
+    },
+    "status": {
+        "ready":     "Ready",
+        "mounting":  "Preparing mount job for WTF.Console...",
+        "done":      "Mount operation finished.",
+        "cancelled": "Operation cancelled.",
+        "launchingConsole": "Launching WTF.Console..."
+    }
+}

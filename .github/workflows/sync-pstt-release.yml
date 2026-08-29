@@ -1,0 +1,127 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+
+# =============================================================================
+# GITHUB ACTIONS WORKFLOW FOR CROSS-REPO RELEASE SYNCHRONIZATION
+# =============================================================================
+# RECEIVING side of the PS.Tweak.Tools <-> WinTwin.Fusion cross-repo
+# release-sync pipeline. Triggered by repository_dispatch type 'pstt-release'
+# fired by WinTwin-Fusion/PS.Tweak.Tools' pstt-release.yml workflow.
+#
+# Steps: checkout WinTwin.Fusion -> checkout released PS.Tweak.Tools commit ->
+# create sync/pstt-<tag> branch -> replace .\PS.Tweak.Tools with released
+# files -> commit & push branch -> print summary. No auto-merge/PR.
+#
+# Required repository secret: CROSS_REPO_SYNC_TOKEN (same PAT as configured
+# in PS.Tweak.Tools; scope 'repo' or fine-grained Contents:write on this repo
+# and read access to WinTwin-Fusion/PS.Tweak.Tools).
+# =============================================================================
+
+name: Sync PS.Tweak.Tools Release
+
+env:
+  target_folder: "PS.Tweak.Tools"
+  source_repo:   "WinTwin-Fusion/PS.Tweak.Tools"
+  workflow_file: "sync-pstt-release.yml"
+
+on:
+  repository_dispatch:
+    types: [pstt-release]
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve dispatch payload
+        id: setup
+        run: |
+          TAG_NAME="${{ github.event.client_payload.tag_name }}"
+          VERSION="${{ github.event.client_payload.version }}"
+          COMMIT_SHA="${{ github.event.client_payload.commit_sha }}"
+          ZIP_FILENAME="${{ github.event.client_payload.zip_filename }}"
+          SOURCE_ACTOR="${{ github.event.client_payload.actor }}"
+          if [ -z "$TAG_NAME" ] || [ -z "$COMMIT_SHA" ]; then
+            echo "ERROR: Missing required fields in repository_dispatch payload."
+            exit 1
+          fi
+          BRANCH_NAME="sync/pstt-${TAG_NAME}"
+          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "commit_sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
+          echo "zip_filename=$ZIP_FILENAME" >> $GITHUB_OUTPUT
+          echo "source_actor=$SOURCE_ACTOR" >> $GITHUB_OUTPUT
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+
+      - name: Checkout WinTwin.Fusion
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.CROSS_REPO_SYNC_TOKEN }}
+          fetch-depth: 0
+
+      - name: Checkout PS.Tweak.Tools release commit
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.source_repo }}
+          ref:        ${{ steps.setup.outputs.commit_sha }}
+          token:      ${{ secrets.CROSS_REPO_SYNC_TOKEN }}
+          path:       pstt-src
+
+      - name: Create sync branch
+        run: |
+          BRANCH_NAME="${{ steps.setup.outputs.branch_name }}"
+          git config user.name  "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          if git ls-remote --exit-code --heads origin "$BRANCH_NAME" >/dev/null 2>&1; then
+            git fetch origin "$BRANCH_NAME"
+            git checkout "$BRANCH_NAME"
+          else
+            git checkout -b "$BRANCH_NAME"
+          fi
+
+      - name: Synchronize PS.Tweak.Tools files
+        run: |
+          TARGET="${{ env.target_folder }}"
+          rm -rf "./$TARGET"
+          mkdir -p "./$TARGET"
+          rsync -a \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='.gitignore' \
+            pstt-src/ "./$TARGET/"
+          rm -rf pstt-src
+          find "./$TARGET" | sort
+
+      - name: Commit and push sync branch
+        run: |
+          BRANCH_NAME="${{ steps.setup.outputs.branch_name }}"
+          TAG_NAME="${{ steps.setup.outputs.tag_name }}"
+          VERSION="${{ steps.setup.outputs.version }}"
+          git add "${{ env.target_folder }}"
+          if git diff --cached --quiet; then
+            echo "No changes detected - nothing to commit."
+            echo "committed=false" >> $GITHUB_ENV
+          else
+            git commit -m "sync(PS.Tweak.Tools): Update module files to release ${TAG_NAME} (v${VERSION})" \
+                        -m "Source commit: ${{ steps.setup.outputs.commit_sha }}" \
+                        -m "Triggered by: ${{ steps.setup.outputs.source_actor }}"
+            git push origin "$BRANCH_NAME"
+            echo "committed=true" >> $GITHUB_ENV
+          fi
+
+      - name: Print release summary
+        run: |
+          echo "======================================================"
+          echo " ${{ github.workflow }} - Sync Summary"
+          echo "======================================================"
+          echo "  Source Repo    : ${{ env.source_repo }}"
+          echo "  Source Tag     : ${{ steps.setup.outputs.tag_name }}"
+          echo "  Source Version : ${{ steps.setup.outputs.version }}"
+          echo "  Source Commit  : ${{ steps.setup.outputs.commit_sha }}"
+          echo "  Target Repo    : ${{ github.repository }}"
+          echo "  Target Folder  : .\\${{ env.target_folder }}"
+          echo "  Sync Branch    : ${{ steps.setup.outputs.branch_name }}"
+          echo "  Committed      : ${{ env.committed }}"
+          echo "  Branch View    : https://github.com/${{ github.repository }}/tree/${{ steps.setup.outputs.branch_name }}"
+          echo "======================================================"
