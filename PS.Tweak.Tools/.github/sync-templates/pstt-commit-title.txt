@@ -1,1 +1,0 @@
-Auto-Sync: PR ${COMPONENT_NAME} from ${SOURCE_COMMIT_SHORT} to WinTwin.Fusion
