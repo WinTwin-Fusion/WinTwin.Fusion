@@ -1,1 +1,0 @@
-# USMT.Composer - Changelog
