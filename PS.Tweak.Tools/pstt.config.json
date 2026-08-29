@@ -1,0 +1,23 @@
+{
+    "appinfo": {
+        "name":         "PS.Tweak.Tools",
+        "version":      "v1.00.02",
+        "devname":      "praetoriani",
+        "website":      "https://github.com/WinTwin-Fusion/PS.Tweak.Tools",
+        "datecreate":   "26.08.2026",
+        "dateupdate":   "27.08.2026"
+    },
+
+    "apptool": {
+        "wtfc": {
+            "appname":   "WTF.Console",
+            "action-id": "wtfconsole",
+            "apppath":   "\\PS.Tweak.Tools\\WTF.Console.ps1",
+            "xmlui":     "\\Core\\ui\\wtf.console.main.xml",
+            "langfile":  {
+                "en-us": "\\Core\\lang\\wtf.console.en-us.json",
+                "de-de": "\\Core\\lang\\wtf.console.de-de.json"
+            }
+        }
+    }
+}
