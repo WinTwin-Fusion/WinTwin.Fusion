@@ -6,7 +6,8 @@
         "processid": "",
         "cmdparams": "",
         "job-start": "",
-        "job-state": ""
+        "job-state": "",
+        "exitcode":  ""
     },
 
     "lastjob": {
@@ -16,7 +17,8 @@
         "cmdparams": "",
         "job-start": "",
         "job-state": "",
-        "job-ended": ""
+        "job-ended": "",
+        "exitcode":  ""
     },
 
     "linedup": {
