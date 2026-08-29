@@ -2,13 +2,13 @@
   "component": "DISM.UI.CC",
   "sourceRepository": "WinTwin-Fusion/DISM.UI.CC",
   "sourceBranch": "main",
-  "sourceCommit": "2b9ff5dce2d94310dc61f5a0e7430c73e2dda18c",
-  "sourceCommitShort": "2b9ff5d",
+  "sourceCommit": "27cbefc07d72d76f4c9c81b885bb1e90094c7909",
+  "sourceCommitShort": "27cbefc",
   "sourcePullRequest": {
-    "number": 21,
-    "title": "Workflow added again",
+    "number": 22,
+    "title": "Re-Upload",
     "mergedBy": "praetoriani",
-    "mergedAt": "2026-08-29T15:14:06Z"
+    "mergedAt": "2026-08-29T15:20:33Z"
   },
   "targetRepository": "WinTwin-Fusion/WinTwin.Fusion",
   "targetBaseBranch": "main",
@@ -20,7 +20,7 @@
   ],
   "syncedBy": "GitHub Actions",
   "workflow": "Sync DISM.UI.CC to WinTwin.Fusion",
-  "workflowRunId": "33259688070",
-  "workflowRunNumber": "17",
-  "syncDate": "2026-08-29T15:14:16Z"
+  "workflowRunId": "33259990011",
+  "workflowRunNumber": "18",
+  "syncDate": "2026-08-29T15:20:45Z"
 }
