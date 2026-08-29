@@ -1,0 +1,25 @@
+{
+  "component": "WinTwin.FXcore",
+  "sourceRepository": "WinTwin-Fusion/WinTwin.FXcore",
+  "sourceBranch": "main",
+  "sourceCommit": "1038f809152ba3ba7c76624f2ebd4515b2caa809",
+  "sourceCommitShort": "1038f80",
+  "sourcePullRequest": {
+    "number": 15,
+    "title": "Workflow added again",
+    "mergedBy": "praetoriani",
+    "mergedAt": "2026-08-29T15:37:16Z"
+  },
+  "targetRepository": "WinTwin-Fusion/WinTwin.Fusion",
+  "targetBaseBranch": "main",
+  "targetSyncBranch": "WTFXC-Component-Update",
+  "targetPath": "Lib/WinTwin.FXcore",
+  "excludedFiles": [
+    ".gitignore"
+  ],
+  "syncedBy": "GitHub Actions",
+  "workflow": "Sync WinTwin.FXcore to WinTwin.Fusion",
+  "workflowRunId": "33260751942",
+  "workflowRunNumber": "12",
+  "syncDate": "2026-08-29T15:37:31Z"
+}
