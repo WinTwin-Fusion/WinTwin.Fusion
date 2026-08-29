@@ -2,13 +2,13 @@
   "component": "USMT.Composer",
   "sourceRepository": "WinTwin-Fusion/USMT.Composer",
   "sourceBranch": "main",
-  "sourceCommit": "e77f16616b544beb03b4b77b3ee2070a9cc58d12",
-  "sourceCommitShort": "e77f166",
+  "sourceCommit": "f4a8a530ff98cba321336f412ed2feb72cf4582a",
+  "sourceCommitShort": "f4a8a53",
   "sourcePullRequest": {
-    "number": 4,
-    "title": "workflow added again",
+    "number": 5,
+    "title": "Re-Upload",
     "mergedBy": "praetoriani",
-    "mergedAt": "2026-08-29T15:03:23Z"
+    "mergedAt": "2026-08-29T15:08:25Z"
   },
   "targetRepository": "WinTwin-Fusion/WinTwin.Fusion",
   "targetBaseBranch": "main",
@@ -19,7 +19,7 @@
   ],
   "syncedBy": "GitHub Actions",
   "workflow": "Sync USMT.Composer to WinTwin.Fusion",
-  "workflowRunId": "33259203980",
-  "workflowRunNumber": "3",
-  "syncDate": "2026-08-29T15:03:36Z"
+  "workflowRunId": "33259428570",
+  "workflowRunNumber": "4",
+  "syncDate": "2026-08-29T15:08:38Z"
 }
