@@ -1,0 +1,75 @@
+{
+    "uupd-catch": {
+        "system": {
+            "name": "Windows 11",
+            "type": "25H2",
+            "arch": "amd64",
+            "vers": [ "home", "pro"],
+            "lang": "en-us"
+        },
+        "config": {
+            "updates":  true,
+            "cleanup":  true,
+            "dotnet35": true
+        },
+        "download": {
+            "location": "C:\\WinTwin.Fusion\\UUPD",
+            "uupdname": "win11_pro_en-us_amd64_25H2_retail.zip",
+            "finished": true
+        },
+        "created":   "21.08.2026 ; 10:17:44",
+        "jobdone":   "21.08.2026 ; 10:19:55",
+        "finished":  true,
+        "logfile":   [ true , "C:\\WinTwin.Fusion\\Core\\logs\\[DATETIME].uupd.catcher.log" ]
+    },
+
+    "uupd-compose": {
+        "zipfile":  "C:\\WinTwin.Fusion\\UUPD\\win11_pro_en-us_amd64_25H2_retail.zip",
+        "isopath":  "C:\\WinTwin.Fusion\\UUPD",
+        "isoname":  "Windows11-25H2-PRO-EN-US-AMD64-WINTWIN-EDITION.iso",
+        "created":  "21.08.2026 ; 10:22:14",
+        "jobdone":  "21.08.2026 ; 11:16:31",
+        "finished": true,
+        "logfile": [ true , "C:\\WinTwin.Fusion\\Core\\logs\\[DATETIME].uupd.compose.log" ]
+    },
+
+    "uupd-isodump": {
+        "isofile": "C:\\WinTwin.Fusion\\UUPD\\Windows11-25H2-PRO-EN-US-AMD64-WINTWIN-EDITION.iso",
+        "output":  "C:\\WinTwin.Fusion\\RawISO",
+        "wimonly": true,
+        "created":  "21.08.2026 ; 11:18:04",
+        "jobdone":  "21.08.2026 ; 11:31:17",
+        "finished": true,
+        "logfile": [ true , "C:\\WinTwin.Fusion\\Core\\logs\\[DATETIME].uupd.isodump.log" ]
+    },
+    
+    "wim-mount": {
+        "path":    "C:\\WinTwin.Fusion\\Mount",
+        "imgfile": "C:\\WinTwin.Fusion\\RawISO\\install.wim",
+        "index":   "1",
+        "created": "21.08.2026 ; 10:32:15",
+        "jobdone": "21.08.2026 ; 10:46:55",
+        "state":   true,
+        "logfile": [ true , "C:\\WinTwin.Fusion\\Core\\logs\\[DATETIME].wim.mounter.log" ]
+    },
+    
+    
+    "wtfconsole": {
+        "script":    "",
+        "action-id": "",
+        "created":   "21.08.2026 ; 10:32:15",
+        "jobdone":   "21.08.2026 ; 10:46:55",
+        "state":     true,
+        "logfile":   [ true , "C:\\WinTwin.Fusion\\Core\\logs\\[DATETIME].wtf.console.log" ]
+    },
+    
+    "eject": {
+        "path":    "C:\\WinTwin.Fusion\\Mount",
+        "imgfile": "C:\\WinTwin.Fusion\\RawISO\\install.wim",
+        "index":   "1",
+        "created": "",
+        "jobdone": "",
+        "state":   false,
+        "logfile": [ true , "C:\\WinTwin.Fusion\\Core\\logs\\[DATETIME].wim.unmount.log" ]
+    }
+}

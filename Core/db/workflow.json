@@ -1,0 +1,44 @@
+{
+    "uupd": {
+        "download":  "false",
+        "isocreate": "false",
+        "isodumped": "false"
+    },
+    "dism": {
+        "inject": {
+            "drivers":  "false",
+            "msstore":  "false",
+            "features": "false",
+            "packages": "false",
+            "wincaps":  "false",
+            "data":     "false"
+        },
+        "remove": {
+            "drivers":  "false",
+            "msstore":  "false",
+            "features": "false",
+            "packages": "false",
+            "wincaps":  "false",
+            "data":     "false"
+        },
+        "image": {
+            "commit": "false"
+        }
+    },
+    "usmt": {
+        "usrdata": "false",
+        "appdata": "false"
+    },
+    "backup": {
+        "desktop":   "false",
+        "startmenu": "false",
+        "taskbar":   "false"
+    },
+    "wintwin": {
+        "iso": {
+            "name": "WinTwin Bootable ISO",
+            "file": "wintwin.iso",
+            "create": "false"
+        }
+    }
+}

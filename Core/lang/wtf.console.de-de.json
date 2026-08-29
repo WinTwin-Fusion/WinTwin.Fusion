@@ -1,0 +1,47 @@
+{
+    "language": "de-de",
+    "window": { "title": "WTF.Console" },
+    "labels": { "prompt": "Cmd:" },
+    "buttons": {
+        "minimizeTooltip": "Minimieren",
+        "maximizeTooltip": "Maximieren",
+        "restoreTooltip":  "Wiederherstellen",
+        "closeTooltip":    "Schließen",
+        "send":            "Senden",
+        "clear":           "Leeren",
+        "sendTooltip":     "Sendet den Befehl an den laufenden Konsolenprozess",
+        "clearTooltip":    "Löscht die Terminalausgabe (beendet den Prozess nicht)"
+    },
+    "status": {
+        "ready":         "Bereit",
+        "starting":      "Starte Konsolenprozess...",
+        "startfailed":   "{0}  Fehler beim Starten des Skripts {1}",
+        "scriptstarted": "{0}  Skript {1} gestartet  (PID: {2})",
+        "scriptrunning": "{0}  Skript {1} wird derzeit ausgeführt ...",
+        "scripterror":   "{0}  Skript {1} hat einen Fehler verursacht!",
+        "scriptdetails": "{0}  Aktuelles Skript: {1}  (PID: {2})",
+        "sending":       "Sende Befehl...",
+        "finished":      "{0}  Skript {1} beendet (Exitcode: {2})",
+        "finishedOkay":  "{0}  Skript {1} erfolgreich beendet (Exitcode: {2})",
+        "finishedFail":  "{0}  Skript {1} mit Fehlern beendet! (Exitcode: {2})",
+        "terminated":    "{0}  Skript {1} wurde vom Benutzer beendet.",
+        "notrunning":    "Kein aktiver Prozess."
+    },
+    "messages": {
+        "missingScriptParam":    "Es wurde keine Skriptdatei angegeben. WTF.Console benötigt den Parameter -ScriptPath.",
+        "scriptNotFound":        "Die angegebene Skriptdatei wurde nicht gefunden: {0}",
+        "processStartFailed":    "Fehler beim Starten des Konsolenprozesses: {0}",
+        "processAlreadyRunning": "Ein Konsolenprozess läuft bereits. Bitte warten Sie, bis er beendet ist, oder schließen Sie das Fenster.",
+        "logfileInitFailed":     "Fehler beim Initialisieren der VPDLX-Logdatei: {0}",
+        "confirmCloseRunning":   "Ein Prozess läuft noch. Das Schließen dieses Fensters beendet ihn. Fortfahren?",
+        "killprocessfailed":     "Fehler beim Beenden des aktuellen Skripts!`nDer Prozess läuft weiterhin!",
+        "scriptstartfailed":     "WTF.Console konnte das Skript {0} im neuen Prozess nicht starten!`nBitte prüfen Sie die Logdateien für weitere Details.`nDrücken Sie OK, um WTF.Console jetzt zu beenden."
+    },
+    "console": {
+        "processStarted":    "[WTF.Console] Prozess gestartet (PID {0}): {1}",
+        "processExited":     "[WTF.Console] Prozess mit Code {0} beendet.",
+        "userInputEcho":     "> {0}",
+        "errorPrefix":       "[FEHLER] ",
+        "logFileInUse":      "[WTF.Console] Logdatei: {0}"
+    }
+}

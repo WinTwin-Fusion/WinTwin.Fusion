@@ -1,0 +1,45 @@
+{
+    "running": {
+        "proc-name": "",
+        "proc-path": "",
+        "action-id": "",
+        "processid": 0,
+        "cmdparams": "",
+        "job-start": "",
+        "job-state": "",
+        "exitcode":  ""
+    },
+
+    "lastjob": {
+        "proc-name": "",
+        "proc-path": "",
+        "action-id": "",
+        "processid": 0,
+        "cmdparams": "",
+        "job-start": "",
+        "job-state": "",
+        "job-ended": "",
+        "exitcode":  ""
+    },
+
+    "console": {
+        "proc-name": "",
+        "proc-path": "",
+        "action-id": "",
+        "processid": 0,
+        "script":    "",
+        "logfile":   "",
+        "job-start": "",
+        "job-state": "",
+        "job-ended": "",
+        "exitcode":  ""
+    },
+
+    "linedup": {
+        "proc-name": "",
+        "proc-path": "",
+        "action-id": "",
+        "cmdparams": ""
+    }
+}
+
