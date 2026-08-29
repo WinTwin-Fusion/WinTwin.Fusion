@@ -1,0 +1,26 @@
+{
+  "component": "DISM.UI.CC",
+  "sourceRepository": "WinTwin-Fusion/DISM.UI.CC",
+  "sourceBranch": "main",
+  "sourceCommit": "2b9ff5dce2d94310dc61f5a0e7430c73e2dda18c",
+  "sourceCommitShort": "2b9ff5d",
+  "sourcePullRequest": {
+    "number": 21,
+    "title": "Workflow added again",
+    "mergedBy": "praetoriani",
+    "mergedAt": "2026-08-29T15:14:06Z"
+  },
+  "targetRepository": "WinTwin-Fusion/WinTwin.Fusion",
+  "targetBaseBranch": "main",
+  "targetSyncBranch": "DUCC-Component-Update",
+  "targetPath": "DISM.UI.CC",
+  "excludedFiles": [
+    ".gitignore",
+    "ducc.wm.changelog.md"
+  ],
+  "syncedBy": "GitHub Actions",
+  "workflow": "Sync DISM.UI.CC to WinTwin.Fusion",
+  "workflowRunId": "33259688070",
+  "workflowRunNumber": "17",
+  "syncDate": "2026-08-29T15:14:16Z"
+}
