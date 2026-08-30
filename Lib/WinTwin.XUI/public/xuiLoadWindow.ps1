@@ -50,7 +50,10 @@ function xuiLoadWindow {
         [Parameter(Mandatory = $true)]
         [AllowEmptyString()]
         [Alias('Path', 'XamlFilePath')]
-        [string]$XMLfile
+        [string]$XMLfile,
+        
+        [Parameter(Mandatory = $false)]
+        [switch]$extended
     )
 
     # --- Basic path checks ----------------------------------------------------
@@ -204,5 +207,9 @@ function xuiLoadWindow {
         RootType = $window.GetType().FullName
     }
 
-    return (OPSreturn -Code success -Message "xuiLoadWindow: Window loaded successfully from '$resolvedPath'." -Data $resultData)
+    if ( $extended.IsPresent ) {
+        return (OPSreturn -Code success -Message "xuiLoadWindow: Window loaded successfully from '$resolvedPath'." -Data $resultData)        
+    } else {
+        return (OPSreturn -Code success -Message "xuiLoadWindow: Window loaded successfully from '$resolvedPath'." -Data $resultData.Window)
+    }
 }

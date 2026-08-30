@@ -12,7 +12,7 @@
 RootModule = 'WinTwin.XUI.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.00.01'
+ModuleVersion = '1.00.02'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Desktop', 'Core')
@@ -56,7 +56,8 @@ FunctionsToExport = @(
     'LoadCoreConfig',        # ← This one is important. Without it, we're not able to configure the module
     'xuiSelectFile',
     'xuiSelectFolder',
-    'xuiLoadWindow'
+    'xuiLoadWindow',
+    'xuiGetControlElements'
 )
 
 # Cmdlets to export from this module
@@ -78,7 +79,8 @@ FileList = @(
     # Public functions
     'Public\xuiSelectFile.ps1',
     'Public\xuiSelectFolder.ps1',
-    'Public\xuiLoadWindow.ps1'
+    'Public\xuiLoadWindow.ps1',
+    'Public\xuiGetControlElements.ps1'
     # Additional scripts
     #'PATH\TO\YOUR_ADDITIONAL_SCTIPT.ps1'
 )
@@ -99,6 +101,11 @@ PrivateData = @{
 ____________________________________________________________________
 ‼ PLEASE VISIT THE GITHUB REPO FOR DETAILED RELEASENOTES/CHANGELOG ‼
 ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+v1.00.02  (30.08.2026)
+----------------------
+Public functions added
+→ xuiGetControlElements.ps1
 
 v1.00.01  (24.08.2026)
 ----------------------
