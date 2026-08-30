@@ -2,13 +2,13 @@
   "component": "WinTwin.XUI",
   "sourceRepository": "WinTwin-Fusion/WinTwin.XUI",
   "sourceBranch": "main",
-  "sourceCommit": "d56f727e3ed7fcb4dddbddd4116d04b198b20552",
-  "sourceCommitShort": "d56f727",
+  "sourceCommit": "20b7a202c3dedb18acb094e1f3f8ceeb41a6f5db",
+  "sourceCommitShort": "20b7a20",
   "sourcePullRequest": {
-    "number": 7,
-    "title": "Re-Upload",
+    "number": 8,
+    "title": "Functions added/upated",
     "mergedBy": "praetoriani",
-    "mergedAt": "2026-08-29T15:49:12Z"
+    "mergedAt": "2026-08-30T20:25:01Z"
   },
   "targetRepository": "WinTwin-Fusion/WinTwin.Fusion",
   "targetBaseBranch": "main",
@@ -19,7 +19,7 @@
   ],
   "syncedBy": "GitHub Actions",
   "workflow": "Sync WinTwin.XUI to WinTwin.Fusion",
-  "workflowRunId": "33261282472",
-  "workflowRunNumber": "6",
-  "syncDate": "2026-08-29T15:49:24Z"
+  "workflowRunId": "33333584708",
+  "workflowRunNumber": "7",
+  "syncDate": "2026-08-30T20:25:15Z"
 }
