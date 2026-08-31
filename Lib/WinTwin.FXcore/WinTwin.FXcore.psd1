@@ -78,6 +78,13 @@ FunctionsToExport = @(
         'wtfxCheckProcess',
         'wtfxKillProcess',
 
+        # Install Manager helper functions
+        'wtfxCheckWindowsADK',
+        'wtfxCheckADKPEaddon',
+        'wtfxInstallADK',
+        'wtfxInstallPEaddon',
+        'wtfxCheckFileIntegrity',
+
         # WTF.Console helpers
         'wtfxConsoleScript',
         'wtfxLaunchConsole',
@@ -157,7 +164,12 @@ FileList = @(
     'Public\wtfxSetJobAction.ps1',
     'Public\wtfxConsoleScript.ps1',
     'Public\wtfxLaunchConsole.ps1',
-    'Public\wtfxSetCMDstate.ps1'
+    'Public\wtfxSetCMDstate.ps1',
+    'Public\wtfxCheckWindowsADK.ps1',
+    'Public\wtfxCheckADKPEaddon.ps1',
+    'Public\wtfxInstallADK.ps1',
+    'Public\wtfxInstallPEaddon.ps1',
+    'Public\wtfxCheckFileIntegrity.ps1'
 
     <# THESE FUNCTIONS NEED TO BE CHECKED/REVIEWED, BEFORE IMPLEMENTIG THEM AGAIN!!
     # Private
