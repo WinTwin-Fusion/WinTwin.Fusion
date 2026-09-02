@@ -68,6 +68,60 @@ function wintwincore.InstallRequiredFonts {
         [string]$Path
     )
 
+    # Helper-Function to reset the fonts cache
+    function Reset-WindowsFontCache {
+        [CmdletBinding(SupportsShouldProcess)]
+        param ()
+
+        $currentIdentity = [Security.Principal.WindowsIdentity]::GetCurrent()
+        $currentPrincipal = [Security.Principal.WindowsPrincipal]::new( $currentIdentity )
+
+        $isAdministrator = $currentPrincipal.IsInRole( [Security.Principal.WindowsBuiltInRole]::Administrator )
+
+        if (-not $isAdministrator) {
+            throw 'Resetting the Windows font cache requires an elevated PowerShell session.'
+        }
+
+        $fontCacheServiceName = 'FontCache'
+
+        $cachePaths = @(
+            (Join-Path $env:WINDIR 'ServiceProfiles\LocalService\AppData\Local\FontCache\*')
+            (Join-Path $env:WINDIR 'System32\FNTCACHE.DAT')
+        )
+
+        try {
+            Write-Verbose 'Stopping the Windows Font Cache service.'
+            Stop-Service -Name $fontCacheServiceName -Force -ErrorAction SilentlyContinue
+
+            foreach ($cachePath in $cachePaths) {
+                Write-Verbose "Removing font cache data from '$cachePath'."
+                Remove-Item -Path $cachePath -Force -Recurse -ErrorAction SilentlyContinue
+            }
+
+            Write-Verbose 'Starting the Windows Font Cache service.'
+            Start-Service -Name $fontCacheServiceName -ErrorAction SilentlyContinue
+            Write-Verbose 'The Windows font cache has been reset.'
+
+            return $true
+        }
+        catch {
+            Write-Error "Resetting the Windows font cache failed: $($_.Exception.Message)"
+
+            try {
+                $service = Get-Service -Name $fontCacheServiceName -ErrorAction SilentlyContinue
+
+                if ($null -ne $service -and $service.Status -ne 'Running') {
+                    Start-Service -Name $fontCacheServiceName -ErrorAction SilentlyContinue
+                }
+            }
+            catch {
+                # Preserve the original exception.
+            }
+
+            return $false
+        }
+    }    
+
     # Constants used by the Windows font and messaging APIs.
     $fontChangeMessage = 0x001D
     $broadcastHandle   = [IntPtr]0xFFFF
@@ -130,11 +184,14 @@ public static class NativeFontMethods
     );
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-    public static extern IntPtr SendMessage(
+    public static extern IntPtr SendMessageTimeout(
         IntPtr windowHandle,
         uint message,
         IntPtr wParam,
-        IntPtr lParam
+        IntPtr lParam,
+        uint flags,
+        uint timeout,
+        out UIntPtr result
     );
 }
 '@ -ErrorAction Stop
@@ -198,10 +255,22 @@ public static class NativeFontMethods
                 PreviousRegistryValue      = $previousRegistryValue
             }
         }
-
+        
         # Notify running applications that the available fonts have changed.
-        [NativeFontMethods]::SendMessage($broadcastHandle, $fontChangeMessage, ([System.IntPtr]::Zero), ([System.IntPtr]::Zero))
+        $SMTO_ABORTIFHUNG = [uint32]0x0002
+        $messageResult = [System.UIntPtr]::Zero
+        $broadcastResult = [NativeFontMethods]::SendMessageTimeout( $broadcastHandle, [uint32]$fontChangeMessage, [System.IntPtr]::Zero, [System.IntPtr]::Zero, $SMTO_ABORTIFHUNG, [uint32]2000, [ref]$messageResult )
+        if ($broadcastResult -eq [System.IntPtr]::Zero) {
+            $nativeError = [Runtime.InteropServices.Marshal]::GetLastWin32Error()
+            Write-Warning ('The fonts were installed, but the WM_FONTCHANGE broadcast failed ' + "or timed out. Win32 error: $nativeError.")
+        } else {
+            Write-Verbose 'WM_FONTCHANGE was broadcast successfully.'
+        }
+        
+        # Reset the fonts cache (otherwise it might be that the installed files are not visible - even if the installation finished successfully)
+        Reset-WindowsFontCache -Verbose
         return $true
+
     }
     catch {
         Write-Error "Font installation failed: $($_.Exception.Message)"
