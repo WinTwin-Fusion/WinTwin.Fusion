@@ -311,7 +311,7 @@ function wintwincore.PatchJSON {
         }
 
         if ($CreateBackup) {
-            if (:IsNullOrWhiteSpace($BackupPath)) {
+            if ([string]::IsNullOrWhiteSpace($BackupPath)) {
                 $replaceBackupPath = "$resolvedPath.bak"
             }
             else {
