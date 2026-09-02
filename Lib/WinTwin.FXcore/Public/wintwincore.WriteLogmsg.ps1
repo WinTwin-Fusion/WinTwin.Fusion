@@ -95,7 +95,7 @@ function wintwincore.WriteLogmsg {
                 $Message  = $Message -join "`n                                  "
                 $LogEntry = "$($LogEntry)`n                                  $($Message)"
             } else {
-                $msgLast  = $Message[-1]
+                $msgLast  = "                                  $($Message[-1])"
                 $Message = $Message[0..($Message.Count - 2)]
                 $Message  = $Message -join "`n                                  "
                 $LogEntry = "$($LogEntry)`n                                  $($Message)`n$($msgLast)"
