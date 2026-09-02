@@ -2,13 +2,13 @@
   "component": "WinTwin.FXcore",
   "sourceRepository": "WinTwin-Fusion/WinTwin.FXcore",
   "sourceBranch": "main",
-  "sourceCommit": "cdea21f6c5d6e0dfd29c35e547b118607ffc6de0",
-  "sourceCommitShort": "cdea21f",
+  "sourceCommit": "eadc7962608d3865d28bfebfd8229d34a58fc2a8",
+  "sourceCommitShort": "eadc796",
   "sourcePullRequest": {
-    "number": 20,
-    "title": "Update wintwincore.WriteLogmsg",
+    "number": 21,
+    "title": "Update wintwincore.GetWinVersion",
     "mergedBy": "praetoriani",
-    "mergedAt": "2026-09-02T10:56:45Z"
+    "mergedAt": "2026-09-02T12:26:26Z"
   },
   "targetRepository": "WinTwin-Fusion/WinTwin.Fusion",
   "targetBaseBranch": "main",
@@ -19,7 +19,7 @@
   ],
   "syncedBy": "GitHub Actions",
   "workflow": "Sync WinTwin.FXcore to WinTwin.Fusion",
-  "workflowRunId": "33622059312",
-  "workflowRunNumber": "17",
-  "syncDate": "2026-09-02T10:57:02Z"
+  "workflowRunId": "33629927919",
+  "workflowRunNumber": "18",
+  "syncDate": "2026-09-02T12:26:38Z"
 }

@@ -240,7 +240,7 @@ function wintwincore.GetWinVersion {
         # Some systems retain "Windows 10" in ProductName even though the build
         # number identifies Windows 11. Correct this only when CIM did not return
         # a usable caption.
-        if (:IsNullOrWhiteSpace($cimProductName) -and $buildNumber -ge 22000 -and $osName -like '*Windows 10*') {
+        if ((:IsNullOrWhiteSpace($cimProductName)) -and $buildNumber -ge 22000 -and $osName -like '*Windows 10*') {
             $osName = $osName -replace 'Windows 10', 'Windows 11'
         }
 
@@ -285,7 +285,7 @@ function wintwincore.GetWinVersion {
         }
 
         # ReleaseId is primarily useful for older Windows 10 releases.
-        if (:IsNullOrWhiteSpace($osVersion) -and $null -ne $currentVersion -and -not :IsNullOrWhiteSpace([string]$currentVersion.ReleaseId)) {
+        if ((:IsNullOrWhiteSpace($osVersion)) -and $null -ne $currentVersion -and -not (:IsNullOrWhiteSpace([string]$currentVersion.ReleaseId))) {
             $releaseId = [string]$currentVersion.ReleaseId
             if ($releaseId.Trim() -match '^\d{4}$') {
                 $osVersion = $releaseId.Trim()
@@ -296,7 +296,7 @@ function wintwincore.GetWinVersion {
         # If the registry values are unavailable, use known base build numbers.
         # Exact base builds are used instead of broad numeric ranges to avoid
         # incorrectly classifying Insider Preview builds.
-        if (:IsNullOrWhiteSpace($osVersion)) {
+        if ((:IsNullOrWhiteSpace($osVersion))) {
             $osVersion = switch ($buildNumber) {
                 # Windows 11 client releases
                 22000 { '21H2'; break }
