@@ -17,3 +17,9 @@ Lib/WinTwin.FXcore/copy-all-files.cmd
 Lib/WinTwin.FXcore/unblock-all-files.cmd
 DISM.UI.CC/ducc.wm.changelog.md
 DEV.TASKS.md
+Core/db/jobaction.json.backup
+Core/db/process.json.backup
+Core/db/workflow.json.backup
+Core/config.json.backup
+Core/db/jobaction.json.bak
+wintwin.fusion.installer.log
