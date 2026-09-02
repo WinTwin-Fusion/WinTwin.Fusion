@@ -12,7 +12,7 @@
 RootModule = 'WinTwin.XUI.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.00.02'
+ModuleVersion = '1.00.03'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Desktop', 'Core')
@@ -57,8 +57,9 @@ FunctionsToExport = @(
     'xuiSelectFile',
     'xuiSelectFolder',
     'xuiLoadWindow',
-    'xuiGetControlElements'
-)
+    'xuiGetControlElements',
+    'xuiCallDispatcher'
+ )
 
 # Cmdlets to export from this module
 CmdletsToExport = @()
@@ -80,7 +81,8 @@ FileList = @(
     'Public\xuiSelectFile.ps1',
     'Public\xuiSelectFolder.ps1',
     'Public\xuiLoadWindow.ps1',
-    'Public\xuiGetControlElements.ps1'
+    'Public\xuiGetControlElements.ps1',
+    'Public\xuiCallDispatcher.ps1'
     # Additional scripts
     #'PATH\TO\YOUR_ADDITIONAL_SCTIPT.ps1'
 )
@@ -101,6 +103,11 @@ PrivateData = @{
 ____________________________________________________________________
 ‼ PLEASE VISIT THE GITHUB REPO FOR DETAILED RELEASENOTES/CHANGELOG ‼
 ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+v1.00.03  (01.09.2026)
+----------------------
+Public functions added
+→ xuiCallDispatcher.ps1
 
 v1.00.02  (30.08.2026)
 ----------------------

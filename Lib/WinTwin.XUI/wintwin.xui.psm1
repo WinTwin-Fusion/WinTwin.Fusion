@@ -14,7 +14,7 @@
 .NOTES
     Creation Date : 23.08.2026
     Last Update   : 24.08.2026
-    Version       : 1.00.02
+    Version       : 1.00.03
     Author        : Praetoriani (a.k.a. M.Sczepanski)
     Website       : https://github.com/WinTwin-Fusion/WinTwin.XUI
 
