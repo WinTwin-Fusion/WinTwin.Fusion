@@ -288,18 +288,18 @@ function wintwincore.PatchJSON {
         [guid]::NewGuid().ToString('N')
     $tempPath = Join-Path -Path $directory -ChildPath $tempName
 
+    $replaceBackupPath = $null
+    $deleteReplaceBackup = $false
+    
     try {
         $json = $document | ConvertTo-Json -Depth $Depth
 
-        # UTF-8 without BOM in Windows PowerShell 5.1 and PowerShell 7+.
+        # UTF-8 without BOM on Windows PowerShell 5.1 and PowerShell 7+.
         $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
-        [System.IO.File]::WriteAllText($tempPath, $json, $utf8NoBom)
+        [System.IO.File]::WriteAllText( $tempPath, $json, $utf8NoBom )
 
-        # Validate the generated JSON before replacing the original file.
-        $validationRaw = [System.IO.File]::ReadAllText(
-            $tempPath,
-            [System.Text.Encoding]::UTF8
-        )
+        # Validate generated JSON before modifying the original file.
+        $validationRaw = [System.IO.File]::ReadAllText( $tempPath, [System.Text.Encoding]::UTF8 )
 
         if ($PSVersionTable.PSVersion.Major -ge 6) {
             $null = $validationRaw |
@@ -311,29 +311,36 @@ function wintwincore.PatchJSON {
         }
 
         if ($CreateBackup) {
-            if ([string]::IsNullOrWhiteSpace($BackupPath)) {
-                $BackupPath = "$resolvedPath.bak"
+            if (:IsNullOrWhiteSpace($BackupPath)) {
+                $replaceBackupPath = "$resolvedPath.bak"
             }
             else {
-                $BackupPath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(
-                    $BackupPath
-                )
+                $replaceBackupPath =
+                    $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(
+                        $BackupPath
+                    )
             }
 
-            Copy-Item `
-                -LiteralPath $resolvedPath `
-                -Destination $BackupPath `
-                -Force `
-                -ErrorAction Stop
+            # Preserves the existing force behavior.
+            if (Test-Path -LiteralPath $replaceBackupPath) {
+                Remove-Item -LiteralPath $replaceBackupPath -Force -ErrorAction Stop
+            }
 
-            $resultData.BackupPath = $BackupPath
+            $resultData.BackupPath = $replaceBackupPath
+        }
+        else {
+            # Some PowerShell/.NET combinations treat $null as an empty path
+            # when calling File.Replace. Therefore, a genuine temporary
+            # backup path is used and removed after a successful replacement.
+            $replaceBackupPath = Join-Path -Path $directory -ChildPath ('.{0}.{1}.replace.bak' -f $fileName, [System.Guid]::NewGuid().ToString('N'))
+            $deleteReplaceBackup = $true
         }
 
-        [System.IO.File]::Replace(
-            $tempPath,
-            $resolvedPath,
-            $null
-        )
+        [System.IO.File]::Replace( $tempPath, $resolvedPath, $replaceBackupPath )
+
+        if ($deleteReplaceBackup -and (Test-Path -LiteralPath $replaceBackupPath)) {
+            Remove-Item -LiteralPath $replaceBackupPath -Force -ErrorAction SilentlyContinue
+        }
 
         return (OPSreturn `
             -Code 0 `
@@ -342,10 +349,7 @@ function wintwincore.PatchJSON {
     }
     catch {
         if (Test-Path -LiteralPath $tempPath) {
-            Remove-Item `
-                -LiteralPath $tempPath `
-                -Force `
-                -ErrorAction SilentlyContinue
+            Remove-Item -LiteralPath $tempPath -Force -ErrorAction SilentlyContinue
         }
 
         return (OPSreturn `
