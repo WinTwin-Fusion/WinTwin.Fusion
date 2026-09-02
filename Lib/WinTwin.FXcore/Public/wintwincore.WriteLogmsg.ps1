@@ -85,7 +85,10 @@ function wintwincore.WriteLogmsg {
         if ($Message.Count -eq 1) {
             $LogEntry = "$($Timestamp)  $($FormattedFlag)  $($Message)"
         }
-        elseif ($Message.Count -ge 2) {
+        elseif ($Message.Count -eq 2) {
+            $LogEntry = "$($Timestamp)  $($FormattedFlag)  $($Message[0])`n                                  $($Message[1])"
+        }
+        elseif ($Message.Count -ge 3) {
             $LogEntry = "$($Timestamp)  $($FormattedFlag)  $($Message[0])"
             $Message  = $Message[1..($Message.Count - 1)]
             $msgLast  = $Message[-1]
