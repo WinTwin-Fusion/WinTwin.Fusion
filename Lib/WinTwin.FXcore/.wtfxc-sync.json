@@ -2,13 +2,13 @@
   "component": "WinTwin.FXcore",
   "sourceRepository": "WinTwin-Fusion/WinTwin.FXcore",
   "sourceBranch": "main",
-  "sourceCommit": "be382119bac5988e2e1d2790c094931e84ac3554",
-  "sourceCommitShort": "be38211",
+  "sourceCommit": "94fe549d5a2a2ad65fed4bbbe7366a45e00d2d91",
+  "sourceCommitShort": "94fe549",
   "sourcePullRequest": {
-    "number": 27,
-    "title": "Patched wintwincore.PatchJSON 😜",
+    "number": 28,
+    "title": "Updated wintwincore.InstallRequiredFonts",
     "mergedBy": "praetoriani",
-    "mergedAt": "2026-09-02T17:25:31Z"
+    "mergedAt": "2026-09-02T17:36:02Z"
   },
   "targetRepository": "WinTwin-Fusion/WinTwin.Fusion",
   "targetBaseBranch": "main",
@@ -19,7 +19,7 @@
   ],
   "syncedBy": "GitHub Actions",
   "workflow": "Sync WinTwin.FXcore to WinTwin.Fusion",
-  "workflowRunId": "33660986654",
-  "workflowRunNumber": "24",
-  "syncDate": "2026-09-02T17:25:45Z"
+  "workflowRunId": "33662087430",
+  "workflowRunNumber": "25",
+  "syncDate": "2026-09-02T17:36:19Z"
 }

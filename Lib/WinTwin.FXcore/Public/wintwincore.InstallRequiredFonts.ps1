@@ -177,7 +177,7 @@ public static class NativeFontMethods
             }
 
             # Add the font to the current Windows font table.
-            $fontsAdded = :AddFontResourceEx($destinationPath, 0, (:Zero))
+            $fontsAdded = [NativeFontMethods]::AddFontResourceEx($destinationPath, 0, ([System.IntPtr]::Zero))
 
             if ($fontsAdded -eq 0) {
                 if (-not $destinationAlreadyExisted) {
@@ -200,7 +200,7 @@ public static class NativeFontMethods
         }
 
         # Notify running applications that the available fonts have changed.
-        SendMessage($broadcastHandle, $fontChangeMessage, (:Zero), (:Zero))
+        [NativeFontMethods]::SendMessage($broadcastHandle, $fontChangeMessage, ([System.IntPtr]::Zero), ([System.IntPtr]::Zero))
         return $true
     }
     catch {
@@ -208,7 +208,7 @@ public static class NativeFontMethods
 
         # Roll back fonts installed during this function call.
         foreach ($installedFont in ($installedFonts | Select-Object -Last $installedFonts.Count)) {
-            RemoveFontResourceEx($installedFont.DestinationPath, 0, (:Zero))
+            [NativeFontMethods]::RemoveFontResourceEx($installedFont.DestinationPath, 0, ([System.IntPtr]::Zero))
 
             if (-not $installedFont.DestinationAlreadyExisted) {
                 Remove-Item -LiteralPath $installedFont.DestinationPath -Force -ErrorAction SilentlyContinue
