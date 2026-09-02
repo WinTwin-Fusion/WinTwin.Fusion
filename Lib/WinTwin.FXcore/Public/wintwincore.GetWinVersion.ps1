@@ -333,9 +333,14 @@ function wintwincore.GetWinVersion {
             }
         }
 
+        # ---------------------------------------------------------------------
+        # Determine operating system bitness and native architecture.
+        # ---------------------------------------------------------------------
         # Retrieve additional informational values if they are available.
         $windowsVersion = $null
         $architecture = $null
+        $nativeArchitecture = $null
+        $nativeArchitectureRaw = $null
 
         if ($null -ne $cimOs -and $cimOs.Version) {
             $windowsVersion = [string]$cimOs.Version
@@ -343,7 +348,9 @@ function wintwincore.GetWinVersion {
         elseif ($null -ne $currentVersion -and $currentVersion.CurrentVersion) {
             $windowsVersion = [string]$currentVersion.CurrentVersion
         }
-
+        
+        # Win32_OperatingSystem.OSArchitecture normally returns values such as
+        # "64-bit" or "32-bit".
         if ($null -ne $cimOs -and $cimOs.OSArchitecture) {
             $architecture = [string]$cimOs.OSArchitecture
         }
@@ -352,6 +359,28 @@ function wintwincore.GetWinVersion {
         }
         else {
             $architecture = '32-bit'
+        }
+
+        # Read PROCESSOR_ARCHITECTURE from the machine scope. This avoids
+        # accidentally reporting the architecture of a 32-bit PowerShell
+        # process running on a 64-bit operating system.
+        try {
+            $nativeArchitectureRaw = [System.Environment]::GetEnvironmentVariable('PROCESSOR_ARCHITECTURE', [System.EnvironmentVariableTarget]::Machine )
+        }
+        catch {
+            Write-Verbose "Unable to determine native architecture: $($_.Exception.Message)"
+        }
+
+        $nativeArchitecture = switch (
+        [string]$nativeArchitectureRaw) {
+            'AMD64' { 'x64'; break }
+            'ARM64' { 'ARM64'; break }
+            'x86' { 'x86'; break }
+            'IA64' { 'IA64'; break }
+            default {
+                if ([System.Environment]::Is64BitOperatingSystem) { 'Unknown 64-bit' }
+                else { 'x86' }
+            }
         }
 
         # Create the data portion separately to keep the OPSreturn structure
@@ -366,12 +395,14 @@ function wintwincore.GetWinVersion {
             else {
                 $null
             }
-            fullbuild        = [string]$fullBuild
-            version          = [string]$windowsVersion
-            architecture     = [string]$architecture
-            iswindowsclient  = [bool]$isWindowsClient
-            iswindowsserver  = [bool]$isWindowsServer
-            detectionmethod  = [string]$detectionMethod
+            fullbuild              = [string]$fullBuild
+            version                = [string]$windowsVersion
+            architecture           = [string]$architecture
+            nativearchitecture     = [string]$nativeArchitecture
+            nativearchitectureraw  = [string]$nativeArchitectureRaw
+            iswindowsclient        = [bool]$isWindowsClient
+            iswindowsserver        = [bool]$isWindowsServer
+            detectionmethod        = [string]$detectionMethod
         }
 
         return [pscustomobject]@{
@@ -383,9 +414,7 @@ function wintwincore.GetWinVersion {
     catch {
         return [pscustomobject]@{
             code    = [int]1
-            message = 'Failed to retrieve Windows version information: {0}' -f
-                $_.Exception.Message
-            
+            message = 'Failed to retrieve Windows version information: {0}' -f $_.Exception.Message
             data    = $null
         }
     }

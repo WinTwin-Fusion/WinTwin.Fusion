@@ -2,13 +2,13 @@
   "component": "WinTwin.FXcore",
   "sourceRepository": "WinTwin-Fusion/WinTwin.FXcore",
   "sourceBranch": "main",
-  "sourceCommit": "94fe549d5a2a2ad65fed4bbbe7366a45e00d2d91",
-  "sourceCommitShort": "94fe549",
+  "sourceCommit": "4c60e12fbe13f9a62e59aa9c66031d2949a39571",
+  "sourceCommitShort": "4c60e12",
   "sourcePullRequest": {
-    "number": 28,
-    "title": "Updated wintwincore.InstallRequiredFonts",
+    "number": 29,
+    "title": "Updated private functions",
     "mergedBy": "praetoriani",
-    "mergedAt": "2026-09-02T17:36:02Z"
+    "mergedAt": "2026-09-02T20:51:27Z"
   },
   "targetRepository": "WinTwin-Fusion/WinTwin.Fusion",
   "targetBaseBranch": "main",
@@ -19,7 +19,7 @@
   ],
   "syncedBy": "GitHub Actions",
   "workflow": "Sync WinTwin.FXcore to WinTwin.Fusion",
-  "workflowRunId": "33662087430",
-  "workflowRunNumber": "25",
-  "syncDate": "2026-09-02T17:36:19Z"
+  "workflowRunId": "33681771648",
+  "workflowRunNumber": "26",
+  "syncDate": "2026-09-02T20:51:42Z"
 }
