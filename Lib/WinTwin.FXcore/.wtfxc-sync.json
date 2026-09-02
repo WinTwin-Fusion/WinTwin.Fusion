@@ -2,13 +2,13 @@
   "component": "WinTwin.FXcore",
   "sourceRepository": "WinTwin-Fusion/WinTwin.FXcore",
   "sourceBranch": "main",
-  "sourceCommit": "c3c71324845674fdd147358d780debe7fde06799",
-  "sourceCommitShort": "c3c7132",
+  "sourceCommit": "7f0cae1f86478632decfcf63664cb2419f1dd0a8",
+  "sourceCommitShort": "7f0cae1",
   "sourcePullRequest": {
-    "number": 25,
-    "title": "Guess what ... 😆",
+    "number": 26,
+    "title": "Updated wintwincore.PatchJSON",
     "mergedBy": "praetoriani",
-    "mergedAt": "2026-09-02T16:39:57Z"
+    "mergedAt": "2026-09-02T17:17:29Z"
   },
   "targetRepository": "WinTwin-Fusion/WinTwin.Fusion",
   "targetBaseBranch": "main",
@@ -19,7 +19,7 @@
   ],
   "syncedBy": "GitHub Actions",
   "workflow": "Sync WinTwin.FXcore to WinTwin.Fusion",
-  "workflowRunId": "33656315482",
-  "workflowRunNumber": "22",
-  "syncDate": "2026-09-02T16:40:13Z"
+  "workflowRunId": "33660156627",
+  "workflowRunNumber": "23",
+  "syncDate": "2026-09-02T17:17:43Z"
 }
