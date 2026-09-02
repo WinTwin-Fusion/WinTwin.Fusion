@@ -1,9 +1,12 @@
-function wtfxInstallPEaddon {
+function wintwincore.InstallADK {
     <#
     .SYNOPSIS
-        Installs the Windows ADK WinPE add-on silently and hidden via adkwinpesetup.exe.
+        Installs the Windows ADK silently and completely hidden via adksetup.exe.
     .PARAMETER SetupPath
-        Full path to adkwinpesetup.exe.
+        Full path to adksetup.exe.
+    .PARAMETER Features
+        Optional list of ADK features to install. Defaults to the Deployment Tools
+        and the USMT feature. Use 'OptionId.All' to install everything.
     .PARAMETER LogFile
         Optional path for the setup log file.
     .PARAMETER TimeoutMinutes
@@ -30,6 +33,9 @@ function wtfxInstallPEaddon {
         [string]$SetupPath,
 
         [Parameter(Mandatory = $false)]
+        [string[]]$Features = @('OptionId.DeploymentTools', 'OptionId.UserStateMigrationTool'),
+
+        [Parameter(Mandatory = $false)]
         [string]$LogFile,
 
         [Parameter(Mandatory = $false)]
@@ -43,19 +49,23 @@ function wtfxInstallPEaddon {
         if ([string]::IsNullOrWhiteSpace($SetupPath)) { return $false }
         if (-not (Test-Path -LiteralPath $SetupPath -PathType Leaf)) { return $false }
 
+        # Resolve to an absolute path (Start-Process does not honour the PS location)
         $exePath = (Resolve-Path -LiteralPath $SetupPath -ErrorAction Stop).ProviderPath
         if ([System.IO.Path]::GetExtension($exePath) -ne '.exe') { return $false }
 
         # --- Build silent command line ------------------------------------------
-        # The WinPE add-on only ships a single feature: OptionId.WindowsPreinstallationEnvironment
-        $arguments = @(
-            '/quiet',
-            '/norestart',
-            '/ceip', 'off',
-            '/features', 'OptionId.WindowsPreinstallationEnvironment'
-        )
+        # /quiet   -> no UI at all
+        # /norestart -> never reboot automatically
+        # /ceip off -> disable customer experience improvement program
+        $arguments = @('/quiet', '/norestart', '/ceip', 'off')
+
+        if ($Features -and $Features.Count -gt 0) {
+            $arguments += '/features'
+            $arguments += $Features
+        }
 
         if (-not [string]::IsNullOrWhiteSpace($LogFile)) {
+            # Make sure the log directory exists, otherwise setup may fail
             $logDir = Split-Path -Path $LogFile -Parent
             if (-not [string]::IsNullOrWhiteSpace($logDir) -and -not (Test-Path -LiteralPath $logDir)) {
                 New-Item -Path $logDir -ItemType Directory -Force -ErrorAction SilentlyContinue | Out-Null
@@ -76,6 +86,7 @@ function wtfxInstallPEaddon {
         if ($TimeoutMinutes -gt 0) {
             $timeoutMs = $TimeoutMinutes * 60 * 1000
             if (-not $process.WaitForExit($timeoutMs)) {
+                # Setup hangs -> terminate and report failure
                 try { $process.Kill() } catch { }
                 return $false
             }
@@ -85,7 +96,8 @@ function wtfxInstallPEaddon {
         }
 
         # --- Evaluate exit code --------------------------------------------------
-        if ($process.ExitCode -eq 0) { return $true }
+        $exitCode = $process.ExitCode
+        if ($exitCode -eq 0) { return $true }
 
         return $false
     }

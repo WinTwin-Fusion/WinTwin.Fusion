@@ -1,10 +1,10 @@
-function wtfxLaunchConsole {
+function wintwincore.LaunchConsole {
     <#
     .SYNOPSIS
         Starts WTF.Console as a detached process for a previously generated script.
 
     .DESCRIPTION
-        wtfxLaunchConsole is the generic, framework-wide replacement for
+        wintwincore.LaunchConsole is the generic, framework-wide replacement for
         Start-WtfConsoleProcess from DISM.UI.CC\wim.mounter.fx.ps1.
 
         The original helper always launched WTF.Console in framework mode with a
@@ -71,18 +71,18 @@ function wtfxLaunchConsole {
 
     .EXAMPLE
         # Typical wim.mounter hand-off after the tool has cleared process.json:
-        $launch = wtfxLaunchConsole -Script 'C:\WinTwin.Fusion\Core\export\mount.image.ps1' `
+        $launch = wintwincore.LaunchConsole -Script 'C:\WinTwin.Fusion\Core\export\mount.image.ps1' `
                                     -Mode framework `
                                     -Action 'wim-mount' `
                                     -FrameworkRoot 'C:\WinTwin.Fusion'
 
     .EXAMPLE
-        wtfxLaunchConsole -Script 'D:\portable\job.ps1' -Mode standalone -Size '1024x768'
+        wintwincore.LaunchConsole -Script 'D:\portable\job.ps1' -Mode standalone -Size '1024x768'
 
     .NOTES
         Part of: WinTwin.FXcore
         Replaces: Start-WtfConsoleProcess
-        Depends on: OPSreturn, wtfxLoadJSON, wtfxWriteJSON, wtfxGetJobAction, wtfxSetJobAction
+        Depends on: OPSreturn, wintwincore.LoadJSON, wintwincore.WriteJSON, wintwincore.GetJobAction, wintwincore.SetJobAction
         See also: wtfConsoleScript
     #>
 
@@ -128,17 +128,17 @@ function wtfxLaunchConsole {
 
     # --- Shared validation ----------------------------------------------------
     if ([string]::IsNullOrWhiteSpace($Script)) {
-        return (OPSreturn -Code fail -Message "wtfxLaunchConsole failed! Parameter 'Script' is required and must not be empty.")
+        return (OPSreturn -Code fail -Message "wintwincore.LaunchConsole failed! Parameter 'Script' is required and must not be empty.")
     }
     if (-not (Test-Path -LiteralPath $Script -PathType Leaf)) {
-        return (OPSreturn -Code fail -Message "wtfxLaunchConsole failed! Script file not found: '$Script'.")
+        return (OPSreturn -Code fail -Message "wintwincore.LaunchConsole failed! Script file not found: '$Script'.")
     }
 
     try {
         $resolvedScript = (Resolve-Path -LiteralPath $Script).ProviderPath
     }
     catch {
-        return (OPSreturn -Code fail -Message "wtfxLaunchConsole failed! Could not resolve Script path '$Script': $($_.Exception.Message)" -Exception $_.Exception)
+        return (OPSreturn -Code fail -Message "wintwincore.LaunchConsole failed! Could not resolve Script path '$Script': $($_.Exception.Message)" -Exception $_.Exception)
     }
 
     $resolvedMode          = $Mode.ToLowerInvariant()
@@ -156,7 +156,7 @@ function wtfxLaunchConsole {
     # =========================================================================
     if ($resolvedMode -eq 'framework') {
         if ([string]::IsNullOrWhiteSpace($Action)) {
-            return (OPSreturn -Code fail -Message "wtfxLaunchConsole failed! Parameter 'Action' is mandatory in framework mode and must match a jobaction.json key (for example 'wim-mount').")
+            return (OPSreturn -Code fail -Message "wintwincore.LaunchConsole failed! Parameter 'Action' is mandatory in framework mode and must match a jobaction.json key (for example 'wim-mount').")
         }
 
         # Infer the framework root from the console path when the caller did not pass it.
@@ -169,16 +169,16 @@ function wtfxLaunchConsole {
         }
 
         if ([string]::IsNullOrWhiteSpace($resolvedFrameworkRoot)) {
-            return (OPSreturn -Code fail -Message "wtfxLaunchConsole failed! FrameworkRoot is required in framework mode (or must be inferable from -WtfConsolePath).")
+            return (OPSreturn -Code fail -Message "wintwincore.LaunchConsole failed! FrameworkRoot is required in framework mode (or must be inferable from -WtfConsolePath).")
         }
         if (-not (Test-Path -LiteralPath (Join-Path $resolvedFrameworkRoot 'Core\config.json') -PathType Leaf)) {
-            return (OPSreturn -Code fail -Message "wtfxLaunchConsole failed! Core\\config.json was not found under FrameworkRoot '$resolvedFrameworkRoot'.")
+            return (OPSreturn -Code fail -Message "wintwincore.LaunchConsole failed! Core\\config.json was not found under FrameworkRoot '$resolvedFrameworkRoot'.")
         }
 
             
-        $configResult = wtfxLoadJSON -Path (Join-Path $resolvedFrameworkRoot 'Core\config.json')
+        $configResult = wintwincore.LoadJSON -Path (Join-Path $resolvedFrameworkRoot 'Core\config.json')
         if ($configResult.code -ne 0) {
-            return (OPSreturn -Code fail -Message "wtfxLaunchConsole failed! Could not load Core\\config.json: $($configResult.msg)" -Exception $configResult.exception)
+            return (OPSreturn -Code fail -Message "wintwincore.LaunchConsole failed! Could not load Core\\config.json: $($configResult.msg)" -Exception $configResult.exception)
         }
         $config = $configResult.data
 
@@ -212,9 +212,9 @@ function wtfxLaunchConsole {
             $processDbPath = Join-Path $resolvedFrameworkRoot 'Core\db\process.json'
         }
 
-        $processResult = wtfxLoadJSON -Path $processDbPath
+        $processResult = wintwincore.LoadJSON -Path $processDbPath
         if ($processResult.code -ne 0) {
-            return (OPSreturn -Code fail -Message "wtfxLaunchConsole failed! Could not load process.json: $($processResult.msg)" -Exception $processResult.exception)
+            return (OPSreturn -Code fail -Message "wintwincore.LaunchConsole failed! Could not load process.json: $($processResult.msg)" -Exception $processResult.exception)
         }
         $processDb = $processResult.data
 
@@ -223,13 +223,13 @@ function wtfxLaunchConsole {
         if ($currentState -eq 'running') {
             $blocker = ''
             try { $blocker = [string]$processDb.running.'proc-name' } catch { $blocker = 'unknown' }
-            return (OPSreturn -Code fail -Message "wtfxLaunchConsole failed! A framework process is already running ('$blocker'). The caller must deregister itself from process.json before handing off to WTF.Console.")
+            return (OPSreturn -Code fail -Message "wintwincore.LaunchConsole failed! A framework process is already running ('$blocker'). The caller must deregister itself from process.json before handing off to WTF.Console.")
         }
 
         # --- jobaction.json ---------------------------------------------------
-        $jobResult = wtfxGetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId $Action
+        $jobResult = wintwincore.GetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId $Action
         if ($jobResult.code -ne 0) {
-            return (OPSreturn -Code fail -Message "wtfxLaunchConsole failed! Action '$Action' is not defined in jobaction.json: $($jobResult.msg)" -Exception $jobResult.exception)
+            return (OPSreturn -Code fail -Message "wintwincore.LaunchConsole failed! Action '$Action' is not defined in jobaction.json: $($jobResult.msg)" -Exception $jobResult.exception)
         }
         $jobNode = $jobResult.data
 
@@ -287,10 +287,10 @@ function wtfxLaunchConsole {
     # =========================================================================
     else {
         if ([string]::IsNullOrWhiteSpace($resolvedConsolePath)) {
-            return (OPSreturn -Code fail -Message "wtfxLaunchConsole failed! Parameter 'WtfConsolePath' is required in standalone mode.")
+            return (OPSreturn -Code fail -Message "wintwincore.LaunchConsole failed! Parameter 'WtfConsolePath' is required in standalone mode.")
         }
         if ($loggingEnabled -and [string]::IsNullOrWhiteSpace($resolvedLogfile)) {
-            return (OPSreturn -Code fail -Message "wtfxLaunchConsole failed! Parameter 'Logfile' is required when Logging is true in standalone mode.")
+            return (OPSreturn -Code fail -Message "wintwincore.LaunchConsole failed! Parameter 'Logfile' is required when Logging is true in standalone mode.")
         }
         if (-not $loggingEnabled) {
             $resolvedLogfile = ''
@@ -298,14 +298,14 @@ function wtfxLaunchConsole {
     }
 
     if ([string]::IsNullOrWhiteSpace($resolvedConsolePath) -or -not (Test-Path -LiteralPath $resolvedConsolePath -PathType Leaf)) {
-        return (OPSreturn -Code fail -Message "wtfxLaunchConsole failed! WTF.Console.ps1 was not found: '$resolvedConsolePath'.")
+        return (OPSreturn -Code fail -Message "wintwincore.LaunchConsole failed! WTF.Console.ps1 was not found: '$resolvedConsolePath'.")
     }
 
     try {
         $resolvedConsolePath = (Resolve-Path -LiteralPath $resolvedConsolePath).ProviderPath
     }
     catch {
-        return (OPSreturn -Code fail -Message "wtfxLaunchConsole failed! Could not resolve WtfConsolePath: $($_.Exception.Message)" -Exception $_.Exception)
+        return (OPSreturn -Code fail -Message "wintwincore.LaunchConsole failed! Could not resolve WtfConsolePath: $($_.Exception.Message)" -Exception $_.Exception)
     }
 
     if ($loggingEnabled -and -not [string]::IsNullOrWhiteSpace($resolvedLogfile)) {
@@ -316,7 +316,7 @@ function wtfxLaunchConsole {
             }
         }
         catch {
-            return (OPSreturn -Code fail -Message "wtfxLaunchConsole failed! Could not create log directory for '$resolvedLogfile': $($_.Exception.Message)" -Exception $_.Exception)
+            return (OPSreturn -Code fail -Message "wintwincore.LaunchConsole failed! Could not create log directory for '$resolvedLogfile': $($_.Exception.Message)" -Exception $_.Exception)
         }
     }
 
@@ -363,38 +363,38 @@ function wtfxLaunchConsole {
             $processDb.running.'job-state' = 'running'
         }
         catch {
-            return (OPSreturn -Code fail -Message "wtfxLaunchConsole failed! Could not update the in-memory process.json running node: $($_.Exception.Message)" -Exception $_.Exception)
+            return (OPSreturn -Code fail -Message "wintwincore.LaunchConsole failed! Could not update the in-memory process.json running node: $($_.Exception.Message)" -Exception $_.Exception)
         }
 
-        $writeProcess = wtfxWriteJSON -Path $processDbPath -Value $processDb
+        $writeProcess = wintwincore.WriteJSON -Path $processDbPath -Value $processDb
         if ($writeProcess.code -ne 0) {
-            return (OPSreturn -Code fail -Message "wtfxLaunchConsole failed! Could not persist process.json: $($writeProcess.msg)" -Exception $writeProcess.exception)
+            return (OPSreturn -Code fail -Message "wintwincore.LaunchConsole failed! Could not persist process.json: $($writeProcess.msg)" -Exception $writeProcess.exception)
         }
 
         # Action-specific node: mark the job as started and record its logfile flag.
-        $null = wtfxSetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId $Action -Field 'created' -Value $timestampNow
-        $null = wtfxSetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId $Action -Field 'state'   -Value $true
+        $null = wintwincore.SetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId $Action -Field 'created' -Value $timestampNow
+        $null = wintwincore.SetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId $Action -Field 'state'   -Value $true
         if ($loggingEnabled -and -not [string]::IsNullOrWhiteSpace($resolvedLogfile)) {
-            $null = wtfxSetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId $Action -Field 'logfile' -Value @($true, $resolvedLogfile)
+            $null = wintwincore.SetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId $Action -Field 'logfile' -Value @($true, $resolvedLogfile)
         }
 
         # Shared WTF.Console node so other tools can see who launched the console.
-        $wtfcExists = wtfxGetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId 'wtfc'
+        $wtfcExists = wintwincore.GetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId 'wtfc'
         if ($wtfcExists.code -eq 0) {
-            $null = wtfxSetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId 'wtfc' -Field 'script'    -Value $resolvedScript
-            $null = wtfxSetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId 'wtfc' -Field 'action-id' -Value $Action
-            $null = wtfxSetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId 'wtfc' -Field 'created'   -Value $timestampNow
-            $null = wtfxSetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId 'wtfc' -Field 'state'     -Value $true
+            $null = wintwincore.SetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId 'wtfc' -Field 'script'    -Value $resolvedScript
+            $null = wintwincore.SetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId 'wtfc' -Field 'action-id' -Value $Action
+            $null = wintwincore.SetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId 'wtfc' -Field 'created'   -Value $timestampNow
+            $null = wintwincore.SetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId 'wtfc' -Field 'state'     -Value $true
             if ($loggingEnabled -and -not [string]::IsNullOrWhiteSpace($resolvedLogfile)) {
-                $null = wtfxSetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId 'wtfc' -Field 'logfile' -Value @($true, $resolvedLogfile)
+                $null = wintwincore.SetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId 'wtfc' -Field 'logfile' -Value @($true, $resolvedLogfile)
             }
         }
     }
 
     # --- Get full path to PowerShell ------------------------------------------
-    $psExeResult = wtfxGetPSExecutable
+    $psExeResult = wintwincore.GetPSExecutable
     if ($psExeResult.code -ne 0) {
-        return (OPSreturn -Code fail -Message "wtfxLaunchConsole failed! Could not resolve PowerShell executable: $($psExeResult.msg)" -Exception $psExeResult.exception)
+        return (OPSreturn -Code fail -Message "wintwincore.LaunchConsole failed! Could not resolve PowerShell executable: $($psExeResult.msg)" -Exception $psExeResult.exception)
     }
     $powershellExe = $psExeResult.data.Path
 
@@ -419,15 +419,15 @@ function wtfxLaunchConsole {
                 $processDb.running.'job-start' = ''
                 $processDb.running.'job-state' = ''
                 if ($processDb.running.PSObject.Properties['pid']) { $processDb.running.processid = 0 }
-                $null = wtfxWriteJSON -Path $processDbPath -Value $processDb
+                $null = wintwincore.WriteJSON -Path $processDbPath -Value $processDb
             }
             catch { }
         }
-        return (OPSreturn -Code fail -Message "wtfxLaunchConsole failed! Could not start WTF.Console:`n$($_.Exception.Message)" -Exception $_.Exception)
+        return (OPSreturn -Code fail -Message "wintwincore.LaunchConsole failed! Could not start WTF.Console:`n$($_.Exception.Message)" -Exception $_.Exception)
     }
 
     if ($null -eq $started) {
-        return (OPSreturn -Code fail -Message "wtfxLaunchConsole failed! Start-Process returned no process object for WTF.Console.")
+        return (OPSreturn -Code fail -Message "wintwincore.LaunchConsole failed! Start-Process returned no process object for WTF.Console.")
     }
 
     # --- Persist the real PID now that the process actually exists -------------
@@ -440,13 +440,13 @@ function wtfxLaunchConsole {
                 $processDb.running | Add-Member -MemberType NoteProperty -Name 'processid' -Value $started.Id -Force
             }
             # Now we can be sure that 'processid' really exists            
-            $writePid = wtfxWriteJSON -Path $processDbPath -Value $processDb
+            $writePid = wintwincore.WriteJSON -Path $processDbPath -Value $processDb
             if ($writePid.code -ne 0) {
-                Write-Verbose "wtfxLaunchConsole: WTF.Console started (PID $($started.Id)), but the PID could not be persisted to process.json: $($writePid.msg)"
+                Write-Verbose "wintwincore.LaunchConsole: WTF.Console started (PID $($started.Id)), but the PID could not be persisted to process.json: $($writePid.msg)"
             }
         }
         catch {
-            Write-Verbose "wtfxLaunchConsole: WTF.Console started (PID $($started.Id)), but the PID could not be persisted to process.json: $($_.Exception.Message)"
+            Write-Verbose "wintwincore.LaunchConsole: WTF.Console started (PID $($started.Id)), but the PID could not be persisted to process.json: $($_.Exception.Message)"
         }
     }
 
@@ -465,5 +465,5 @@ function wtfxLaunchConsole {
     }
 
     # --- Return to Caller -----------------------------------------------------
-    return (OPSreturn -Code success -Message "wtfxLaunchConsole: WTF.Console started (PID $($started.Id)) in '$resolvedMode' mode." -Data $resultData)
+    return (OPSreturn -Code success -Message "wintwincore.LaunchConsole: WTF.Console started (PID $($started.Id)) in '$resolvedMode' mode." -Data $resultData)
 }

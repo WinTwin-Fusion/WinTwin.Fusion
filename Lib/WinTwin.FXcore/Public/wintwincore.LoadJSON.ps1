@@ -1,10 +1,10 @@
-function wtfxLoadJSON {
+function wintwincore.LoadJSON {
     <#
     .SYNOPSIS
     Loads and parses a JSON file into a PowerShell object.
 
     .DESCRIPTION
-    The wtfxLoadJSON function reads a plain JSON file from disk, validates that it
+    The wintwincore.LoadJSON function reads a plain JSON file from disk, validates that it
     exists and that its content is syntactically valid JSON, and returns the parsed
     object via the standard OPSreturn contract. This function is the generic,
     reusable JSON-loading primitive for the whole WinTwin.Fusion framework - it does
@@ -18,12 +18,12 @@ function wtfxLoadJSON {
     covers all currently known WinTwin.Fusion JSON schemas.
 
     .EXAMPLE
-    $result = wtfxLoadJSON -Path "C:\WinTwin.Fusion\Core\config.json"
+    $result = wintwincore.LoadJSON -Path "C:\WinTwin.Fusion\Core\config.json"
     if ($result.code -eq 0) { $config = $result.data }
 
     .NOTES
     Part of: WinTwin.FXcore
-    See also: wtfxLoadJSONC, wtfxWriteJSON
+    See also: wintwincore.LoadJSONC, wintwincore.WriteJSON
     #>
 
     [CmdletBinding()]

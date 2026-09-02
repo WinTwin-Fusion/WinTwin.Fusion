@@ -1,10 +1,10 @@
-function wtfxCreateNewDir {
+function wintwincore.CreateNewDir {
     <#
     .SYNOPSIS
         Creates a directory (including any missing parent folders in the chain).
 
     .DESCRIPTION
-        wtfxCreateNewDir is the framework-wide, robust replacement for the previously
+        wintwincore.CreateNewDir is the framework-wide, robust replacement for the previously
         undefined "CreateNewDir" calls scattered across tool-local code (e.g.
         DISM.UI.CC\wim.mounter.ps1). It creates the full directory chain for -Path in
         a single call - PowerShell's own New-Item -ItemType Directory already creates
@@ -35,16 +35,16 @@ function wtfxCreateNewDir {
         PSCustomObject from OPSreturn.
 
     .EXAMPLE
-        $result = wtfxCreateNewDir -Path 'C:\WinTwin.Fusion\Core\logs'
+        $result = wintwincore.CreateNewDir -Path 'C:\WinTwin.Fusion\Core\logs'
         if ($result.code -ne 0) { throw $result.msg }
 
     .EXAMPLE
-        wtfxCreateNewDir -Path $WinTwin['export'] -Force
+        wintwincore.CreateNewDir -Path $WinTwin['export'] -Force
 
     .NOTES
         Part of: WinTwin.FXcore
         Replaces: the previously undefined "CreateNewDir" call sites
-        See also: wtfxRemoveFolder, OPSreturn
+        See also: wintwincore.RemoveFolder, OPSreturn
     #>
 
     [CmdletBinding()]
@@ -59,7 +59,7 @@ function wtfxCreateNewDir {
     )
 
     if ([string]::IsNullOrWhiteSpace($Path)) {
-        return (OPSreturn -Code fail -Message "wtfxCreateNewDir failed! Parameter 'Path' is required and must not be empty.")
+        return (OPSreturn -Code fail -Message "wintwincore.CreateNewDir failed! Parameter 'Path' is required and must not be empty.")
     }
 
     # --- Already a directory: nothing to do -----------------------------------
@@ -68,20 +68,20 @@ function wtfxCreateNewDir {
             Path    = $Path
             Created = $false
         }
-        return (OPSreturn -Code success -Message "wtfxCreateNewDir: Target already exists as a directory, nothing to do: '$Path'." -Data $resultData)
+        return (OPSreturn -Code success -Message "wintwincore.CreateNewDir: Target already exists as a directory, nothing to do: '$Path'." -Data $resultData)
     }
 
     # --- Target exists but is a file, not a directory -------------------------
     if (Test-Path -LiteralPath $Path -PathType Leaf) {
         if (-not $Force) {
-            return (OPSreturn -Code fail -Message "wtfxCreateNewDir failed! A file (not a directory) already exists at '$Path'. Use -Force to remove it and create the directory instead.")
+            return (OPSreturn -Code fail -Message "wintwincore.CreateNewDir failed! A file (not a directory) already exists at '$Path'. Use -Force to remove it and create the directory instead.")
         }
 
         try {
             Remove-Item -LiteralPath $Path -Force -ErrorAction Stop
         }
         catch {
-            return (OPSreturn -Code fail -Message "wtfxCreateNewDir failed! Could not remove the existing file at '$Path' before creating the directory: $($_.Exception.Message)" -Exception $_.Exception)
+            return (OPSreturn -Code fail -Message "wintwincore.CreateNewDir failed! Could not remove the existing file at '$Path' before creating the directory: $($_.Exception.Message)" -Exception $_.Exception)
         }
     }
 
@@ -90,11 +90,11 @@ function wtfxCreateNewDir {
         New-Item -ItemType Directory -Path $Path -Force -ErrorAction Stop | Out-Null
     }
     catch {
-        return (OPSreturn -Code fail -Message "wtfxCreateNewDir failed! Could not create directory '$Path': $($_.Exception.Message)" -Exception $_.Exception)
+        return (OPSreturn -Code fail -Message "wintwincore.CreateNewDir failed! Could not create directory '$Path': $($_.Exception.Message)" -Exception $_.Exception)
     }
 
     if (-not (Test-Path -LiteralPath $Path -PathType Container)) {
-        return (OPSreturn -Code fail -Message "wtfxCreateNewDir failed! Directory was not present after the create operation: '$Path'.")
+        return (OPSreturn -Code fail -Message "wintwincore.CreateNewDir failed! Directory was not present after the create operation: '$Path'.")
     }
 
     $resultData = [pscustomobject]@{
@@ -102,5 +102,5 @@ function wtfxCreateNewDir {
         Created = $true
     }
 
-    return (OPSreturn -Code success -Message "wtfxCreateNewDir: Directory created successfully: '$Path'." -Data $resultData)
+    return (OPSreturn -Code success -Message "wintwincore.CreateNewDir: Directory created successfully: '$Path'." -Data $resultData)
 }

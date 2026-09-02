@@ -1,10 +1,10 @@
-function wtfxGetPSExecutable {
+function wintwincore.GetPSExecutable {
     <#
     .SYNOPSIS
         Resolves the full path of the PowerShell executable that is currently running.
 
     .DESCRIPTION
-        wtfxGetPSExecutable is the framework-wide, robust replacement for hard-coding
+        wintwincore.GetPSExecutable is the framework-wide, robust replacement for hard-coding
         'powershell.exe' when a WinTwin.Fusion tool needs to spawn a new PowerShell
         process (e.g. Start-Process). Hard-coding the executable name breaks as soon
         as the framework is run under a PowerShell edition/installation where the
@@ -35,14 +35,14 @@ function wtfxGetPSExecutable {
         Success .data: Path (string), Edition (string), Version (string).
 
     .EXAMPLE
-        $psExe = wtfxGetPSExecutable
+        $psExe = wintwincore.GetPSExecutable
         if ($psExe.code -ne 0) { throw $psExe.msg }
         Start-Process -FilePath $psExe.data.Path -ArgumentList $argList -PassThru
 
     .NOTES
         Part of: WinTwin.FXcore
         Replaces: hard-coded 'powershell.exe' / 'pwsh.exe' assumptions
-        Used by: wtfxLaunchConsole (and recommended for WTF.Console.ps1's own
+        Used by: wintwincore.LaunchConsole (and recommended for WTF.Console.ps1's own
                   redirected child-process spawn)
         See also: OPSreturn
     #>
@@ -67,13 +67,13 @@ function wtfxGetPSExecutable {
             $resolvedExe = Join-Path $PSHOME $exeName
         }
         catch {
-            return (OPSreturn -Code fail -Message "wtfxGetPSExecutable failed! Could not build a fallback path from `$PSHOME: $($_.Exception.Message)" -Exception $_.Exception)
+            return (OPSreturn -Code fail -Message "wintwincore.GetPSExecutable failed! Could not build a fallback path from `$PSHOME: $($_.Exception.Message)" -Exception $_.Exception)
         }
     }
 
     # --- Step 3: final sanity check ----------------------------------------------
     if ([string]::IsNullOrWhiteSpace($resolvedExe) -or -not (Test-Path -LiteralPath $resolvedExe -PathType Leaf)) {
-        return (OPSreturn -Code fail -Message "wtfxGetPSExecutable failed! Could not resolve a valid PowerShell executable (looked for: '$resolvedExe').")
+        return (OPSreturn -Code fail -Message "wintwincore.GetPSExecutable failed! Could not resolve a valid PowerShell executable (looked for: '$resolvedExe').")
     }
 
     $resultData = [pscustomobject]@{
@@ -82,5 +82,5 @@ function wtfxGetPSExecutable {
         Version = [string]$PSVersionTable.PSVersion
     }
 
-    return (OPSreturn -Code success -Message "wtfxGetPSExecutable: Resolved PowerShell executable: '$resolvedExe'." -Data $resultData)
+    return (OPSreturn -Code success -Message "wintwincore.GetPSExecutable: Resolved PowerShell executable: '$resolvedExe'." -Data $resultData)
 }

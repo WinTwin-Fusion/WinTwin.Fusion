@@ -1,13 +1,13 @@
-function wtfxRegisterProcess {
+function wintwincore.RegisterProcess {
     <#
     .SYNOPSIS
     Registers a running process in the framework's central process.json database.
 
     .DESCRIPTION
-    The wtfxRegisterProcess function resolves the path to Core\db\process.json via
-    Core\config.json (path.root + path.appdb.process), loads it with wtfxLoadJSON,
+    The wintwincore.RegisterProcess function resolves the path to Core\db\process.json via
+    Core\config.json (path.root + path.appdb.process), loads it with wintwincore.LoadJSON,
     and writes the given process details into the 'running' node. Before writing,
-    it internally calls wtfxCheckProcess so a previously registered lock is either
+    it internally calls wintwincore.CheckProcess so a previously registered lock is either
     confirmed genuinely free, or self-healed if it was left behind by a process
     that died without deregistering itself - a crashed tool must never be able to
     permanently block every other framework tool from starting new work. If a
@@ -30,7 +30,7 @@ function wtfxRegisterProcess {
 
     .PARAMETER ProcessId
     The operating system process ID (PID) of the process being registered.
-    Required so wtfxCheckProcess / wtfxKillProcess can later verify whether the
+    Required so wintwincore.CheckProcess / wintwincore.KillProcess can later verify whether the
     process is still actually alive.
 
     .PARAMETER CmdParams
@@ -42,14 +42,14 @@ function wtfxRegisterProcess {
     'running' node.
 
     .EXAMPLE
-    $reg = wtfxRegisterProcess -FrameworkRoot "C:\WinTwin.Fusion" -ProcName "WTF.Console" `
+    $reg = wintwincore.RegisterProcess -FrameworkRoot "C:\WinTwin.Fusion" -ProcName "WTF.Console" `
                                 -ProcPath "C:\WinTwin.Fusion\PS.Tweak.Tools\wtf.console.ps1" `
                                 -ActionId "wim-mount" -ProcessId $started.Id -CmdParams $commandLine
     if ($reg.code -ne 0) { throw $reg.msg }
 
     .NOTES
     Part of: WinTwin.FXcore
-    See also: wtfxUnregisterProcess, wtfxCheckProcess, wtfxKillProcess, wtfxLoadJSON, wtfxWriteJSON
+    See also: wintwincore.UnregisterProcess, wintwincore.CheckProcess, wintwincore.KillProcess, wintwincore.LoadJSON, wintwincore.WriteJSON
     #>
 
     [CmdletBinding()]
@@ -96,7 +96,7 @@ function wtfxRegisterProcess {
 
     # Self-heal a stale lock (a previously registered process that died without
     # deregistering itself) before deciding whether registration is possible.
-    $checkResult = wtfxCheckProcess -FrameworkRoot $FrameworkRoot
+    $checkResult = wintwincore.CheckProcess -FrameworkRoot $FrameworkRoot
     if ($checkResult.code -ne 0) {
         return (OPSreturn -Code -1 -Message "Could not verify the current process lock: $($checkResult.msg)" -Exception $checkResult.exception)
     }
@@ -105,7 +105,7 @@ function wtfxRegisterProcess {
     }
 
     $configPath = Join-Path -Path $FrameworkRoot -ChildPath 'Core\config.json'
-    $configResult = wtfxLoadJSON -Path $configPath
+    $configResult = wintwincore.LoadJSON -Path $configPath
     if ($configResult.code -ne 0) {
         return (OPSreturn -Code -1 -Message "Could not load Core\config.json: $($configResult.msg)" -Exception $configResult.exception)
     }
@@ -124,7 +124,7 @@ function wtfxRegisterProcess {
     # relativeProcessPath is stored with a leading backslash, e.g. "\Core\db\process.json"
     $processDbPath = Join-Path -Path $FrameworkRoot -ChildPath ($relativeProcessPath.TrimStart('\'))
 
-    $processResult = wtfxLoadJSON -Path $processDbPath
+    $processResult = wintwincore.LoadJSON -Path $processDbPath
     if ($processResult.code -ne 0) {
         return (OPSreturn -Code -1 -Message "Could not load process.json: $($processResult.msg)" -Exception $processResult.exception)
     }
@@ -145,7 +145,7 @@ function wtfxRegisterProcess {
         return (OPSreturn -Code -1 -Message "Could not update the in-memory 'running' node: $($_.Exception.Message)" -Exception $_.Exception)
     }
 
-    $writeResult = wtfxWriteJSON -Path $processDbPath -Value $db
+    $writeResult = wintwincore.WriteJSON -Path $processDbPath -Value $db
     if ($writeResult.code -ne 0) {
         return (OPSreturn -Code -1 -Message "Process was accepted but could not be persisted to process.json: $($writeResult.msg)" -Exception $writeResult.exception)
     }

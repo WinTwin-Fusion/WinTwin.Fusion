@@ -1,12 +1,12 @@
-function wtfxGetJobAction {
+function wintwincore.GetJobAction {
     <#
     .SYNOPSIS
     Reads a specific job/action node (or a single field of it) from the framework's
     central jobaction.json database.
 
     .DESCRIPTION
-    The wtfxGetJobAction function resolves the path to Core\db\jobaction.json via
-    Core\config.json (path.root + path.appdb.actions), loads it with wtfxLoadJSON,
+    The wintwincore.GetJobAction function resolves the path to Core\db\jobaction.json via
+    Core\config.json (path.root + path.appdb.actions), loads it with wintwincore.LoadJSON,
     and returns either the full node for a given -ActionId (e.g. "wim-mount") or,
     if -Field is also supplied, only that single field's value (e.g. "path" or
     "logfile"). This is the read counterpart to wtfSetJobAction and is the
@@ -28,16 +28,16 @@ function wtfxGetJobAction {
     returned.
 
     .EXAMPLE
-    $result = wtfxGetJobAction -FrameworkRoot "C:\WinTwin.Fusion" -ActionId "wim-mount"
+    $result = wintwincore.GetJobAction -FrameworkRoot "C:\WinTwin.Fusion" -ActionId "wim-mount"
     if ($result.code -eq 0) { $wimMountNode = $result.data }
 
     .EXAMPLE
-    $result = wtfxGetJobAction -FrameworkRoot "C:\WinTwin.Fusion" -ActionId "wim-mount" -Field "path"
+    $result = wintwincore.GetJobAction -FrameworkRoot "C:\WinTwin.Fusion" -ActionId "wim-mount" -Field "path"
     if ($result.code -eq 0) { $mountPath = $result.data }
 
     .NOTES
     Part of: WinTwin.FXcore
-    See also: wtfSetJobAction, wtfxLoadJSON
+    See also: wtfSetJobAction, wintwincore.LoadJSON
     #>
 
     [CmdletBinding()]
@@ -63,7 +63,7 @@ function wtfxGetJobAction {
     }
 
     $configPath = Join-Path -Path $FrameworkRoot -ChildPath 'Core\config.json'
-    $configResult = wtfxLoadJSON -Path $configPath
+    $configResult = wintwincore.LoadJSON -Path $configPath
     if ($configResult.code -ne 0) {
         return (OPSreturn -Code -1 -Message "Could not load Core\config.json: $($configResult.msg)" -Exception $configResult.exception)
     }
@@ -83,7 +83,7 @@ function wtfxGetJobAction {
     # relativeActionsPath is stored with a leading backslash, e.g. "\Core\db\jobaction.json"
     $jobActionPath = Join-Path -Path $FrameworkRoot -ChildPath ($relativeActionsPath.TrimStart('\'))
 
-    $jobActionResult = wtfxLoadJSON -Path $jobActionPath
+    $jobActionResult = wintwincore.LoadJSON -Path $jobActionPath
     if ($jobActionResult.code -ne 0) {
         return (OPSreturn -Code -1 -Message "Could not load jobaction.json: $($jobActionResult.msg)" -Exception $jobActionResult.exception)
     }

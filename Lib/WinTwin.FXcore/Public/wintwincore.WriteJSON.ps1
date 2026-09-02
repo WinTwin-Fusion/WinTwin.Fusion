@@ -1,17 +1,17 @@
-function wtfxWriteJSON {
+function wintwincore.WriteJSON {
     <#
     .SYNOPSIS
     Writes a value into a JSON (or JSONC) file, either replacing the whole document
     or a single nested property addressed via a dot-separated key path.
 
     .DESCRIPTION
-    The wtfxWriteJSON function is the generic, reusable JSON-writing primitive for the
+    The wintwincore.WriteJSON function is the generic, reusable JSON-writing primitive for the
     WinTwin.Fusion framework. It supports two modes:
 
       1) Whole-object mode (no -KeyPath given): the -Value parameter is serialized
          and completely replaces the file content. Use this when you already hold a
          fully assembled object in memory (e.g. after modifying the result of
-         wtfxLoadJSON / wtfLoadJSONC).
+         wintwincore.LoadJSON / wtfLoadJSONC).
 
       2) Key-path mode (-KeyPath given): only the single nested property addressed
          by a dot-separated path (e.g. "path.root" or "wim-mount.path") is replaced
@@ -44,16 +44,16 @@ function wtfxWriteJSON {
     Maximum depth passed to ConvertTo-Json. Default is 20.
 
     .EXAMPLE
-    wtfxWriteJSON -Path "C:\WinTwin.Fusion\Core\config.json" -Value $config
+    wintwincore.WriteJSON -Path "C:\WinTwin.Fusion\Core\config.json" -Value $config
     Whole-object mode: overwrites config.json with the in-memory $config object.
 
     .EXAMPLE
-    wtfxWriteJSON -Path "C:\WinTwin.Fusion\Core\config.json" -KeyPath "path.root" -Value "C:\WinTwin.Fusion"
+    wintwincore.WriteJSON -Path "C:\WinTwin.Fusion\Core\config.json" -KeyPath "path.root" -Value "C:\WinTwin.Fusion"
     Key-path mode: updates only path.root, leaving the rest of config.json intact.
 
     .NOTES
     Part of: WinTwin.FXcore
-    See also: wtfxLoadJSON, wtfLoadJSONC
+    See also: wintwincore.LoadJSON, wtfLoadJSONC
     #>
 
     [CmdletBinding()]

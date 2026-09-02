@@ -2,13 +2,13 @@
   "component": "WinTwin.FXcore",
   "sourceRepository": "WinTwin-Fusion/WinTwin.FXcore",
   "sourceBranch": "main",
-  "sourceCommit": "ac6b519087fce0da4fa96763465d34a0177eb8e2",
-  "sourceCommitShort": "ac6b519",
+  "sourceCommit": "29fa89eb398ae49fdd5fc37a65da46d91f7586fa",
+  "sourceCommitShort": "29fa89e",
   "sourcePullRequest": {
-    "number": 17,
-    "title": "Add ADK install/check helpers and file integrity",
+    "number": 18,
+    "title": "Major update",
     "mergedBy": "praetoriani",
-    "mergedAt": "2026-08-31T18:10:07Z"
+    "mergedAt": "2026-09-02T07:30:10Z"
   },
   "targetRepository": "WinTwin-Fusion/WinTwin.Fusion",
   "targetBaseBranch": "main",
@@ -19,7 +19,7 @@
   ],
   "syncedBy": "GitHub Actions",
   "workflow": "Sync WinTwin.FXcore to WinTwin.Fusion",
-  "workflowRunId": "33423520236",
-  "workflowRunNumber": "14",
-  "syncDate": "2026-08-31T18:10:21Z"
+  "workflowRunId": "33603891096",
+  "workflowRunNumber": "15",
+  "syncDate": "2026-09-02T07:30:24Z"
 }

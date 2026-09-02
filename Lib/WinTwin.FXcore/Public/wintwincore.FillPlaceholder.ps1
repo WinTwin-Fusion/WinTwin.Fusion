@@ -1,9 +1,9 @@
-function wtfxFillPlaceholder {
+function wintwincore.FillPlaceholder {
     <#
     .SYNOPSIS
-        wtfxFillPlaceholder is a simple function that fills placeholders in a text with predefined values.
+        wintwincore.FillPlaceholder is a simple function that fills placeholders in a text with predefined values.
     .DESCRIPTION
-        The wtfxFillPlaceholder function replaces predefined placeholders within a specific text with the
+        The wintwincore.FillPlaceholder function replaces predefined placeholders within a specific text with the
         provided values. The function expects the text containing the placeholders to be passed via the
         -text parameter. The -txtval ​​parameter defines the new values ​​to be inserted in place of the
         placeholders. The function uses OPSreturn to generate a standardized return object. If the number
@@ -19,10 +19,10 @@ function wtfxFillPlaceholder {
         the text will be returned with empty placeholders. This parameter must be an array,
         and the number of array elements should match the number of placeholders in the text.
     .EXAMPLE
-        $newText = wtfxFillPlaceholder -text "{0} Message: Have a {1} day!" -txtval @("Importang","great")
+        $newText = wintwincore.FillPlaceholder -text "{0} Message: Have a {1} day!" -txtval @("Importang","great")
         if ( $newText.code -gt 0 ) { $replaced = $newText.data }
     .EXAMPLE
-        $newText = wtfxFillPlaceholder -text "{0} Message: Have a {1} day!" -txtval @("Just another", "nice")
+        $newText = wintwincore.FillPlaceholder -text "{0} Message: Have a {1} day!" -txtval @("Just another", "nice")
         if ( $newText.code -lt 0 ) { Write-Host "$($newText.message)`n$($newText.exception)" }
     #>
     

@@ -1,4 +1,4 @@
-function wtfxCheckProcess {
+function wintwincore.CheckProcess {
     <#
     .SYNOPSIS
     Checks whether the framework's central process.json currently holds a
@@ -9,7 +9,7 @@ function wtfxCheckProcess {
     A 'running' job-state in process.json alone does not prove that the
     registered process is still alive - it may have crashed, been killed via
     Task Manager, lost power mid-job, or thrown an unhandled exception.
-    wtfxCheckProcess resolves the recorded PID via Get-Process and cross-checks
+    wintwincore.CheckProcess resolves the recorded PID via Get-Process and cross-checks
     it against the recorded executable path (proc-path) to guard against PID
     reuse. If the process is gone (or a different process now owns that PID),
     the lock is treated as stale: it is moved into 'lastjob' (job-state
@@ -18,7 +18,7 @@ function wtfxCheckProcess {
     original owner.
 
     This function is the single source of truth every other process-management
-    function (wtfxRegisterProcess, wtfxKillProcess) relies on before deciding
+    function (wintwincore.RegisterProcess, wintwincore.KillProcess) relies on before deciding
     whether a lock is real.
 
     .PARAMETER FrameworkRoot
@@ -31,14 +31,14 @@ function wtfxCheckProcess {
     cleaned up if a stale lock was found).
 
     .EXAMPLE
-    $check = wtfxCheckProcess -FrameworkRoot "C:\WinTwin.Fusion"
+    $check = wintwincore.CheckProcess -FrameworkRoot "C:\WinTwin.Fusion"
     if ($check.code -eq 0 -and -not $check.data.IsRunning) {
         # safe to register a new process now
     }
 
     .NOTES
     Part of: WinTwin.FXcore
-    See also: wtfxRegisterProcess, wtfxUnregisterProcess, wtfxKillProcess, wtfxLoadJSON, wtfxWriteJSON
+    See also: wintwincore.RegisterProcess, wintwincore.UnregisterProcess, wintwincore.KillProcess, wintwincore.LoadJSON, wintwincore.WriteJSON
     #>
 
     [CmdletBinding()]
@@ -53,7 +53,7 @@ function wtfxCheckProcess {
     }
 
     $configPath = Join-Path -Path $FrameworkRoot -ChildPath 'Core\config.json'
-    $configResult = wtfxLoadJSON -Path $configPath
+    $configResult = wintwincore.LoadJSON -Path $configPath
     if ($configResult.code -ne 0) {
         return (OPSreturn -Code -1 -Message "Could not load Core\config.json: $($configResult.msg)" -Exception $configResult.exception)
     }
@@ -71,7 +71,7 @@ function wtfxCheckProcess {
 
     $processDbPath = Join-Path -Path $FrameworkRoot -ChildPath ($relativeProcessPath.TrimStart('\'))
 
-    $processResult = wtfxLoadJSON -Path $processDbPath
+    $processResult = wintwincore.LoadJSON -Path $processDbPath
     if ($processResult.code -ne 0) {
         return (OPSreturn -Code -1 -Message "Could not load process.json: $($processResult.msg)" -Exception $processResult.exception)
     }
@@ -86,7 +86,7 @@ function wtfxCheckProcess {
             WasStale  = $false
             Running   = $db.running
         }
-        return (OPSreturn -Code 0 -Message "wtfxCheckProcess: No process is currently registered." -Data $resultData)
+        return (OPSreturn -Code 0 -Message "wintwincore.CheckProcess: No process is currently registered." -Data $resultData)
     }
 
     $registeredPid  = 0
@@ -119,7 +119,7 @@ function wtfxCheckProcess {
             WasStale  = $false
             Running   = $db.running
         }
-        return (OPSreturn -Code 0 -Message "wtfxCheckProcess: Process '$($db.running.'proc-name')' (PID $registeredPid) is still running." -Data $resultData)
+        return (OPSreturn -Code 0 -Message "wintwincore.CheckProcess: Process '$($db.running.'proc-name')' (PID $registeredPid) is still running." -Data $resultData)
     }
 
     # --- Stale lock: the recorded process is gone (or the PID was recycled) ---
@@ -146,7 +146,7 @@ function wtfxCheckProcess {
         return (OPSreturn -Code -1 -Message "Detected a stale process lock but could not update the in-memory process database: $($_.Exception.Message)" -Exception $_.Exception)
     }
 
-    $writeResult = wtfxWriteJSON -Path $processDbPath -Value $db
+    $writeResult = wintwincore.WriteJSON -Path $processDbPath -Value $db
     if ($writeResult.code -ne 0) {
         return (OPSreturn -Code -1 -Message "Detected a stale process lock but could not persist the cleanup to process.json: $($writeResult.msg)" -Exception $writeResult.exception)
     }
@@ -157,5 +157,5 @@ function wtfxCheckProcess {
         Running   = $db.running
     }
 
-    return (OPSreturn -Code 0 -Message "wtfxCheckProcess: Stale lock detected and cleared (PID $registeredPid no longer exists or was recycled)." -Data $resultData)
+    return (OPSreturn -Code 0 -Message "wintwincore.CheckProcess: Stale lock detected and cleared (PID $registeredPid no longer exists or was recycled)." -Data $resultData)
 }
