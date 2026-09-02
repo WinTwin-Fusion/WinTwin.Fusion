@@ -43,10 +43,10 @@ function wintwincore.WriteLogmsg {
         
         [Parameter(Mandatory = $true)]
         [AllowEmptyString()]
-        [string]$Message,
-        
+        [string[]]$Message,
+
         [Parameter(Mandatory = $false)]
-        [ValidateSet("INFO", "DEBUG", "WARN", "ERROR", IgnoreCase = $true)]
+        [ValidateSet("INFO","OKAY","DEBUG","WARN","ERROR","FAIL", IgnoreCase = $true)]
         [string]$Flag = "DEBUG",
         
         [Parameter(Mandatory = $false)]
@@ -58,7 +58,7 @@ function wintwincore.WriteLogmsg {
         return (OPSreturn -Code -1 -Message "Parameter 'Logfile' is required but was not provided or is empty")
     }
     
-    if ([string]::IsNullOrEmpty($Message)) {
+    if ($Message.Count -eq 0) {
         return (OPSreturn -Code -1 -Message "Parameter 'Message' is required but was not provided or is empty")
     }
     
@@ -69,9 +69,11 @@ function wintwincore.WriteLogmsg {
         # Adjust flag formatting for consistent spacing
         switch ($Flag) {
             "INFO"  { $FormattedFlag = "[INFO] " }
+            "OKAY " { $FormattedFlag = "[OKAY] " }
             "DEBUG" { $FormattedFlag = "[DEBUG]" }
             "WARN"  { $FormattedFlag = "[WARN] " }
             "ERROR" { $FormattedFlag = "[ERROR]" }
+            "FAIL " { $FormattedFlag = "[FAIL] " }
             default { $FormattedFlag = "[DEBUG]" }
         }
         
@@ -79,10 +81,25 @@ function wintwincore.WriteLogmsg {
         $Timestamp = Get-Date -Format "[yyyy.MM.dd ; HH:mm:ss]"
         
         # Create formatted log entry
-        $LogEntry = "$Timestamp $FormattedFlag $Message"
+        #$LogEntry = "$($Timestamp)  $($FormattedFlag)"
+        if ($Message.Count -eq 1) {
+            $LogEntry = "$($Timestamp)  $($FormattedFlag)  $($Message)"
+        }
+        elseif ($Message.Count -ge 2) {
+            $LogEntry = "$($Timestamp)  $($FormattedFlag)  $($Message[0])"
+            $Message  = $Message[1..($Message.Count - 1)]
+            $msgLast  = $Message[-1]
+            $Message = $Message[0..($Message.Count - 2)]
+            $Message  = $Message -join "`n                                  "
+            $LogEntry = "$($LogEntry)`n                                  $($Message)$($msgLast)"
+        }
+        else {
+            $Message  = $Message -join "`n"
+            $LogEntry = "$($Timestamp)  $($FormattedFlag)  $($Message)"
+        }
         
         # Check if log file exists
-        $FileExists = Test-Path -Path $Logfile
+        $FileExists = Test-Path -LiteralPath $Logfile
         
         # Determine write operation based on Override parameter and file existence
         if ($Override -eq 1 -or -not $FileExists) {
