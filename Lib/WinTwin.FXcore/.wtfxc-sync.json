@@ -2,13 +2,13 @@
   "component": "WinTwin.FXcore",
   "sourceRepository": "WinTwin-Fusion/WinTwin.FXcore",
   "sourceBranch": "main",
-  "sourceCommit": "eadc7962608d3865d28bfebfd8229d34a58fc2a8",
-  "sourceCommitShort": "eadc796",
+  "sourceCommit": "61b222f73b406f8099dc48696c74213e2dc5b5e1",
+  "sourceCommitShort": "61b222f",
   "sourcePullRequest": {
-    "number": 21,
-    "title": "Update wintwincore.GetWinVersion",
+    "number": 22,
+    "title": "Bugfix fixed 😄",
     "mergedBy": "praetoriani",
-    "mergedAt": "2026-09-02T12:26:26Z"
+    "mergedAt": "2026-09-02T12:48:28Z"
   },
   "targetRepository": "WinTwin-Fusion/WinTwin.Fusion",
   "targetBaseBranch": "main",
@@ -19,7 +19,7 @@
   ],
   "syncedBy": "GitHub Actions",
   "workflow": "Sync WinTwin.FXcore to WinTwin.Fusion",
-  "workflowRunId": "33629927919",
-  "workflowRunNumber": "18",
-  "syncDate": "2026-09-02T12:26:38Z"
+  "workflowRunId": "33632010243",
+  "workflowRunNumber": "19",
+  "syncDate": "2026-09-02T12:48:41Z"
 }

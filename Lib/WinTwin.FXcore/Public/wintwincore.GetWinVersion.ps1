@@ -227,10 +227,10 @@ function wintwincore.GetWinVersion {
             $registryProductName = [string]$currentVersion.ProductName
         }
 
-        if (-not (:IsNullOrWhiteSpace($cimProductName))) {
+        if (-not [string]::IsNullOrWhiteSpace($cimProductName)) {
             $osName = $cimProductName.Trim()
         }
-        elseif (-not (:IsNullOrWhiteSpace($registryProductName))) {
+        elseif (-not [string]::IsNullOrWhiteSpace($registryProductName)) {
             $osName = $registryProductName.Trim()
         }
         else {
@@ -240,7 +240,7 @@ function wintwincore.GetWinVersion {
         # Some systems retain "Windows 10" in ProductName even though the build
         # number identifies Windows 11. Correct this only when CIM did not return
         # a usable caption.
-        if ((:IsNullOrWhiteSpace($cimProductName)) -and $buildNumber -ge 22000 -and $osName -like '*Windows 10*') {
+        if ([string]::IsNullOrWhiteSpace($cimProductName) -and $buildNumber -ge 22000 -and $osName -like '*Windows 10*') {
             $osName = $osName -replace 'Windows 10', 'Windows 11'
         }
 
@@ -274,7 +274,7 @@ function wintwincore.GetWinVersion {
         $detectionMethod = $null
 
         # DisplayVersion is the preferred source on current Windows versions.
-        if ($null -ne $currentVersion -and -not (:IsNullOrWhiteSpace([string]$currentVersion.DisplayVersion))) {
+        if ($null -ne $currentVersion -and -not [string]::IsNullOrWhiteSpace([string]$currentVersion.DisplayVersion)) {
             $displayVersion = [string]$currentVersion.DisplayVersion
 
             # Accept values such as 21H2, 22H2, 24H2, 25H2, and 26H1.
@@ -285,7 +285,7 @@ function wintwincore.GetWinVersion {
         }
 
         # ReleaseId is primarily useful for older Windows 10 releases.
-        if ((:IsNullOrWhiteSpace($osVersion)) -and $null -ne $currentVersion -and -not (:IsNullOrWhiteSpace([string]$currentVersion.ReleaseId))) {
+        if ([string]::IsNullOrWhiteSpace($osVersion) -and $null -ne $currentVersion -and -not [string]::IsNullOrWhiteSpace([string]$currentVersion.ReleaseId)) {
             $releaseId = [string]$currentVersion.ReleaseId
             if ($releaseId.Trim() -match '^\d{4}$') {
                 $osVersion = $releaseId.Trim()
@@ -296,7 +296,7 @@ function wintwincore.GetWinVersion {
         # If the registry values are unavailable, use known base build numbers.
         # Exact base builds are used instead of broad numeric ranges to avoid
         # incorrectly classifying Insider Preview builds.
-        if ((:IsNullOrWhiteSpace($osVersion))) {
+        if ([string]::IsNullOrWhiteSpace($osVersion)) {
             $osVersion = switch ($buildNumber) {
                 # Windows 11 client releases
                 22000 { '21H2'; break }
@@ -347,7 +347,7 @@ function wintwincore.GetWinVersion {
         if ($null -ne $cimOs -and $cimOs.OSArchitecture) {
             $architecture = [string]$cimOs.OSArchitecture
         }
-        elseif (:Is64BitOperatingSystem) {
+        elseif ([System.Environment]::Is64BitOperatingSystem) {
             $architecture = '64-bit'
         }
         else {
