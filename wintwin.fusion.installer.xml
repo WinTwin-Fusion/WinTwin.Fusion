@@ -1,0 +1,429 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="WinTwin.Fusion Installation Manager"
+    Width="660"
+    Height="800"
+    WindowStyle="None"
+    AllowsTransparency="True"
+    Background="Transparent"
+    ResizeMode="NoResize"
+    ShowInTaskbar="True"
+    WindowStartupLocation="CenterScreen">
+    
+  <Window.Resources>
+    <!-- ⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯ -->
+    <!-- COLOR SET                                                      -->
+    <!-- ⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯ -->
+    <SolidColorBrush x:Key="BrushBg"                Color="#121212"/>
+    <SolidColorBrush x:Key="BrushSurface"           Color="#1A1A1A"/>
+    <SolidColorBrush x:Key="BrushSurface2"          Color="#1F1F1F"/>
+    <SolidColorBrush x:Key="BrushTitleBar"          Color="#0F0F0F"/>
+    <SolidColorBrush x:Key="BrushAccent"            Color="#2cec0e"/>
+    <SolidColorBrush x:Key="BrushAccentHover"       Color="#43ff3d"/>
+    <SolidColorBrush x:Key="BrushAccentDim"         Color="#19b90a"/>
+    <SolidColorBrush x:Key="BrushText"              Color="#E8E8E8"/>
+    <SolidColorBrush x:Key="BrushTextMuted"         Color="#888888"/>
+    <SolidColorBrush x:Key="BrushTextFaint"         Color="#444444"/>
+    <SolidColorBrush x:Key="BrushBorder"            Color="#2A2A2A"/>
+    <SolidColorBrush x:Key="BrushBtnClose"          Color="#970f14"/>
+    <SolidColorBrush x:Key="BrushBtnCloseHover"     Color="#c12025"/>
+    <SolidColorBrush x:Key="BrushBtnMinimize"       Color="#c98c00"/>
+    <SolidColorBrush x:Key="BrushBtnMinimizeHover"  Color="#ffd54d"/>
+    <SolidColorBrush x:Key="BrushBtnMaximize"       Color="#25A244"/>
+    <SolidColorBrush x:Key="BrushTransparent"       Color="Transparent"/>
+    
+    <SolidColorBrush x:Key="BrushGlyphOkay"         Color="#2cec0e"/>
+    <SolidColorBrush x:Key="BrushGlyphFail"         Color="#F1242E"/>
+
+    <SolidColorBrush x:Key="BrushInputBg"           Color="#1F1F1F"/>
+    <SolidColorBrush x:Key="BrushInputBorder"       Color="#2A2A2A"/>
+    <SolidColorBrush x:Key="BrushInputError"        Color="#740509"/>
+    <SolidColorBrush x:Key="BrushInputErrorBrdr"    Color="#e4454a"/>
+    <SolidColorBrush x:Key="BrushTerminalBg"        Color="#0C0C0C"/>
+
+    <!-- ⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯ -->
+    <!--  WINDOW CONTROL BUTTON STYLE (Close / Minimize / Maximize)     -->
+    <!-- ⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯ -->
+    <Style x:Key="WinCtrlBtnMinimize" TargetType="Button">
+        <Setter Property="Width" Value="28"/>
+        <Setter Property="Height" Value="22"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Focusable" Value="False"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <Ellipse x:Name="BtnEllipse" Fill="{TemplateBinding Background}" Width="20" Height="20"/>
+                        <TextBlock x:Name="CloseGlyph" Text="⩡" FontSize="18" FontWeight="ExtraBold" Foreground="#f7b100" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" Margin="0,-4,0,0" Opacity="0"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="CloseGlyph" Property="Opacity" Value="1"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="BtnEllipse" Property="Opacity" Value="0.7"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="WinCtrlBtnClose" TargetType="Button">
+        <Setter Property="Width" Value="28"/>
+        <Setter Property="Height" Value="22"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Focusable" Value="False"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <Ellipse x:Name="BtnEllipse" Fill="{TemplateBinding Background}" Width="20" Height="20"/>
+                        <TextBlock x:Name="CloseGlyph" Text="×" FontSize="26" FontWeight="ExtraBold" Foreground="#f1242e" HorizontalAlignment="Center" VerticalAlignment="Top" TextAlignment="Center" Margin="0,-10,0,0" Opacity="0"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="CloseGlyph" Property="Opacity" Value="1"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="BtnEllipse" Property="Opacity" Value="0.7"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <!-- ⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯ -->
+    <!--  TEXT CONTROL STYLES                                           -->
+    <!-- ⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯ -->
+    <Style x:Key="InstructionText" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource BrushText}"></Setter>
+        <Setter Property="FontFamily" Value="Segoe UI"></Setter>
+        <Setter Property="FontSize" Value="24"></Setter>
+        <Setter Property="TextAlignment" Value="Center"></Setter>
+        <Setter Property="HorizontalAlignment" Value="Center"></Setter>
+    </Style>
+    <Style x:Key="StatusBarText" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource BrushTextMuted}"></Setter>
+        <Setter Property="FontSize" Value="11"></Setter>
+        <Setter Property="VerticalAlignment" Value="Center"></Setter>
+    </Style>
+    <!-- ⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯ -->
+    <!--  ACTION BUTTON STYLE (Install / Cancel)                        -->
+    <!-- ⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯ -->
+    <Style x:Key="ActionButton" TargetType="Button">
+        <Setter Property="Height" Value="34"/>
+        <Setter Property="MinWidth" Value="104"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Background" Value="{StaticResource BrushSurface2}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource BrushBorder}"/>
+        <Setter Property="Foreground" Value="{StaticResource BrushText}"/>
+        <Setter Property="FontFamily" Value="Segoe UI Semibold"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Focusable" Value="False"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="ActBtnBorder" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="18,0"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="ActBtnBorder" Property="BorderBrush" Value="{StaticResource BrushAccent}"/>
+                            <Setter Property="Foreground" Value="{StaticResource BrushAccentHover}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="ActBtnBorder" Property="Background" Value="{StaticResource BrushAccentDim}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Foreground" Value="{StaticResource BrushTextFaint}"/>
+                            <Setter TargetName="ActBtnBorder" Property="Background" Value="{StaticResource BrushSurface}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <!-- ⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯ -->
+    <!--  CHECKBOX DESIGN                                               -->
+    <!-- ⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯⋯ -->
+    <Style x:Key="StatusCheckBoxStyle" TargetType="CheckBox">
+        <Setter Property="FontFamily" Value="Segoe UI" />
+        <Setter Property="FontSize" Value="15" />
+        <Setter Property="Margin" Value="0,0,14,0" />
+        <Setter Property="HorizontalAlignment" Value="Right" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="IsHitTestVisible" Value="False" />
+        <!-- Drei mögliche Zustände zulassen -->
+        <Setter Property="IsThreeState" Value="True" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="CheckBox">
+                    <Grid Width="20" Height="20">
+                        <Border x:Name="Box" CornerRadius="3" Background="{StaticResource BrushSurface2}" BorderBrush="{StaticResource BrushBorder}" BorderThickness="1" />
+                        <!-- Erfolgszeichen -->
+                        <TextBlock x:Name="SuccessGlyph" Text="✔" FontSize="15" FontWeight="ExtraLight" Foreground="{StaticResource BrushGlyphOkay}" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-4,0,0" Visibility="Collapsed" />
+                        <!-- Fehlerzeichen -->
+                        <TextBlock x:Name="ErrorGlyph" Text="×" FontSize="20" FontWeight="Bold" Foreground="{StaticResource BrushGlyphFail}" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-4,0,0" Visibility="Collapsed" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <!-- Erfolgreich -->
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource BrushGlyphOkay}" />
+                            <Setter TargetName="SuccessGlyph" Property="Visibility" Value="Visible" />
+                            <Setter TargetName="ErrorGlyph" Property="Visibility" Value="Collapsed" />
+                        </Trigger>
+
+                        <!-- Fehlgeschlagen -->
+                        <Trigger Property="IsChecked" Value="False">
+                            <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource BrushGlyphFail}" />
+                            <Setter TargetName="SuccessGlyph" Property="Visibility" Value="Collapsed" />
+                            <Setter TargetName="ErrorGlyph" Property="Visibility" Value="Visible" />
+                        </Trigger>
+
+                        <!-- Noch nicht geprüft -->
+                        <Trigger Property="IsChecked" Value="{x:Null}">
+                            <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource BrushBorder}" />
+                            <Setter TargetName="SuccessGlyph" Property="Visibility" Value="Collapsed" />
+                            <Setter TargetName="ErrorGlyph" Property="Visibility" Value="Collapsed" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+</Style>
+  </Window.Resources>
+
+  <Border CornerRadius="10" Background="{StaticResource BrushBg}" BorderBrush="{StaticResource BrushBorder}" BorderThickness="1">
+    <Grid>
+      <Grid.RowDefinitions>
+        <RowDefinition Height="44"></RowDefinition>
+        <RowDefinition Height="*"></RowDefinition>
+        <RowDefinition Height="12"></RowDefinition>
+        <RowDefinition Height="26"></RowDefinition>
+      </Grid.RowDefinitions>
+      <!-- TITLE BAR -->
+      <Border Grid.Row="0" Background="{StaticResource BrushTitleBar}" CornerRadius="10,10,0,0">
+        <Grid x:Name="TitleBarPanel">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="70"></ColumnDefinition>
+            <ColumnDefinition Width="*"></ColumnDefinition>
+            <ColumnDefinition Width="70"></ColumnDefinition>
+          </Grid.ColumnDefinitions>
+          <Image x:Name="TitleBarLogo" Width="20" Height="20" Margin="14,0,0,0" VerticalAlignment="Center"></Image>
+          <TextBlock x:Name="TitleBarText" Grid.Column="1" Text="                                                                                WinTwin.Fusion Installation Manager                                                                                " Foreground="{StaticResource BrushTextMuted}" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"></TextBlock>
+          <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="0,0,14,0" VerticalAlignment="Center">
+            <Button x:Name="BtnMinimize" Style="{StaticResource WinCtrlBtnMinimize}" Background="{StaticResource BrushBtnMinimize}" ToolTip="Minimize"/>
+            <Button x:Name="BtnClose" Style="{StaticResource WinCtrlBtnClose}" Background="{StaticResource BrushBtnClose}" ToolTip="Close"/>
+          </StackPanel>
+        </Grid>
+      </Border>
+      <!-- MAIN -->
+      <Grid x:Name="MainContentPanel" Grid.Row="1" Margin="24,16">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="40"></RowDefinition>
+          <RowDefinition Height="40"></RowDefinition>
+          <!-- SPACER -->
+          <RowDefinition Height="10"></RowDefinition>
+          <!-- CHECKBOXES -->
+          <RowDefinition Height="26"></RowDefinition>
+          <RowDefinition Height="26"></RowDefinition>
+          <RowDefinition Height="26"></RowDefinition>
+          <RowDefinition Height="26"></RowDefinition>
+          <RowDefinition Height="26"></RowDefinition>
+          <RowDefinition Height="26"></RowDefinition>
+          <RowDefinition Height="26"></RowDefinition>
+          <RowDefinition Height="26"></RowDefinition>
+          <RowDefinition Height="26"></RowDefinition>
+          <RowDefinition Height="26"></RowDefinition>
+          <RowDefinition Height="26"></RowDefinition>
+          <RowDefinition Height="26"></RowDefinition>
+          <RowDefinition Height="26"></RowDefinition>
+          <RowDefinition Height="26"></RowDefinition>
+          <RowDefinition Height="26"></RowDefinition>
+          <RowDefinition Height="26"></RowDefinition>
+          <RowDefinition Height="26"></RowDefinition>
+          <RowDefinition Height="26"></RowDefinition>
+          <!-- FOOTNOTE -->
+          <RowDefinition Height="50"></RowDefinition>
+          <!-- BUTTONS -->
+          <RowDefinition Height="80"></RowDefinition>
+          <!-- SPACER -->
+          <RowDefinition Height="Auto"></RowDefinition>
+
+        </Grid.RowDefinitions>
+        <TextBlock x:Name="LblWelcome" Grid.Row="0" Style="{StaticResource InstructionText}" Text="WinTwin.Fusion Framework - Installation Manager"></TextBlock>
+        <TextBlock x:Name="LblSetupInfo" Grid.Row="1" Style="{StaticResource InstructionText}" FontSize="15" FontWeight="Light" Text="" HorizontalAlignment="Center" VerticalAlignment="Center"></TextBlock>
+
+        <Grid Grid.Row="3">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="3*"></ColumnDefinition>
+            <ColumnDefinition Width="7*"></ColumnDefinition>
+          </Grid.ColumnDefinitions>
+          <CheckBox x:Name="CBiselevated" Grid.Column="0" Style="{StaticResource StatusCheckBoxStyle}"></CheckBox>
+          <TextBlock x:Name="Lbliselevated" Grid.Column="1" Text="Running with elevated privileges (admin-mode)" Foreground="{StaticResource BrushText}" FontSize="15" FontWeight="Light" VerticalAlignment="Center"></TextBlock>
+        </Grid>
+        <Grid Grid.Row="4">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="3*"></ColumnDefinition>
+            <ColumnDefinition Width="7*"></ColumnDefinition>
+          </Grid.ColumnDefinitions>
+          <CheckBox x:Name="CBiswindows11" Grid.Column="0" Style="{StaticResource StatusCheckBoxStyle}"></CheckBox>
+          <TextBlock x:Name="Lbliswindows11" Grid.Column="1" Text="System requirement check completed" Foreground="{StaticResource BrushText}" FontSize="15" FontWeight="Light" VerticalAlignment="Center"></TextBlock>
+        </Grid>
+        <Grid Grid.Row="5">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="3*"></ColumnDefinition>
+            <ColumnDefinition Width="7*"></ColumnDefinition>
+          </Grid.ColumnDefinitions>
+          <CheckBox x:Name="CBisdismworking" Grid.Column="0" Style="{StaticResource StatusCheckBoxStyle}"></CheckBox>
+          <TextBlock x:Name="Lblisdismworking" Grid.Column="1" Text="DISM is installed and working." Foreground="{StaticResource BrushText}" FontSize="15" FontWeight="Light" VerticalAlignment="Center"></TextBlock>
+        </Grid>
+        <Grid Grid.Row="6">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="3*"></ColumnDefinition>
+            <ColumnDefinition Width="7*"></ColumnDefinition>
+          </Grid.ColumnDefinitions>
+          <CheckBox x:Name="CBhaswindowsadk" Grid.Column="0" Style="{StaticResource StatusCheckBoxStyle}"></CheckBox>
+          <TextBlock x:Name="Lblhaswindowsadk" Grid.Column="1" Text="Windows ADK installation found." Foreground="{StaticResource BrushText}" FontSize="15" FontWeight="Light" VerticalAlignment="Center"></TextBlock>
+        </Grid>
+        <Grid Grid.Row="7">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="3*"></ColumnDefinition>
+            <ColumnDefinition Width="7*"></ColumnDefinition>
+          </Grid.ColumnDefinitions>
+          <CheckBox x:Name="CBhasadkpeaddon" Grid.Column="0" Style="{StaticResource StatusCheckBoxStyle}"></CheckBox>
+          <TextBlock x:Name="Lblhasadkpeaddon" Grid.Column="1" Text="Windows ADK (PE AddOn) installation found." Foreground="{StaticResource BrushText}" FontSize="15" FontWeight="Light" VerticalAlignment="Center"></TextBlock>
+        </Grid>
+        <Grid Grid.Row="8">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="3*"></ColumnDefinition>
+            <ColumnDefinition Width="7*"></ColumnDefinition>
+          </Grid.ColumnDefinitions>
+          <CheckBox x:Name="CBrootdirfound" Grid.Column="0" Style="{StaticResource StatusCheckBoxStyle}"></CheckBox>
+          <TextBlock x:Name="Lblrootdirfound" Grid.Column="1" Text="Framework-Root-Directory detected" Foreground="{StaticResource BrushText}" FontSize="15" FontWeight="Light" VerticalAlignment="Center"></TextBlock>
+        </Grid>
+        <Grid Grid.Row="9">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="3*"></ColumnDefinition>
+            <ColumnDefinition Width="7*"></ColumnDefinition>
+          </Grid.ColumnDefinitions>
+          <CheckBox x:Name="CBverifylicense" Grid.Column="0" Style="{StaticResource StatusCheckBoxStyle}"></CheckBox>
+          <TextBlock x:Name="Lblverifylicense" Grid.Column="1" Text="Verify License integrity" Foreground="{StaticResource BrushText}" FontSize="15" FontWeight="Light" VerticalAlignment="Center"></TextBlock>
+        </Grid>
+        <Grid Grid.Row="10">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="3*"></ColumnDefinition>
+            <ColumnDefinition Width="7*"></ColumnDefinition>
+          </Grid.ColumnDefinitions>
+          <CheckBox x:Name="CBhasallfolders" Grid.Column="0" Style="{StaticResource StatusCheckBoxStyle}"></CheckBox>
+          <TextBlock x:Name="Lblhasallfolders" Grid.Column="1" Text="Basic check of the folder structure" Foreground="{StaticResource BrushText}" FontSize="15" FontWeight="Light" VerticalAlignment="Center"></TextBlock>
+        </Grid>
+        <Grid Grid.Row="11">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="3*"></ColumnDefinition>
+            <ColumnDefinition Width="7*"></ColumnDefinition>
+          </Grid.ColumnDefinitions>
+          <CheckBox x:Name="CBalltoolsfound" Grid.Column="0" Style="{StaticResource StatusCheckBoxStyle}"></CheckBox>
+          <TextBlock x:Name="Lblalltoolsfound" Grid.Column="1" Text="Additional tools folder of Framework found" Foreground="{StaticResource BrushText}" FontSize="15" FontWeight="Light" VerticalAlignment="Center"></TextBlock>
+        </Grid>
+        <Grid Grid.Row="12">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="3*"></ColumnDefinition>
+            <ColumnDefinition Width="7*"></ColumnDefinition>
+          </Grid.ColumnDefinitions>
+          <CheckBox x:Name="CBjsonfilesfound" Grid.Column="0" Style="{StaticResource StatusCheckBoxStyle}"></CheckBox>
+          <TextBlock x:Name="Lbljsonfilesfound" Grid.Column="1" Text="All important configuration files found." Foreground="{StaticResource BrushText}" FontSize="15" FontWeight="Light" VerticalAlignment="Center"></TextBlock>
+        </Grid>
+        <Grid Grid.Row="13">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="3*"></ColumnDefinition>
+            <ColumnDefinition Width="7*"></ColumnDefinition>
+          </Grid.ColumnDefinitions>
+          <CheckBox x:Name="CBlibrariesfound" Grid.Column="0" Style="{StaticResource StatusCheckBoxStyle}"></CheckBox>
+          <TextBlock x:Name="Lbllibrariesfound" Grid.Column="1" Text="Required framework-integrated libraries found." Foreground="{StaticResource BrushText}" FontSize="15" FontWeight="Light" VerticalAlignment="Center"></TextBlock>
+        </Grid>
+        <Grid Grid.Row="14">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="3*"></ColumnDefinition>
+            <ColumnDefinition Width="7*"></ColumnDefinition>
+          </Grid.ColumnDefinitions>
+          <CheckBox x:Name="CBcoreconfigdone" Grid.Column="0" Style="{StaticResource StatusCheckBoxStyle}"></CheckBox>
+          <TextBlock x:Name="Lblcoreconfigdone" Grid.Column="1" Text="Core configuration of the framework completed." Foreground="{StaticResource BrushText}" FontSize="15" FontWeight="Light" VerticalAlignment="Center"></TextBlock>
+        </Grid>
+        <Grid Grid.Row="15">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="3*"></ColumnDefinition>
+            <ColumnDefinition Width="7*"></ColumnDefinition>
+          </Grid.ColumnDefinitions>
+          <CheckBox x:Name="CBjobsconfigured" Grid.Column="0" Style="{StaticResource StatusCheckBoxStyle}"></CheckBox>
+          <TextBlock x:Name="Lbljobsconfigured" Grid.Column="1" Text="Configuration of internal job management completed." Foreground="{StaticResource BrushText}" FontSize="15" FontWeight="Light" VerticalAlignment="Center"></TextBlock>
+        </Grid>
+        <Grid Grid.Row="16">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="3*"></ColumnDefinition>
+            <ColumnDefinition Width="7*"></ColumnDefinition>
+          </Grid.ColumnDefinitions>
+          <CheckBox x:Name="CBprocessdbdone" Grid.Column="0" Style="{StaticResource StatusCheckBoxStyle}"></CheckBox>
+          <TextBlock x:Name="Lblprocessdbdone" Grid.Column="1" Text="Internal process database set up and configured." Foreground="{StaticResource BrushText}" FontSize="15" FontWeight="Light" VerticalAlignment="Center"></TextBlock>
+        </Grid>
+        <Grid Grid.Row="17">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="3*"></ColumnDefinition>
+            <ColumnDefinition Width="7*"></ColumnDefinition>
+          </Grid.ColumnDefinitions>
+          <CheckBox x:Name="CBworkflowsdone" Grid.Column="0" Style="{StaticResource StatusCheckBoxStyle}"></CheckBox>
+          <TextBlock x:Name="Lblworkflowsdone" Grid.Column="1" Text="Framework workflows have been set up." Foreground="{StaticResource BrushText}" FontSize="15" FontWeight="Light" VerticalAlignment="Center"></TextBlock>
+        </Grid>
+        <Grid Grid.Row="18">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="3*"></ColumnDefinition>
+            <ColumnDefinition Width="7*"></ColumnDefinition>
+          </Grid.ColumnDefinitions>
+          <CheckBox x:Name="CBfontsinstalled" Grid.Column="0" Style="{StaticResource StatusCheckBoxStyle}"></CheckBox>
+          <TextBlock x:Name="Lblfontsinstalled" Grid.Column="1" Text="Installation of all fonts for the framework completed." Foreground="{StaticResource BrushText}" FontSize="15" FontWeight="Light" VerticalAlignment="Center"></TextBlock>
+        </Grid>
+        <Grid Grid.Row="19">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="3*"></ColumnDefinition>
+            <ColumnDefinition Width="7*"></ColumnDefinition>
+          </Grid.ColumnDefinitions>
+          <CheckBox x:Name="CBfinalcheckup" Grid.Column="0" Style="{StaticResource StatusCheckBoxStyle}"></CheckBox>
+          <TextBlock x:Name="Lblfinalcheckup" Grid.Column="1" Text="Final checkup/cleanup." Foreground="{StaticResource BrushText}" FontSize="15" FontWeight="Light" VerticalAlignment="Center"></TextBlock>
+        </Grid>
+        <Grid Grid.Row="20">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="3*"></ColumnDefinition>
+            <ColumnDefinition Width="7*"></ColumnDefinition>
+          </Grid.ColumnDefinitions>
+          <CheckBox x:Name="CBwintwinready" Grid.Column="0" Style="{StaticResource StatusCheckBoxStyle}"></CheckBox>
+          <TextBlock x:Name="Lblwintwinready" Grid.Column="1" Text="Install Manager finished." Foreground="{StaticResource BrushText}" FontSize="15" FontWeight="Light" VerticalAlignment="Center"></TextBlock>
+        </Grid>
+
+        <TextBlock x:Name="LblInstallHint" Grid.Row="21" Style="{StaticResource InstructionText}" FontSize="15" FontWeight="Light" Text="" VerticalAlignment="Bottom"></TextBlock>
+        <StackPanel x:Name="ButtonPanel" Grid.Row="22" Orientation="Horizontal" HorizontalAlignment="Center">
+          <Button x:Name="BtnInstall" Style="{StaticResource ActionButton}" Content="Run Installer" IsEnabled="True" Margin="0,0,30,0"></Button>
+          <Button x:Name="BtnCancel" Style="{StaticResource ActionButton}" Content="Exit" IsEnabled="True"></Button>
+          <Button x:Name="BtnCleanSetup" Style="{StaticResource ActionButton}" Content="Clean Install" IsEnabled="True" Margin="30,0,0,0"></Button>
+        </StackPanel>
+      </Grid>
+      <!-- PROGRESS -->
+      <ProgressBar x:Name="PrgInstallation" Grid.Row="2" Margin="1,0,1,2" Height="14" Minimum="0" Maximum="100" Value="0"></ProgressBar>
+      <!-- STATUS BAR -->
+      <Border Grid.Row="3" Background="{StaticResource BrushTitleBar}" BorderBrush="{StaticResource BrushBorder}" BorderThickness="0,1,0,0">
+        <Grid Margin="14,0">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"></ColumnDefinition>
+            <ColumnDefinition Width="Auto"></ColumnDefinition>
+          </Grid.ColumnDefinitions>
+          <TextBlock x:Name="StatusText" Grid.Column="0" Text="Ready for installation" Style="{StaticResource StatusBarText}"></TextBlock>
+          <TextBlock x:Name="StatusInfo" Grid.Column="1" Text="WinTwin.Fusion Installer v1.00.00" Style="{StaticResource StatusBarText}"></TextBlock>
+        </Grid>
+      </Border>
+    </Grid>
+  </Border>
+</Window>

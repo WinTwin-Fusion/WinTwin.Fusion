@@ -1,0 +1,1148 @@
+<#
+.SYNOPSIS
+    This is the WinTwin.Fusion Installation Manager.
+.DESCRIPTION
+    The WinTwin.Fusion Installation Manager provides a graphical interface for installing and configuring
+    the WinTwin.Fusion Framework. It automatically checks all necessary prerequisites, independently
+    adjusts the framework's configurations, and adapts everything so that the WinTwin.Fusion Framework
+    can be executed from the current directory.
+.NOTES
+    CREATOR:    Praetoriani (a.k.a M.Sczepanski)
+    WEBSITE:    https://github.com/WinTwin-Fusion/WinTwin.Fusion
+    VERSION:    v1.01.02
+    CREATED:    29.08.2026
+    UPDATED:    31.08.2026
+#>
+
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory = $false)]
+    [ValidateSet("en-us","de-de")]
+    [string]$Language = "en-us",
+
+    [Parameter(Mandatory = $false)]
+    [switch]$CleanInstall,
+
+    [Parameter(Mandatory = $false)]
+    [switch]$SkipAdkInstall,
+
+    [Parameter(Mandatory = $false)]
+    [switch]$SkipWinPEInstall
+)
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+
+#--------------------------------------------------------------------------------
+# Load additional Libraries (Required to build the UI)
+#--------------------------------------------------------------------------------
+try {    
+    Add-Type -AssemblyName PresentationFramework -ErrorAction Stop
+    Add-Type -AssemblyName PresentationCore -ErrorAction Stop
+    Add-Type -AssemblyName WindowsBase -ErrorAction Stop
+    Add-Type -AssemblyName System.Xml -ErrorAction Stop
+    Add-Type -AssemblyName System.Windows.Forms -ErrorAction Stop
+}
+catch {
+    [System.Windows.MessageBox]::Show(
+        "Required assemblies could not be loaded!`n$($_.Exception.Message)",
+        "Runtime-Error!",
+        [System.Windows.MessageBoxButton]::OK,
+        [System.Windows.MessageBoxImage]::Error
+    ) | Out-Null
+    exit 1
+}
+
+# --------------------------------------------------------------------------
+# ERROR HANDLING
+# Using the script:Add-Error function, the installer collects information
+# about errors that occurred during the process.
+# --------------------------------------------------------------------------
+$script:errorlist = @()
+$script:errorhead = "WinTwin.Fusion - Install Manager"
+function script:Add-Error {
+    # Small Helper-Function to add an error to script:errorlist
+    # Usage: Add-Error "config.json is missing"
+    [CmdletBinding()]
+    param(
+        [string]$errortext
+    )
+    $script:errorlist += $errortext
+}
+function script:Show-RuntimeError {
+    # Small Helper-Function to show error dialogs
+    # Usage: Show-RuntimeError "Something went wrong."
+    # Usage: Show-RuntimeError "Core configuration not found" -exitapp
+    [CmdletBinding()]
+    param(
+        [string]$errortext,
+        [switch]$exitapp
+    )
+    [System.Windows.MessageBox]::Show(
+        $errortext,
+        "Runtime-Error!",
+        [System.Windows.MessageBoxButton]::OK,
+        [System.Windows.MessageBoxImage]::Error
+    ) | Out-Null
+    if ($exitapp.IsPresent) { exit 1 }
+    return
+}
+
+# --------------------------------------------------------------------------
+# GLOBAL INSTALLER VARS
+# --------------------------------------------------------------------------
+$script:setupconfig = [pscustomobject]@{
+    xmluiname  = "wintwin.fusion.installer.xml"
+    xmlui      = $null
+    currentDir = "$(Split-Path -Path $PSCommandPath -Parent)"
+    langfile   = "\Core\lang\install-manager.{0}.json"
+    appname    = "WinTwin.Fusion Install Manager"
+    appvers    = "v1.01.02"
+    adkexe     = "\AddOns\adksetup.exe"
+    peexe      = "\AddOns\adkwinpesetup.exe"
+}
+# Make sure that the required xml file for the UI can be found!
+$script:setupconfig.xmlui = Join-Path "$($script:setupconfig.currentDir)" "$($script:setupconfig.xmluiname)"
+if (-not (Test-Path -LiteralPath "$($script:setupconfig.xmlui)")) {
+    script:Show-RuntimeError -exitapp "Cannot build XML UI for WinTwin.Fusion Installer Manager.`nMissing XML-File:   $($script:setupconfig.xmluiname)`n`nWinTwin.Fusion Installer Manager is now closing."
+}
+
+$script:setupconfig.langfile = Join-Path "$($script:setupconfig.currentDir)" "$($script:setupconfig.langfile)"
+
+$script:setupconfig.adkexe = Join-Path "$($script:setupconfig.currentDir)" "$($script:setupconfig.adkexe)"
+$script:setupconfig.peexe  = Join-Path "$($script:setupconfig.currentDir)" "$($script:setupconfig.peexe)"
+
+# --------------------------------------------------------------------------
+# INSTALL MANAGER REQUIREMENT OBJECT
+# --------------------------------------------------------------------------
+
+# This object stores all requirements we need to check
+$script:requirement = [pscustomobject]@{
+    # Define a reference to the required PowerShell Libraries
+    wintwinlicense = [pscustomobject]@{
+        licensefile = "LICENSE.MD"
+        noticefile  = "NOTICE"
+        licensehash = "72A7A07E2D5CF61DC40F669A1F368019085E81F557EF63C038B28DC8F70EF8E3794A6941D1039D81D08A87BE90CC59984D3C839D8BD03DCF7F05CF8B52CD0CF4"
+        noticehash  = "0EBC8DB2C51A6A9446CAD73CCE8C84A341A4621D80EB5BB20A009EB2FB0263ACE88E26F71BC7AF6226CEEA687E97B0DB9C7B65C4797B264076F420ACE9F47F6E"
+    }
+    # Define a reference to the required PowerShell Libraries
+    directory = [pscustomobject]@{
+        lib      = Join-Path "$($script:setupconfig.currentDir)" "\Lib"
+        lang     = Join-Path "$($script:setupconfig.currentDir)" "\Core\lang"
+        logs     = Join-Path "$($script:setupconfig.currentDir)" "\Core\logs"
+        ui       = Join-Path "$($script:setupconfig.currentDir)" "\Core\ui"
+        fonts    = Join-Path "$($script:setupconfig.currentDir)" "\Core\fonts"
+        export   = Join-Path "$($script:setupconfig.currentDir)" "\Core\export"
+        addons   = Join-Path "$($script:setupconfig.currentDir)" "\AddOns"
+        drivers  = Join-Path "$($script:setupconfig.currentDir)" "\Drivers"
+        mountdir = Join-Path "$($script:setupconfig.currentDir)" "\Mount"
+        msstore  = Join-Path "$($script:setupconfig.currentDir)" "\MSStore"
+        output   = Join-Path "$($script:setupconfig.currentDir)" "\Output"
+        winmenu  = Join-Path "$($script:setupconfig.currentDir)" "\Profile.Backup\Startmenu"
+        wintbar  = Join-Path "$($script:setupconfig.currentDir)" "\Profile.Backup\Taskbar"
+        rawiso   = Join-Path "$($script:setupconfig.currentDir)" "\RawISO"
+        userdata = Join-Path "$($script:setupconfig.currentDir)" "\UserData"
+    }
+    # Define a reference to the required JSON-Files
+    apptools = [pscustomobject]@{
+        framework = Join-Path "$($script:setupconfig.currentDir)" "\DISM.UI.CC"
+        processdb = Join-Path "$($script:setupconfig.currentDir)" "\PS.Tweak.Tools"
+        workflows = Join-Path "$($script:setupconfig.currentDir)" "\USMT.Composer"
+    }
+    # Define a reference to the required JSON-Files
+    configfile = [pscustomobject]@{
+        framework = Join-Path "$($script:setupconfig.currentDir)" "\Core\config.json"
+        processdb = Join-Path "$($script:setupconfig.currentDir)" "\Core\db\process.json"
+        workflows = Join-Path "$($script:setupconfig.currentDir)" "\Core\db\workflow.json"
+        jobaction = Join-Path "$($script:setupconfig.currentDir)" "\Core\db\jobaction.json"
+    }
+    # Define a reference to the required PowerShell Libraries
+    applibrary = [pscustomobject]@{
+        opsreturn = Join-Path "$($script:setupconfig.currentDir)" "\Lib\OPSreturn\OPSreturn.psd1"
+        wtfxcore  = Join-Path "$($script:setupconfig.currentDir)" "\Lib\WinTwin.FXcore\WinTwin.FXcore.psd1"
+        wtxui     = Join-Path "$($script:setupconfig.currentDir)" "\Lib\WinTwin.XUI\wintwin.xui.psd1"
+        psappcore = Join-Path "$($script:setupconfig.currentDir)" "\Lib\PSAppCoreLib\PSAppCoreLib.psd1"
+        vpdlx     = Join-Path "$($script:setupconfig.currentDir)" "\Lib\VPDLX\VPDLX.psd1"
+    }
+}
+
+# --------------------------------------------------------------------------
+# INSTALL MANAGER CHECKLIST
+# The script:checklist object essentially functions as a checklist. Each
+# element of the script:checklist represents a check performed by the
+# Install Manager. Any issues or errors encountered are recorded via the
+# script:Add-Error function, and the script:checklist stores whether the
+# check was successfully completed.
+# IMPORTANT: script:checklist does not store the specific results of a
+# performed check. It only stores whether the check was performed or not.
+# --------------------------------------------------------------------------
+$script:checklist = [pscustomobject]@{
+    iselevated     = $false     # <-  Checks for elevated rights
+    rootdirfound   = $false     # <-  $true if root directory found
+    verifylicense  = $false     # <-  License integrity checks
+    hasallfolders  = $false     # <-  Check the folder structure (not the content!)
+    alltoolsfound  = $false     # <-  Checks the diretory of each tool (e.g. PS.Tweak.Tools)
+    jsonfilesfound = $false     # <-  Looks for the core JSON-files (e.g. config.json)
+    librariesfound = $false     # <-  Checks if all PowerShell Libraries could be found
+    coreconfigdone = $false     # <-  $true if config.json has been configured
+    jobsconfigured = $false     # <-  $true if jobaction.json has been configured
+    processdbdone  = $false     # <-  $true if process.json has been configured
+    workflowsdone  = $false     # <-  $true if workflows.json has been configured
+    iswindows11    = $false     # <-  Checks for Windows 11 (24H2/25H2)
+    isdismworking  = $false     # <-  Checks if DISM is installed and working
+    haswindowsadk  = $false     # <-  Checks for Windows ADK (can be silently installed if not found)
+    hasadkpeaddon  = $false     # <-  Checks for Windows ADK (PE AddOn) (can be silently installed if not found)
+    fondsinstalled = $false     # <-  Installs all required fonts
+    finalcheckup   = $false     # <-  $true if the final checkup has been performet
+    wintwinready   = $false     # <-  $true if all requrirements are fullfilled
+}
+
+# --------------------------------------------------------------------------
+# PRE-LOADIND STAGE
+# Since we are already familiar with the script directory, we can take
+# a step ahead and immediately determine whether the libraries are
+# available. If they are, we can tick off one check; as a bonus, we can
+# give the Install Manager a significant boost by loading the  libraries.
+# --------------------------------------------------------------------------
+
+# 1st Step: We're going to verify that all library files exists
+foreach ($prop in $script:requirement.applibrary.psobject.Properties) {
+    if (-not (Test-Path -LiteralPath $prop.Value -PathType Leaf)) {
+        script:Add-Error "$($prop.Value) not found!"
+    }
+}
+# 2nd Step: Try to import the libraries one by one (counting errors)
+if ( $script:errorlist.Count -eq 0) {
+    $importOK = 0
+    foreach ($prop in $script:requirement.applibrary.psobject.Properties) {
+        try {
+            Import-Module $prop.Value -Force -ErrorAction Stop
+            $importOK++
+        }
+        catch {
+            $libName = [string]$($prop.Name).ToUpper()
+            Show-RuntimeError -exitapp "Failed loading internal Framework Library  $($libName)!"
+        }
+    }
+    # Only if all libraries could be loaded
+    if ( $importOK -eq 5) {
+        #$script:checklist.librariesfound = $true
+        Write-Host "Following Libraries were successfully loaded" -ForegroundColor Gray
+        foreach ($prop in $script:requirement.applibrary.psobject.Properties) {
+        Write-Host "$($prop.Value)" -ForegroundColor DarkGreen
+        }
+    }
+}
+
+# Now we're all set. We can now use the framework-internal
+# libraries including all of their provided functions :)
+
+#--------------------------------------------------------------------------------
+# Hide Console Window -> Using Function from WinTwin.FXcore
+# -> We can use wintwincore.SystemMessageBox to display Error-Messages!
+#--------------------------------------------------------------------------------
+#wintwincore.SetCMDstate -State Hide
+
+#--------------------------------------------------------------------------------
+# Load/Create the Window
+# In this section, the UI is loaded from the XML file, the window is created,
+# and all UI elements are referenced. Everything will be stored in $script:app
+#--------------------------------------------------------------------------------
+$script:app = [pscustomobject]@{
+    window  = $null
+    control = $null
+}
+# The -extended switch returns the window object including the referenced controls
+$script:LoadXML = xuiLoadWindow -XMLfile $script:setupconfig.xmlui -extended
+if ($script:LoadXML.code -ne 0) {
+    $null = wintwincore.SystemMessageBox -smbTitle $script:errorhead `
+    -smbText "Faild loading User Interface:`n$($script:setupconfig.xmlui)`n$($script:LoadXML.message)" `
+    -smbIcon Error -smbButtons OK
+    exit 1
+}
+# Store the window and all controls inside the window
+$script:app.window  = $script:LoadXML.data.Window
+$script:app.control = $script:LoadXML.data.Controls
+
+#--------------------------------------------------------------------------------
+# Load Language-File for the Install Manager
+#--------------------------------------------------------------------------------
+$Language = $Language.ToString().ToLower()
+$script:setupconfig.langfile = $script:setupconfig.langfile -f $Language
+
+$script:result = wintwincore.LoadJSON -Path $script:setupconfig.langfile
+if ($script:result.code -ne 0) {
+    $null = wintwincore.SystemMessageBox -smbTitle $script:errorhead `
+    -smbText "Faild loading language package:`n$($script:setupconfig.langfile)`n$($script:result.message)"
+    -smbIcon Error -smbButtons OK
+    exit 1
+}
+$script:apptxt = $script:result.data
+
+#--------------------------------------------------------------------------------
+# Load the text from the language file into the ui of the window
+#--------------------------------------------------------------------------------
+$script:app.control.LblWelcome.Text        = $script:apptxt.ui.HeaderText
+$script:app.control.LblSetupInfo.Text      = $script:apptxt.ui.WelcomeText
+$script:app.control.Lbliselevated.Text     = $script:apptxt.ui.CBiselevated
+$script:app.control.Lbliswindows11.Text    = $script:apptxt.ui.CBiswindows11
+$script:app.control.Lblisdismworking.Text  = $script:apptxt.ui.CBisdismworking
+$script:app.control.Lblhaswindowsadk.Text  = $script:apptxt.ui.CBhaswindowsadk
+$script:app.control.Lblhasadkpeaddon.Text  = $script:apptxt.ui.CBhasadkpeaddon
+$script:app.control.Lblrootdirfound.Text   = $script:apptxt.ui.CBrootdirfound
+$script:app.control.Lblverifylicense.Text  = $script:apptxt.ui.CBverifylicense
+$script:app.control.Lblhasallfolders.Text  = $script:apptxt.ui.CBhasallfolders
+$script:app.control.Lblalltoolsfound.Text  = $script:apptxt.ui.CBalltoolsfound
+$script:app.control.Lbljsonfilesfound.Text = $script:apptxt.ui.CBjsonfilesfound
+$script:app.control.Lbllibrariesfound.Text = $script:apptxt.ui.CBlibrariesfound
+$script:app.control.Lblcoreconfigdone.Text = $script:apptxt.ui.CBcoreconfigdone
+$script:app.control.Lbljobsconfigured.Text = $script:apptxt.ui.CBjobsconfigured
+$script:app.control.Lblprocessdbdone.Text  = $script:apptxt.ui.CBprocessdbdone
+$script:app.control.Lblworkflowsdone.Text  = $script:apptxt.ui.CBworkflowsdone
+$script:app.control.Lblfontsinstalled.Text = $script:apptxt.ui.CBfondsinstalled
+$script:app.control.Lblfinalcheckup.Text   = $script:apptxt.ui.CBfinalcheckup
+$script:app.control.Lblwintwinready.Text   = $script:apptxt.ui.CBwintwinready
+
+# Due to the instruction text includes placeholders, we need to replace them first
+$script:apptxt.ui.InsctructionText = $script:apptxt.ui.InsctructionText -f `
+$script:apptxt.ui.ButtonRunSetup, $script:apptxt.ui.ButtonClose, $script:apptxt.ui.ButtonCleanSetup
+$script:app.control.LblInstallHint.Text   = $script:apptxt.ui.InsctructionText
+
+$script:app.control.BtnInstall.Content    = $script:apptxt.ui.ButtonRunSetup
+$script:app.control.BtnCancel.Content     = $script:apptxt.ui.ButtonClose
+$script:app.control.BtnCleanSetup.Content = $script:apptxt.ui.ButtonCleanSetup
+
+# Short configuration of BtnCleanSetup. It'll only be activated with the -CleanInstall Switch
+if ($CleanInstall.IsPresent) { $script:app.control.BtnCleanSetup.IsEnabled = $true }
+else { $script:app.control.BtnCleanSetup.IsEnabled = $false }
+
+$script:app.control.StatusText.Text   = $script:apptxt.status.ready
+$script:app.control.StatusInfo.Text   = "$($script:setupconfig.appname) ($($script:setupconfig.appvers))"
+
+# Due to our checkboxes have 3 states, we initialy need to reset them
+$statusCheckBoxes = @(
+    'CBiselevated'
+    'CBiswindows11'
+    'CBisdismworking'
+    'CBhaswindowsadk'
+    'CBhasadkpeaddon'
+    'CBrootdirfound'
+    'CBverifylicense'
+    'CBhasallfolders'
+    'CBalltoolsfound'
+    'CBjsonfilesfound'
+    'CBlibrariesfound'
+    'CBcoreconfigdone'
+    'CBjobsconfigured'
+    'CBprocessdbdone'
+    'CBworkflowsdone'
+    'CBfontsinstalled'
+    'CBfinalcheckup'
+    'CBwintwinready'
+)
+
+foreach ($controlName in $statusCheckBoxes) {
+    $script:app.control[$controlName].IsChecked = $null
+}
+
+#--------------------------------------------------------------------------------
+# Internal Functions for WinTwin.Fusion Install Manager
+#--------------------------------------------------------------------------------
+function script:uiEvent {
+    <#
+    .SYNOPSIS
+        Pumps the WPF dispatcher so that pending UI updates are rendered
+        immediately instead of being deferred until the current handler
+        returns.
+
+    .DESCRIPTION
+        While a synchronous handler (e.g. the BtnInstall click handler) is
+        running on the UI thread, WPF queues all visual changes and only
+        redraws them once the dispatcher is free again. Calling this
+        function in between updates forces the dispatcher to process the
+        queued rendering work right away, so the user sees live progress.
+
+    .NOTES
+        This is a lightweight "DoEvents" equivalent for WPF. It keeps the
+        UI thread busy, so the window cannot be moved/resized while a long
+        operation is running. Use it for short checks; for long-running
+        work prefer a background thread (e.g. Start-ThreadJob).
+    #>
+    [CmdletBinding()]
+    param()
+
+    $dispatcher = [System.Windows.Threading.Dispatcher]::CurrentDispatcher
+    $frame = [System.Windows.Threading.DispatcherFrame]::new($false)
+    $callback = [System.Windows.Threading.DispatcherOperationCallback]{
+        param($f)
+        $f.Continue = $false
+        return $null
+    }
+    $dispatcher.BeginInvoke(
+        [System.Windows.Threading.DispatcherPriority]::Background,
+        $callback,
+        $frame
+    ) | Out-Null
+    [System.Windows.Threading.Dispatcher]::PushFrame($frame)
+    
+    Start-Sleep -Milliseconds 500
+}
+
+function script:SetStatusUpdate {
+    <#
+    .SYNOPSIS
+        Updates the installation progress bar based on the current step.
+
+    .DESCRIPTION
+        Maps a step number (0-18) to a progress percentage and applies it
+        to the PrgInstallation control. Step 0 resets the bar, step 18
+        completes it, and every step in between advances it proportionally.
+
+    .NOTES
+        The original implementation referenced an undefined variable ($x)
+        instead of $StepCount, which threw an exception under
+        Set-StrictMode and prevented the progress bar from updating. The
+        step range was also corrected to cover step 17.
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [ValidateRange(0, 18)]
+        [int]$StepCount
+    )
+
+    if ($StepCount -eq 0) {
+        # Reset the progress bar to 0
+        $script:app.control.PrgInstallation.Value = 0
+    }
+    elseif ($StepCount -ge 1 -and $StepCount -le 17) {
+        # Calculate the progress level for the current step
+        $result = [math]::Truncate(((100 / 18) * $StepCount) * 10) / 10
+        $script:app.control.PrgInstallation.Value = $result
+    }
+    elseif ($StepCount -eq 18) {
+        # Finish the progress bar
+        $script:app.control.PrgInstallation.Value = 100
+    }
+
+    # Render the change immediately so the user sees live progress
+    script:uiEvent
+}
+
+function script:ReplaceRootPath {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$location,
+        [Parameter(Mandatory = $false)]
+        [string]$oldRoot = "C:\WinTwin.Fusion",
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$newRoot
+    )
+    $local:error = $null
+    try {
+        $local:tail = $location.Substring($oldRoot.Length).TrimStart('\')
+        $location = Join-Path $newRoot $local:tail        
+    }
+    catch {
+        $local:error = $_.ErrorDetails.Message ? $_.ErrorDetails.Message : $_.Exception.Message
+    }
+
+    if (Test-Path -Path $location -PathType Container) {
+        return [pscustomobject]@{ code=0 ; message="success" ; data=$location }
+    } else {
+        return [pscustomobject]@{ code=1 ; message="failed" ; data=$local:error }
+    }
+}
+
+
+function script:CheckElevatedRights {
+    [CmdletBinding()]
+    [OutputType([bool])]
+    param()
+
+    try {
+        $currentIdentity = [Security.Principal.WindowsIdentity]::GetCurrent()
+
+        if (-not $currentIdentity) {
+            return $false
+        }
+
+        $principal = New-Object Security.Principal.WindowsPrincipal($currentIdentity)
+
+        return $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+    }
+    catch {
+        Write-Verbose "Fehler bei der Ermittlung der Berechtigungen: $_"
+        $null = wintwincore.SystemMessageBox -smbTitle $script:errorhead `
+        -smbText "Function script:CheckElevatedRights failed with following error:`n$($_.Exception.Message)" `
+        -smbIcon Warning -smbButtons OK
+        return $false
+    }
+}
+function script:GetSystemInfo {
+    [CmdletBinding()]
+    [OutputType([bool])]
+    param()
+
+    try {
+        # The registry keys ProductName / CurrentMajorVersionNumber still report
+        # "Windows 10 ..." / 10 on Windows 11 for compatibility reasons. The
+        # correct product name is available via Win32_OperatingSystem.
+        $currentVersion = Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -ErrorAction Stop
+        $cimOs = Get-CimInstance Win32_OperatingSystem -ErrorAction Stop
+
+        $registryProductName = $currentVersion.ProductName
+        $buildNumber = [int]$currentVersion.CurrentBuild
+        $majorVersion = [int]$currentVersion.CurrentMajorVersionNumber
+        $cimProductName = $cimOs.Caption
+
+        # Determine the product name: CIM is reliable, the registry is the fallback.
+        if ($cimProductName -and ($cimProductName -like '*Windows 11*')) { $productName = $cimProductName }
+        elseif ($cimProductName -and ($cimProductName -like '*Windows 10*')) { $productName = $cimProductName }
+        elseif ($registryProductName) {
+            # Correct the registry name if the build already indicates Windows 11.
+            if (($buildNumber -ge 22000) -and ($registryProductName -like '*Windows 10*')) { $productName = $registryProductName -replace 'Windows 10', 'Windows 11' }
+            else { $productName = $registryProductName }
+        }
+        else { $productName = 'Unknown' }
+
+        # Windows 11 intentionally keeps MajorVersion = 10. The build number is
+        # the unambiguous differentiator: >= 22000 = Windows 11.
+        $isWindows11 = ($majorVersion -eq 10 -and $buildNumber -ge 22000) -or ($productName -like '*Windows 11*')
+
+        # Only allow Windows 11
+        if (-not $isWindows11) { return $false }
+
+        # Windows 11 24H2 = Build 26100
+        # Windows 11 25H2 = Build 26200+ (current branch)
+        # Accepts exclusively 24H2 and 25H2
+        if ($buildNumber -ge 26100 -and $buildNumber -lt 27000) {
+            return $true
+        }
+
+        return $false
+    }
+    catch {
+        #Write-Verbose "Fehler bei der Ermittlung der Betriebssystemversion: $_"
+        return $false
+    }
+}
+
+function script:CheckDISM {
+    [CmdletBinding()]
+    [OutputType([bool])]
+    param(
+        [int]$TimeoutSeconds = 30
+    )
+
+    try {
+        # DISM.exe finden
+        $dismPath = (Get-Command dism.exe -ErrorAction Stop).Source
+
+        if (-not (Test-Path -LiteralPath $dismPath)) {
+            return $false
+        }
+
+        # Funktionsprüfung: schneller, lesender DISM-Aufruf
+        $process = Start-Process `
+            -FilePath $dismPath `
+            -ArgumentList '/Online','/Get-CurrentEdition' `
+            -NoNewWindow `
+            -Wait:$false `
+            -PassThru
+
+        if (-not $process.WaitForExit($TimeoutSeconds * 1000)) {
+            try { $process.Kill() } catch {}
+            return $false
+        }
+
+        # Erfolgreicher ExitCode = DISM funktioniert
+        if ($process.ExitCode -eq 0) {
+            return $true
+        }
+
+        return $false
+    }
+    catch {
+        Write-Verbose "DISM-Prüfung fehlgeschlagen: $_"
+        return $false
+    }
+}
+
+#--------------------------------------------------------------------------------
+# Helper-Functions for the UI-Events
+#--------------------------------------------------------------------------------
+
+# Closes the window
+$script:app.control.BtnMinimize.Add_Click({
+    $script:app.window.WindowState = [System.Windows.WindowState]::Minimized
+})
+
+# Minimizes the window
+$script:app.control.BtnClose.Add_Click({
+    $script:app.window.Close()
+})
+
+# Adds Drag-n-Drop support (due to we're using a borderless window)
+$script:app.control.TitleBarPanel.Add_MouseLeftButtonDown({
+    param($senderObj, $eventObj)
+
+    if ($eventObj.ButtonState -eq
+        [System.Windows.Input.MouseButtonState]::Pressed) {
+        $script:app.window.DragMove()
+    }
+})
+
+# Action-Button: Run Installation  ->  This is where all the "magic" happens ;)
+$script:app.control.BtnInstall.Add_Click({
+    # Let's start the setup/configuration
+
+    # Check No. 01: elevated rights
+    $script:app.control.StatusText.Text = $script:apptxt.status.task01
+    script:uiEvent
+    if (-not (script:CheckElevatedRights)) {
+        $null = wintwincore.SystemMessageBox -smbTitle $script:errorhead `
+        -smbText "The Install Manager requires elevated rights!`nPlease restart it as an administrator." `
+        -smbIcon Warning -smbButtons OK
+        $script:app.control.CBiselevated.IsChecked = $false
+        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Not running with elevated priviledges!")"
+        return $false # We cannot perform any further checks without admin rights
+    } else {
+        $script:app.control.CBiselevated.IsChecked = $true
+        script:SetStatusUpdate -StepCount 1
+    }
+    script:uiEvent
+
+    # Check No. 02: check supported Windows versions (Win11 24H2/25H2)
+    $script:app.control.StatusText.Text = $script:apptxt.status.task02
+    script:uiEvent
+    if (-not (script:GetSystemInfo)) {
+        $script:app.control.CBiswindows11.IsChecked = $false
+        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Current system is not supported!")"
+        return $false # Same here: no need to continue if the current system is not supported!
+    } else {
+        $script:app.control.CBiswindows11.IsChecked = $true
+        script:SetStatusUpdate -StepCount 2
+    }
+    script:uiEvent
+
+    # Check No. 03: DISM-Check
+    $script:app.control.StatusText.Text = $script:apptxt.status.task03
+    script:uiEvent
+    if (-not (script:CheckDISM)) {
+        $script:app.control.CBisdismworking.IsChecked = $false
+        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "DISM not found or not working!")"
+        return $false # Same here: no need to continue without DISM
+    } else {
+        $script:app.control.CBisdismworking.IsChecked = $true
+        script:SetStatusUpdate -StepCount 3
+    }
+    script:uiEvent
+
+    # Check No. 04: Check ADK-Installation
+    $script:app.control.StatusText.Text = $script:apptxt.status.task04
+    script:uiEvent
+    if (-not (wintwincore.CheckWindowsADK)) {
+        $script:app.control.CBhaswindowsadk.IsChecked = $false
+        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Windows 11 ADK not found!")"
+        script:uiEvent
+        # In this special case we have to perfom some special checks
+        if ($SkipAdkInstall.IsPresent) {
+            # SkipAdkInstall-Switch was used. So we have to skip it
+            # Remember: The ADK isn't installed at this point!
+            $null = wintwincore.SystemMessageBox -smbTitle $script:errorhead `
+            -smbText "$($script:apptxt.message.InstallAdvise -f "Windows ADK")" `
+            -smbIcon Information -smbButtons OK
+        } else {
+            # At this point, we could automatically fix it by installing it silently
+            $response = wintwincore.SystemMessageBox -smbTitle $script:errorhead `
+            -smbText $script:apptxt.message.InstallADKnow `
+            -smbIcon Warning -smbButtons YesNo
+            if ($response.code -eq 0 -and $response.data -eq 'Yes') {
+                $script:app.control.StatusText.Text = "$($script:apptxt.status.silentsetup -f "Windows ADK")"
+                script:uiEvent
+                # User wants to install the windows adk
+                if (-not (wintwincore.InstallADK -SetupPath $script:setupconfig.adkexe)) {
+                    $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Failed installing Windows ADK")"
+                    $response = wintwincore.SystemMessageBox -smbTitle $script:errorhead `
+                    -smbText "$($script:apptxt.message.InstallFailed -f "Windows ADK")" `
+                    -smbIcon Warning -smbButtons OK
+                } else {
+                    $script:app.control.CBhaswindowsadk.IsChecked = $true
+                }
+            } else {
+                $null = wintwincore.SystemMessageBox -smbTitle $script:errorhead `
+                -smbText "$($script:apptxt.message.InstallAdvise -f "Windows ADK")" `
+                -smbIcon Information -smbButtons OK
+            }
+        }
+    } else {
+        $script:app.control.CBhaswindowsadk.IsChecked = $true
+        script:SetStatusUpdate -StepCount 4
+    }
+    script:uiEvent
+
+    # Check No. 05: Check ADK PE AddOn
+    $script:app.control.StatusText.Text = $script:apptxt.status.task05
+    script:uiEvent
+    if (-not (wintwincore.CheckADKPEaddon)) {
+        $script:app.control.CBhasadkpeaddon.IsChecked = $false
+        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Windows 11 ADK PE AddOn not found!")"
+        script:uiEvent
+        if ($SkipWinPEInstall.IsPresent) {
+            # SkipWinPEInstall was used. So we have to skip it
+            $null = wintwincore.SystemMessageBox -smbTitle $script:errorhead `
+            -smbText "$($script:apptxt.message.InstallAdvise -f "ADK PE AddOn")" `
+            -smbIcon Information -smbButtons OK
+        } else {
+            # At this point, we could automatically fix it by installing it silently
+            $response = wintwincore.SystemMessageBox -smbTitle $script:errorhead `
+            -smbText $script:apptxt.message.InstallPEnow `
+            -smbIcon Warning -smbButtons YesNo
+            if ($response.code -eq 0 -and $response.data -eq 'Yes') {
+                $script:app.control.StatusText.Text = "$($script:apptxt.status.silentsetup -f "ADK PE AddOn")"
+                # User wants to install the windows adk
+                if (-not (wintwincore.InstallPEaddon -SetupPath $script:setupconfig.peexe)) {
+                    $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Failed installing ADK PE AddOn")"
+                    $response = wintwincore.SystemMessageBox -smbTitle $script:errorhead `
+                    -smbText "$($script:apptxt.message.InstallFailed -f "ADK PE AddOn")" `
+                    -smbIcon Warning -smbButtons OK
+                } else {
+                    $script:app.control.CBhasadkpeaddon.IsChecked = $true
+                }
+            }  else {
+                $null = wintwincore.SystemMessageBox -smbTitle $script:errorhead `
+                -smbText "$($script:apptxt.message.InstallAdvise -f "ADK PE AddOn")" `
+                -smbIcon Information -smbButtons OK
+            }
+        }
+    } else {
+        $script:app.control.CBhasadkpeaddon.IsChecked = $true
+        script:SetStatusUpdate -StepCount 5
+    }
+    script:uiEvent
+
+    # Check No. 06: Get Framework Root
+    $script:app.control.StatusText.Text = $script:apptxt.status.task06
+    script:uiEvent
+    if (-not (Test-Path -Path $script:setupconfig.currentDir -PathType Container)) {
+        $script:app.control.CBrootdirfound.IsChecked = $false
+        script:Add-Error "Could not determine root directory!"
+        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Could not determine root directory!")"
+    } else {
+        $script:app.control.CBrootdirfound.IsChecked = $true
+        script:SetStatusUpdate -StepCount 6
+    }
+    script:uiEvent
+
+    # Check No. 07: license integrity check
+    $script:app.control.StatusText.Text = $script:apptxt.status.task07
+    script:uiEvent
+    $script:requirement.wintwinlicense.licensefile = Join-Path "$($script:setupconfig.currentDir)" "$($script:requirement.wintwinlicense.licensefile)"
+    $script:requirement.wintwinlicense.noticefile  = Join-Path "$($script:setupconfig.currentDir)" "$($script:requirement.wintwinlicense.noticefile)"
+    $script:licensecheck = wintwincore.CheckFileIntegrity -Path $script:requirement.wintwinlicense.licensefile -Algo SHA512 -Hash $script:requirement.wintwinlicense.licensehash
+    $script:noticecheck  = wintwincore.CheckFileIntegrity -Path $script:requirement.wintwinlicense.noticefile -Algo SHA512 -Hash $script:requirement.wintwinlicense.noticehash
+    if ($script:licensecheck -eq 0 -and $script:noticecheck -eq 0) {
+        $script:app.control.CBverifylicense.IsChecked = $true
+        script:SetStatusUpdate -StepCount 7
+    } else {
+        $script:app.control.CBverifylicense.IsChecked = $false
+        script:Add-Error "License Integrity Check failed!"
+        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "License Integrity Check failed!")"
+    }
+    script:uiEvent
+
+    # Check No. 08: folder structure check
+    $script:app.control.StatusText.Text = $script:apptxt.status.task08
+    script:uiEvent
+    $script:scanerror = 0
+    foreach ($prop in $script:requirement.directory.psobject.Properties) {
+        if (-not (Test-Path -Path $prop.Value -PathType Container)) {
+            #script:Add-Error "$($prop.Value) not found!"
+            $script:scanerror++
+        }
+    }
+    if ($script:scanerror -eq 0) {
+        $script:app.control.CBhasallfolders.IsChecked = $true
+        script:SetStatusUpdate -StepCount 8
+    } else {
+        $script:app.control.CBhasallfolders.IsChecked = $false
+        script:Add-Error "Folder structure is damaged!"
+        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Folder structure is damaged!")"
+    }
+    script:uiEvent
+
+    # Check No. 09: additional tools check
+    $script:app.control.StatusText.Text = $script:apptxt.status.task09
+    script:uiEvent
+    $script:scanerror = 0
+    foreach ($prop in $script:requirement.apptools.psobject.Properties) {
+        if (-not (Test-Path -Path $prop.Value -PathType Container)) {
+            #script:Add-Error "$($prop.Value) not found!"
+            $script:scanerror++
+        }
+    }
+    if ($script:scanerror -eq 0) {
+        $script:app.control.CBalltoolsfound.IsChecked = $true
+        script:SetStatusUpdate -StepCount 9
+    } else {
+        $script:app.control.CBalltoolsfound.IsChecked = $false
+        script:Add-Error "Missing Framework-Tool(s) detected!"
+        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Missing Framework-Tool(s) detected!")"
+    }
+    script:uiEvent
+
+    # Check No. 10: additional tools check
+    $script:app.control.StatusText.Text = $script:apptxt.status.task10
+    script:uiEvent
+    $script:scanerror = 0
+    foreach ($prop in $script:requirement.configfile.psobject.Properties) {
+        if (-not (Test-Path -Path $prop.Value -PathType Container)) {
+            #script:Add-Error "$($prop.Value) not found!"
+            $script:scanerror++
+        }
+    }
+    if ($script:scanerror -eq 0) {
+        $script:app.control.CBjsonfilesfound.IsChecked = $true
+        script:SetStatusUpdate -StepCount 10
+    } else {
+        $script:app.control.CBjsonfilesfound.IsChecked = $false
+        script:Add-Error "Missing config file(s) detected!"
+        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Missing config file(s) detected!")"
+    }
+    script:uiEvent
+
+    # Check No. 11: framework-library check
+    $script:app.control.StatusText.Text = $script:apptxt.status.task11
+    script:uiEvent
+    $script:scanerror = 0
+    foreach ($prop in $script:requirement.applibrary.psobject.Properties) {
+        if (-not (Test-Path -Path $prop.Value -PathType Container)) {
+            #script:Add-Error "$($prop.Value) not found!"
+            $script:scanerror++
+        }
+    }
+    if ($script:scanerror -eq 0) {
+        $script:app.control.CBlibrariesfound.IsChecked = $true
+        script:SetStatusUpdate -StepCount 11
+    } else {
+        $script:app.control.CBlibrariesfound.IsChecked = $false
+        script:Add-Error "Missing framework library detected!"
+        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Missing framework library detected!")"
+    }
+    script:uiEvent
+
+    # Check No. 12: framework configuration
+    $script:app.control.StatusText.Text = $script:apptxt.status.task12
+    script:uiEvent
+    $script:readJSON = wintwincore.LoadJSON -Path $script:requirement.configfile.framework
+    if ($script:readJSON.code -ne 0) {
+        $script:app.control.CBcoreconfigdone.IsChecked = $false
+        script:Add-Error "Framework-Configuration failed!"
+        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Framework-Configuration failed!")"
+        script:uiEvent
+        $null = wintwincore.SystemMessageBox -smbTitle $script:errorhead `
+        -smbText "$($script:apptxt.message.InstallError -f "Failed reading the configuration file!")" `
+        -smbIcon Warning -smbButtons OK
+        return $false # <- we cannot continue if we cannot edit the config.json
+    }
+    $script:readJSON = $script:readJSON.data
+
+    $script:readJSON.appconfig.defaultlanguage = "$($Language)"
+    $script:readJSON.path.root = "$($script:setupconfig.currentDir)"
+
+    $script:writeJSON = wintwincore.WriteJSON -Path $script:requirement.configfile.framework -Value $script:readJSON
+    if ($script:writeJSON.code -ne 0) {
+        $script:app.control.CBcoreconfigdone.IsChecked = $false
+        script:Add-Error "Framework-Configuration failed!"
+        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Framework-Configuration failed!")"
+        script:uiEvent
+        $null = wintwincore.SystemMessageBox -smbTitle $script:errorhead `
+        -smbText "$($script:apptxt.message.InstallError -f "Failed writing changes to configuration file!")" `
+        -smbIcon Warning -smbButtons OK
+        return $false # <- we cannot continue if we cannot edit the config.json
+    }
+    $script:app.control.CBcoreconfigdone.IsChecked = $true
+    script:SetStatusUpdate -StepCount 12
+    script:uiEvent
+
+    # Check No. 13: job-action configuration
+    $script:app.control.StatusText.Text = $script:apptxt.status.task13
+    script:uiEvent
+    # Try to patch the jobaction.json
+    $script:result = wintwincore.PatchJSON `
+        -Path $script:requirement.configfile.jobaction `
+        -SearchValue 'C:\WinTwin.Fusion' `
+        -ReplacementValue $script:setupconfig.currentDir `
+        -CreateBackup
+    # Patching failed
+    if ($script:result.code -ne 0) {
+            $script:app.control.CBjobsconfigured.IsChecked = $false
+            script:Add-Error "Job-Configuration failed!"
+            $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Job-Configuration failed!")"
+            script:uiEvent
+            $null = wintwincore.SystemMessageBox -smbTitle $script:errorhead `
+            -smbText "$($script:apptxt.message.InstallError -f "Failed updating the job configuration!")" `
+            -smbIcon Warning -smbButtons OK
+            return $false # <- we cannot continue if we cannot edit the jobaction.json
+    }
+    $script:app.control.CBjobsconfigured.IsChecked = $true
+    script:SetStatusUpdate -StepCount 13
+    script:uiEvent
+
+    <# PREVIOUS CODE-BLOCK FOR PATCHING THE JOBACTION.JSON
+        $script:readJSON = wintwincore.LoadJSON -Path $script:requirement.configfile.jobaction
+        if ($script:readJSON.code -ne 0) {
+            $script:app.control.CBjobsconfigured.IsChecked = $false
+            script:Add-Error "Job-Configuration failed!"
+            $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Job-Configuration failed!")"
+            script:uiEvent
+            $null = wintwincore.SystemMessageBox -smbTitle $script:errorhead `
+            -smbText "$($script:apptxt.message.InstallError -f "Failed reading the job configuration!")" `
+            -smbIcon Warning -smbButtons OK
+            return $false # <- we cannot continue if we cannot edit the jobaction.json
+        }
+        $script:readJSON = $script:readJSON.data
+    
+        $script:scanerror = 0
+        $script:newPath = script:ReplaceRootPath -location "$($script:readJSON."uupd-catch".download.location)" -newRoot "$($script:setupconfig.currentDir)"
+        if ($script:newPath.code -eq 0) { $script:readJSON."uupd-catch".download.location = $script:newPath.data }
+        else { $script:scanerror++ }
+
+        $script:newPath = script:ReplaceRootPath -location "$($script:readJSON."uupd-catch".logfile[1])" -newRoot "$($script:setupconfig.currentDir)"
+        if ($script:newPath.code -eq 0) { $script:readJSON."uupd-catch".logfile[1] = $script:newPath.data ; $script:readJSON."uupd-catch".logfile[0] = $true }
+        else { $script:scanerror++ }
+
+        $script:newPath = script:ReplaceRootPath -location "$($script:readJSON."uupd-compose".zipfile)" -newRoot "$($script:setupconfig.currentDir)"
+        if ($script:newPath.code -eq 0) { $script:readJSON."uupd-compose".zipfile = $script:newPath.data }
+        else { $script:scanerror++ }
+
+        $script:newPath = script:ReplaceRootPath -location "$($script:readJSON."uupd-compose".isopath)" -newRoot "$($script:setupconfig.currentDir)"
+        if ($script:newPath.code -eq 0) { $script:readJSON."uupd-compose".isopath = $script:newPath.data }
+        else { $script:scanerror++ }
+
+        $script:newPath = script:ReplaceRootPath -location "$($script:readJSON."uupd-compose".logfile[1])" -newRoot "$($script:setupconfig.currentDir)"
+        if ($script:newPath.code -eq 0) { $script:readJSON."uupd-compose".logfile[1] = $script:newPath.data ; $script:readJSON."uupd-compose".logfile[0] = $true }
+        else { $script:scanerror++ }
+
+        $script:newPath = script:ReplaceRootPath -location "$($script:readJSON."uupd-isodump".isofile)" -newRoot "$($script:setupconfig.currentDir)"
+        if ($script:newPath.code -eq 0) { $script:readJSON."uupd-isodump".isofile = $script:newPath.data }
+        else { $script:scanerror++ }
+
+        $script:newPath = script:ReplaceRootPath -location "$($script:readJSON."uupd-isodump".output)" -newRoot "$($script:setupconfig.currentDir)"
+        if ($script:newPath.code -eq 0) { $script:readJSON."uupd-isodump".output = $script:newPath.data }
+        else { $script:scanerror++ }
+
+        $script:newPath = script:ReplaceRootPath -location "$($script:readJSON."uupd-isodump".logfile[1])" -newRoot "$($script:setupconfig.currentDir)"
+        if ($script:newPath.code -eq 0) { $script:readJSON."uupd-isodump".logfile[1] = $script:newPath.data ; $script:readJSON."uupd-isodump".logfile[0] = $true }
+        else { $script:scanerror++ }
+
+        $script:newPath = script:ReplaceRootPath -location "$($script:readJSON."wim-mount".path)" -newRoot "$($script:setupconfig.currentDir)"
+        if ($script:newPath.code -eq 0) { $script:readJSON."wim-mount".path = $script:newPath.data }
+        else { $script:scanerror++ }
+
+        $script:newPath = script:ReplaceRootPath -location "$($script:readJSON."wim-mount".imgfile)" -newRoot "$($script:setupconfig.currentDir)"
+        if ($script:newPath.code -eq 0) { $script:readJSON."wim-mount".imgfile = $script:newPath.data }
+        else { $script:scanerror++ }
+
+        $script:newPath = script:ReplaceRootPath -location "$($script:readJSON."wim-mount".logfile[1])" -newRoot "$($script:setupconfig.currentDir)"
+        if ($script:newPath.code -eq 0) { $script:readJSON."wim-mount".logfile[1] = $script:newPath.data ; $script:readJSON."wim-mount".logfile[0] = $true }
+        else { $script:scanerror++ }
+
+        $script:newPath = script:ReplaceRootPath -location "$($script:readJSON."wim-eject".path)" -newRoot "$($script:setupconfig.currentDir)"
+        if ($script:newPath.code -eq 0) { $script:readJSON."wim-eject".path = $script:newPath.data }
+        else { $script:scanerror++ }
+
+        $script:newPath = script:ReplaceRootPath -location "$($script:readJSON."wim-eject".imgfile)" -newRoot "$($script:setupconfig.currentDir)"
+        if ($script:newPath.code -eq 0) { $script:readJSON."wim-eject".imgfile = $script:newPath.data }
+        else { $script:scanerror++ }
+
+        $script:newPath = script:ReplaceRootPath -location "$($script:readJSON."wim-eject".logfile[1])" -newRoot "$($script:setupconfig.currentDir)"
+        if ($script:newPath.code -eq 0) { $script:readJSON."wim-eject".logfile[1] = $script:newPath.data ; $script:readJSON."wim-eject".logfile[0] = $true }
+        else { $script:scanerror++ }
+
+        $script:newPath = script:ReplaceRootPath -location "$($script:readJSON."wtfconsole".logfile[1])" -newRoot "$($script:setupconfig.currentDir)"
+        if ($script:newPath.code -eq 0) { $script:readJSON."wtfconsole".logfile[1] = $script:newPath.data ; $script:readJSON."wtfconsole".logfile[0] = $true }
+        else { $script:scanerror++ }
+
+        $script:writeJSON = wintwincore.WriteJSON -Path $script:requirement.configfile.jobaction -Value $script:readJSON
+        if ($script:writeJSON.code -ne 0) {
+            $script:app.control.CBjobsconfigured.IsChecked = $false
+            script:Add-Error "Framework-Configuration failed!"
+            $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Job-Configuration failed!")"
+            script:uiEvent
+            $null = wintwincore.SystemMessageBox -smbTitle $script:errorhead `
+            -smbText "$($script:apptxt.message.InstallError -f "Failed writing changes to job configuration!")" `
+            -smbIcon Warning -smbButtons OK
+            return $false # <- we cannot continue if we cannot edit the jobaction.json
+        }
+        $script:app.control.CBjobsconfigured.IsChecked = $true
+        script:SetStatusUpdate -StepCount 13
+        script:uiEvent
+    #>
+
+    # Check No. 14: job-action configuration
+    $script:app.control.StatusText.Text = $script:apptxt.status.task14
+    script:uiEvent
+    $script:readJSON = wintwincore.LoadJSON -Path $script:requirement.configfile.processdb
+    if ($script:readJSON.code -ne 0) {
+        $script:app.control.CBprocessdbdone.IsChecked = $false
+        script:Add-Error "Failed setting up process database!"
+        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Failed setting up process database!")"
+        script:uiEvent
+        $null = wintwincore.SystemMessageBox -smbTitle $script:errorhead `
+        -smbText "$($script:apptxt.message.InstallError -f "Failed reading current process database!")" `
+        -smbIcon Warning -smbButtons OK
+        return $false # <- we cannot continue if we cannot edit the jobaction.json
+    }
+    $script:readJSON = $script:readJSON.data
+
+    $script:readJSON.running."proc-name" = ""
+    $script:readJSON.running."proc-path" = ""
+    $script:readJSON.running."action-id" = ""
+    $script:readJSON.running.processid   = 0
+    $script:readJSON.running.cmdparams   = ""
+    $script:readJSON.running."job-start" = ""
+    $script:readJSON.running."job-state" = ""
+    $script:readJSON.running.exitcode    = ""
+
+    $script:readJSON.lastjob."proc-name" = ""
+    $script:readJSON.lastjob."proc-path" = ""
+    $script:readJSON.lastjob."action-id" = ""
+    $script:readJSON.lastjob.processid   = 0
+    $script:readJSON.lastjob.cmdparams   = ""
+    $script:readJSON.lastjob."job-start" = ""
+    $script:readJSON.lastjob."job-state" = ""
+    $script:readJSON.lastjob."job-ended" = ""
+    $script:readJSON.lastjob.exitcode    = ""
+
+    $script:readJSON.console."proc-name" = ""
+    $script:readJSON.console."proc-path" = ""
+    $script:readJSON.console."action-id" = ""
+    $script:readJSON.console.processid   = 0
+    $script:readJSON.console.script      = ""
+    $script:readJSON.console.logfile     = ""
+    $script:readJSON.console."job-start" = ""
+    $script:readJSON.console."job-state" = ""
+    $script:readJSON.console."job-ended" = ""
+    $script:readJSON.console.exitcode    = ""
+    
+    $script:writeJSON = wintwincore.WriteJSON -Path $script:requirement.configfile.processdb -Value $script:readJSON
+    if ($script:writeJSON.code -ne 0) {
+        $script:app.control.CBprocessdbdone.IsChecked = $false
+        script:Add-Error "Failed setting up process database!"
+        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Failed setting up process database!")"
+        script:uiEvent
+        $null = wintwincore.SystemMessageBox -smbTitle $script:errorhead `
+        -smbText "$($script:apptxt.message.InstallError -f "Failed writing changes to process database!")" `
+        -smbIcon Warning -smbButtons OK
+        return $false # <- we cannot continue if we cannot edit the jobaction.json
+    }
+    $script:app.control.CBprocessdbdone.IsChecked = $true
+    script:SetStatusUpdate -StepCount 14
+    script:uiEvent
+
+    # Check No. 15: job-action configuration
+    $script:app.control.StatusText.Text = $script:apptxt.status.task15
+    script:uiEvent
+    $script:readJSON = wintwincore.LoadJSON -Path $script:requirement.configfile.workflows
+    if ($script:readJSON.code -ne 0) {
+        $script:app.control.CBworkflowsdone.IsChecked = $false
+        script:Add-Error "Failed setting up workflow-feature!"
+        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Failed setting up workflow-feature!")"
+        script:uiEvent
+        $null = wintwincore.SystemMessageBox -smbTitle $script:errorhead `
+        -smbText "$($script:apptxt.message.InstallError -f "Failed reading current workflow configuration!")" `
+        -smbIcon Warning -smbButtons OK
+        return $false # <- we cannot continue if we cannot edit the jobaction.json
+    }
+    $script:readJSON = $script:readJSON.data
+
+    # There's nothing to do here a.t.m.
+    Start-Sleep -Milliseconds 2000
+
+    $script:writeJSON = wintwincore.WriteJSON -Path $script:requirement.configfile.workflows -Value $script:readJSON
+    if ($script:writeJSON.code -ne 0) {
+        $script:app.control.CBworkflowsdone.IsChecked = $false
+        script:Add-Error "Failed setting up workflow-feature!"
+        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Failed setting up workflow-feature!")"
+        script:uiEvent
+        $null = wintwincore.SystemMessageBox -smbTitle $script:errorhead `
+        -smbText "$($script:apptxt.message.InstallError -f "Failed writing changes to workflow configuration!")" `
+        -smbIcon Warning -smbButtons OK
+        return $false # <- we cannot continue if we cannot edit the jobaction.json
+    }
+    $script:app.control.CBworkflowsdone.IsChecked = $true
+    script:SetStatusUpdate -StepCount 15
+    script:uiEvent
+
+    # Check No. 16: install required fonts
+    $script:app.control.StatusText.Text = $script:apptxt.status.task16
+    script:uiEvent
+
+    $script:fontsresult = wintwincore.InstallRequiredFonts -Path $script:requirement.directory.fonts
+    if ($script:fontsresult) {
+        $script:app.control.CBfondsinstalled.IsChecked = $true
+        script:SetStatusUpdate -StepCount 16
+        script:uiEvent
+    }
+    else {
+        $script:app.control.CBfondsinstalled.IsChecked = $false
+        script:Add-Error "Font-Installation failed!"
+        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Font-Installation failed!")"
+        script:uiEvent
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+})
+
+# Action-Button: Close/Exit
+$script:app.control.BtnCancel.Add_Click({
+    $script:app.window.Close()
+})
+
+# Action-Button: Clean/Fresh Install
+$script:app.control.BtnCleanSetup.Add_Click({
+    $null = wintwincore.SystemMessageBox -smbTitle $script:errorhead `
+    -smbText "This feature hasn't been implemented till now.`nIt'll be coming soon in a future release :)" `
+    -smbIcon None -smbButtons OK
+})
+
+# CheckBox Test
+#$script:app.control.CBiselevated.IsChecked = $true
+
+#--------------------------------------------------------------------------------
+# Launch the UI and show the window
+#--------------------------------------------------------------------------------
+
+$script:app.window.Topmost = $true
+$script:app.window.Add_Loaded({
+    $script:app.window.Activate()
+    $script:app.window.Focus()
+    $script:app.window.Topmost = $false
+})
+
+$script:app.window.ShowDialog() | Out-Null
+# Cleanup/Exit
+#wintwincore.SetCMDstate -State Show
+exit 0
