@@ -1,10 +1,10 @@
-function wtfxRemoveFolder {
+function wintwincore.RemoveFolder {
     <#
     .SYNOPSIS
         Removes a directory, optionally including all of its content.
 
     .DESCRIPTION
-        wtfxRemoveFolder is the counterpart to wtfxCreateNewDir and the framework-wide,
+        wintwincore.RemoveFolder is the counterpart to wintwincore.CreateNewDir and the framework-wide,
         robust replacement for ad-hoc "Remove-Item -Recurse" calls scattered across
         tool-local code.
 
@@ -32,16 +32,16 @@ function wtfxRemoveFolder {
         PSCustomObject from OPSreturn.
 
     .EXAMPLE
-        $result = wtfxRemoveFolder -Path 'C:\WinTwin.Fusion\Core\export' -Recursive
+        $result = wintwincore.RemoveFolder -Path 'C:\WinTwin.Fusion\Core\export' -Recursive
         if ($result.code -ne 0) { throw $result.msg }
 
     .EXAMPLE
         # Fails on purpose if the mount export folder still contains files:
-        wtfxRemoveFolder -Path $WinTwin['export']
+        wintwincore.RemoveFolder -Path $WinTwin['export']
 
     .NOTES
         Part of: WinTwin.FXcore
-        Counterpart to: wtfxCreateNewDir
+        Counterpart to: wintwincore.CreateNewDir
         See also: OPSreturn
     #>
 
@@ -57,7 +57,7 @@ function wtfxRemoveFolder {
     )
 
     if ([string]::IsNullOrWhiteSpace($Path)) {
-        return (OPSreturn -Code fail -Message "wtfxRemoveFolder failed! Parameter 'Path' is required and must not be empty.")
+        return (OPSreturn -Code fail -Message "wintwincore.RemoveFolder failed! Parameter 'Path' is required and must not be empty.")
     }
 
     # --- Idempotent: target already gone ---------------------------------------
@@ -66,11 +66,11 @@ function wtfxRemoveFolder {
             Path    = $Path
             Existed = $false
         }
-        return (OPSreturn -Code success -Message "wtfxRemoveFolder: Target does not exist, nothing to remove: '$Path'." -Data $resultData)
+        return (OPSreturn -Code success -Message "wintwincore.RemoveFolder: Target does not exist, nothing to remove: '$Path'." -Data $resultData)
     }
 
     if (-not (Test-Path -LiteralPath $Path -PathType Container)) {
-        return (OPSreturn -Code fail -Message "wtfxRemoveFolder failed! Target exists but is not a directory: '$Path'.")
+        return (OPSreturn -Code fail -Message "wintwincore.RemoveFolder failed! Target exists but is not a directory: '$Path'.")
     }
 
     # --- Check whether the directory is actually empty --------------------------
@@ -78,13 +78,13 @@ function wtfxRemoveFolder {
         $childItems = Get-ChildItem -LiteralPath $Path -Force -ErrorAction Stop
     }
     catch {
-        return (OPSreturn -Code fail -Message "wtfxRemoveFolder failed! Could not enumerate the content of '$Path': $($_.Exception.Message)" -Exception $_.Exception)
+        return (OPSreturn -Code fail -Message "wintwincore.RemoveFolder failed! Could not enumerate the content of '$Path': $($_.Exception.Message)" -Exception $_.Exception)
     }
 
     $isEmpty = (@($childItems).Count -eq 0)
 
     if (-not $isEmpty -and -not $Recursive) {
-        return (OPSreturn -Code fail -Message "wtfxRemoveFolder failed! Directory '$Path' is not empty. Use -Recursive to remove it including all of its content.")
+        return (OPSreturn -Code fail -Message "wintwincore.RemoveFolder failed! Directory '$Path' is not empty. Use -Recursive to remove it including all of its content.")
     }
 
     # --- Remove the directory (Recurse is harmless on an already-empty folder) --
@@ -92,11 +92,11 @@ function wtfxRemoveFolder {
         Remove-Item -LiteralPath $Path -Recurse -Force -ErrorAction Stop
     }
     catch {
-        return (OPSreturn -Code fail -Message "wtfxRemoveFolder failed! Could not remove directory '$Path': $($_.Exception.Message)" -Exception $_.Exception)
+        return (OPSreturn -Code fail -Message "wintwincore.RemoveFolder failed! Could not remove directory '$Path': $($_.Exception.Message)" -Exception $_.Exception)
     }
 
     if (Test-Path -LiteralPath $Path) {
-        return (OPSreturn -Code fail -Message "wtfxRemoveFolder failed! Directory '$Path' still exists after the remove operation.")
+        return (OPSreturn -Code fail -Message "wintwincore.RemoveFolder failed! Directory '$Path' still exists after the remove operation.")
     }
 
     $resultData = [pscustomobject]@{
@@ -104,5 +104,5 @@ function wtfxRemoveFolder {
         Existed = $true
     }
 
-    return (OPSreturn -Code success -Message "wtfxRemoveFolder: Directory removed successfully: '$Path'." -Data $resultData)
+    return (OPSreturn -Code success -Message "wintwincore.RemoveFolder: Directory removed successfully: '$Path'." -Data $resultData)
 }

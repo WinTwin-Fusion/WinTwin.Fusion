@@ -1,10 +1,10 @@
-function wtfxWriteLogmsg {
+function wintwincore.WriteLogmsg {
     <#
     .SYNOPSIS
     Writes messages to a log file with timestamps and severity flags.
     
     .DESCRIPTION
-    The wtfxWriteLogmsg function creates or appends to a log file with formatted messages
+    The wintwincore.WriteLogmsg function creates or appends to a log file with formatted messages
     including timestamps and severity levels. It handles file creation, validation, and
     proper error handling through a standardized return object.
     
@@ -23,15 +23,15 @@ function wtfxWriteLogmsg {
     Default is 0 (append) if not specified.
     
     .EXAMPLE
-    wtfxWriteLogmsg -Logfile "C:\Logs\application.log" -Message "Application started successfully"
+    wintwincore.WriteLogmsg -Logfile "C:\Logs\application.log" -Message "Application started successfully"
     Creates a log entry with DEBUG flag (default) and current timestamp.
     
     .EXAMPLE
-    wtfxWriteLogmsg -Logfile "C:\Logs\application.log" -Message "Configuration loaded" -Flag "INFO"
+    wintwincore.WriteLogmsg -Logfile "C:\Logs\application.log" -Message "Configuration loaded" -Flag "INFO"
     Creates a log entry with INFO flag and current timestamp.
     
     .EXAMPLE
-    wtfxWriteLogmsg -Logfile "C:\Logs\application.log" -Message "Critical error occurred" -Flag "ERROR" -Override 1
+    wintwincore.WriteLogmsg -Logfile "C:\Logs\application.log" -Message "Critical error occurred" -Flag "ERROR" -Override 1
     Overwrites the existing log file and creates a new entry with ERROR flag.
     #>
     
@@ -115,6 +115,6 @@ function wtfxWriteLogmsg {
         return (OPSreturn -Code 0 -Message "")
     }
     catch {
-        return (OPSreturn -Code -1 -Message "Unexpected error in wtfxWriteLogmsg function: $($_.Exception.Message)")
+        return (OPSreturn -Code -1 -Message "Unexpected error in wintwincore.WriteLogmsg function: $($_.Exception.Message)")
     }
 }

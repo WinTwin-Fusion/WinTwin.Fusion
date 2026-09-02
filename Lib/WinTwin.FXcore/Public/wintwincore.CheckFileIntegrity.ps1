@@ -1,10 +1,10 @@
-function wtfxCheckFileIntegrity {
+function wintwincore.CheckFileIntegrity {
     <#
     .SYNOPSIS
     Verifies that a given file exists and matches an expected SHA hash value.
 
     .DESCRIPTION
-    wtfxCheckFileIntegrity performs a reliable two-stage integrity check:
+    wintwincore.CheckFileIntegrity performs a reliable two-stage integrity check:
       1. Existence check: the supplied -Path is resolved to an absolute provider path
          and verified to be an existing FILE (not a directory, not a wildcard match).
       2. Hash check: the file hash is calculated with the requested SHA algorithm
@@ -31,11 +31,11 @@ function wtfxCheckFileIntegrity {
       error    -> unexpected runtime error (hash calculation failed, access denied, ...)
 
     .EXAMPLE
-    $r = wtfxCheckFileIntegrity -Path 'C:\Sources\adksetup.exe' -Hash 'A1B2...'
+    $r = wintwincore.CheckFileIntegrity -Path 'C:\Sources\adksetup.exe' -Hash 'A1B2...'
     if ($r.code -eq 0) { 'File is valid' }
 
     .EXAMPLE
-    wtfxCheckFileIntegrity -Path 'C:\ISO\winpe.wim' -Algo SHA512 -Hash '9F3C...'
+    wintwincore.CheckFileIntegrity -Path 'C:\ISO\winpe.wim' -Algo SHA512 -Hash '9F3C...'
     #>
 
     [CmdletBinding()]

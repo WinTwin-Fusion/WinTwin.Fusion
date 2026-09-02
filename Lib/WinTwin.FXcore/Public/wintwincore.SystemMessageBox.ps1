@@ -1,13 +1,13 @@
-function wtfxSystemMessageBox {
+function wintwincore.SystemMessageBox {
     <#
     .SYNOPSIS
         Shows a native System.Windows.MessageBox, always forced into the foreground.
 
     .DESCRIPTION
-        wtfxSystemMessageBox is the framework-wide, temporary replacement for a proper
+        wintwincore.SystemMessageBox is the framework-wide, temporary replacement for a proper
         in-house WinTwin.Fusion error/notification dialog. Since the framework
         consistently hides the console window (for purely cosmetic reasons, see
-        wtfxSetCMDstate -State Hide), tools need a reliable way to surface errors to
+        wintwincore.SetCMDstate -State Hide), tools need a reliable way to surface errors to
         the user without relying on Write-Error/Write-Host, which nobody would ever
         see. Until a dedicated WinTwin.Fusion notification tool exists, this function
         wraps the built-in WPF System.Windows.MessageBox.
@@ -43,12 +43,12 @@ function wtfxSystemMessageBox {
         Success .data: the clicked button as a string (OK/Cancel/Yes/No/None).
 
     .EXAMPLE
-        wtfxSystemMessageBox -smbTitle 'DISM.UI.CC - wim.mounter' `
+        wintwincore.SystemMessageBox -smbTitle 'DISM.UI.CC - wim.mounter' `
                               -smbText 'WTF.Console.ps1 was not found.' `
                               -smbIcon Error -smbButtons OK
 
     .EXAMPLE
-        $result = wtfxSystemMessageBox -smbTitle 'wim.mounter' -smbText 'Overwrite existing mount point?' `
+        $result = wintwincore.SystemMessageBox -smbTitle 'wim.mounter' -smbText 'Overwrite existing mount point?' `
                                         -smbIcon Question -smbButtons YesNo
         if ($result.code -eq 0 -and $result.data -eq 'Yes') { ... }
 
@@ -79,10 +79,10 @@ function wtfxSystemMessageBox {
     )
 
     if ([string]::IsNullOrWhiteSpace($smbTitle)) {
-        return (OPSreturn -Code fail -Message "wtfxSystemMessageBox failed! Parameter 'smbTitle' is required and must not be empty.")
+        return (OPSreturn -Code fail -Message "wintwincore.SystemMessageBox failed! Parameter 'smbTitle' is required and must not be empty.")
     }
     if ([string]::IsNullOrWhiteSpace($smbText)) {
-        return (OPSreturn -Code fail -Message "wtfxSystemMessageBox failed! Parameter 'smbText' is required and must not be empty.")
+        return (OPSreturn -Code fail -Message "wintwincore.SystemMessageBox failed! Parameter 'smbText' is required and must not be empty.")
     }
 
     try {
@@ -92,7 +92,7 @@ function wtfxSystemMessageBox {
         Add-Type -AssemblyName System.Windows.Forms -ErrorAction Stop
     }
     catch {
-        return (OPSreturn -Code fail -Message "wtfxSystemMessageBox failed! Required WPF/WinForms assemblies could not be loaded: $($_.Exception.Message)" -Exception $_.Exception)
+        return (OPSreturn -Code fail -Message "wintwincore.SystemMessageBox failed! Required WPF/WinForms assemblies could not be loaded: $($_.Exception.Message)" -Exception $_.Exception)
     }
 
     # --- Hidden, TopMost owner so the MessageBox is forced into the foreground ---
@@ -115,7 +115,7 @@ function wtfxSystemMessageBox {
         [void][System.Windows.Forms.Application]::DoEvents()
     }
     catch {
-        return (OPSreturn -Code fail -Message "wtfxSystemMessageBox failed! Could not create the hidden foreground owner window: $($_.Exception.Message)" -Exception $_.Exception)
+        return (OPSreturn -Code fail -Message "wintwincore.SystemMessageBox failed! Could not create the hidden foreground owner window: $($_.Exception.Message)" -Exception $_.Exception)
     }
 
     try {
@@ -133,7 +133,7 @@ function wtfxSystemMessageBox {
         )
     }
     catch {
-        return (OPSreturn -Code fail -Message "wtfxSystemMessageBox failed! Could not show the message box: $($_.Exception.Message)" -Exception $_.Exception)
+        return (OPSreturn -Code fail -Message "wintwincore.SystemMessageBox failed! Could not show the message box: $($_.Exception.Message)" -Exception $_.Exception)
     }
     finally {
         if ($null -ne $owner) {
@@ -142,5 +142,5 @@ function wtfxSystemMessageBox {
         }
     }
 
-    return (OPSreturn -Code success -Message "wtfxSystemMessageBox: Message box closed, user clicked '$clickedButton'." -Data $clickedButton.ToString())
+    return (OPSreturn -Code success -Message "wintwincore.SystemMessageBox: Message box closed, user clicked '$clickedButton'." -Data $clickedButton.ToString())
 }

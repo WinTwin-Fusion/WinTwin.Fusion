@@ -1,10 +1,10 @@
-function wtfxConsoleScript {
+function wintwincore.ConsoleScript {
     <#
     .SYNOPSIS
         Creates a script file that can later be executed by WTF.Console.
 
     .DESCRIPTION
-        wtfxConsoleScript is the generic, framework-wide replacement for tool-local helpers
+        wintwincore.ConsoleScript is the generic, framework-wide replacement for tool-local helpers
         such as New-WimMountConsoleScript in DISM.UI.CC\wim.mounter.fx.ps1.
 
         The original helper both *assembled* a mount-specific here-string and *wrote* it to
@@ -48,7 +48,7 @@ function wtfxConsoleScript {
         exit 0
         "@
 
-        $result = wtfxConsoleScript -ScriptPath 'C:\WinTwin.Fusion\Core\export\mount.image.ps1' `
+        $result = wintwincore.ConsoleScript -ScriptPath 'C:\WinTwin.Fusion\Core\export\mount.image.ps1' `
                                    -ScriptType ps1 `
                                    -ScriptData $scriptContent
         if ($result.code -eq 0) { $result.data.Path }
@@ -82,11 +82,11 @@ function wtfxConsoleScript {
 
     # --- Parameter validation -------------------------------------------------
     if ([string]::IsNullOrWhiteSpace($ScriptPath)) {
-        return (OPSreturn -Code fail -Message "wtfxConsoleScript failed! Parameter 'ScriptPath' is required and must not be empty.")
+        return (OPSreturn -Code fail -Message "wintwincore.ConsoleScript failed! Parameter 'ScriptPath' is required and must not be empty.")
     }
 
     if ($null -eq $ScriptData) {
-        return (OPSreturn -Code fail -Message "wtfxConsoleScript failed! Parameter 'ScriptData' is required and must not be null.")
+        return (OPSreturn -Code fail -Message "wintwincore.ConsoleScript failed! Parameter 'ScriptData' is required and must not be null.")
     }
 
     # Normalize ScriptData so callers can pass a here-string, string[], or scriptblock
@@ -103,11 +103,11 @@ function wtfxConsoleScript {
         }
     }
     catch {
-        return (OPSreturn -Code fail -Message "wtfxConsoleScript failed! Could not normalize ScriptData: $($_.Exception.Message)" -Exception $_.Exception)
+        return (OPSreturn -Code fail -Message "wintwincore.ConsoleScript failed! Could not normalize ScriptData: $($_.Exception.Message)" -Exception $_.Exception)
     }
 
     if ([string]::IsNullOrWhiteSpace($normalizedContent)) {
-        return (OPSreturn -Code fail -Message "wtfxConsoleScript failed! Parameter 'ScriptData' resolved to an empty script body.")
+        return (OPSreturn -Code fail -Message "wintwincore.ConsoleScript failed! Parameter 'ScriptData' resolved to an empty script body.")
     }
 
     # ScriptType is reserved for WTF.Console, but we still refuse an obvious extension mismatch
@@ -116,7 +116,7 @@ function wtfxConsoleScript {
     $actualExtension   = [System.IO.Path]::GetExtension($ScriptPath)
     if (-not [string]::IsNullOrWhiteSpace($actualExtension) -and
         $actualExtension.ToLowerInvariant() -ne $declaredExtension) {
-        return (OPSreturn -Code fail -Message "wtfxConsoleScript failed! ScriptType '$ScriptType' does not match the destination extension '$actualExtension' of '$ScriptPath'.")
+        return (OPSreturn -Code fail -Message "wintwincore.ConsoleScript failed! ScriptType '$ScriptType' does not match the destination extension '$actualExtension' of '$ScriptPath'.")
     }
 
     # --- Ensure destination directory -----------------------------------------
@@ -127,7 +127,7 @@ function wtfxConsoleScript {
         }
     }
     catch {
-        return (OPSreturn -Code fail -Message "wtfxConsoleScript failed! Could not create destination directory for '$ScriptPath': $($_.Exception.Message)" -Exception $_.Exception)
+        return (OPSreturn -Code fail -Message "wintwincore.ConsoleScript failed! Could not create destination directory for '$ScriptPath': $($_.Exception.Message)" -Exception $_.Exception)
     }
 
     # --- Persist the script ---------------------------------------------------
@@ -137,11 +137,11 @@ function wtfxConsoleScript {
         Set-Content -LiteralPath $ScriptPath -Value $normalizedContent -Encoding UTF8 -Force -ErrorAction Stop
     }
     catch {
-        return (OPSreturn -Code fail -Message "wtfxConsoleScript failed! Could not write script file '$ScriptPath': $($_.Exception.Message)" -Exception $_.Exception)
+        return (OPSreturn -Code fail -Message "wintwincore.ConsoleScript failed! Could not write script file '$ScriptPath': $($_.Exception.Message)" -Exception $_.Exception)
     }
 
     if (-not (Test-Path -LiteralPath $ScriptPath -PathType Leaf)) {
-        return (OPSreturn -Code fail -Message "wtfxConsoleScript failed! Script file was not present after the write operation: '$ScriptPath'.")
+        return (OPSreturn -Code fail -Message "wintwincore.ConsoleScript failed! Script file was not present after the write operation: '$ScriptPath'.")
     }
 
     $writtenItem = Get-Item -LiteralPath $ScriptPath -ErrorAction SilentlyContinue
@@ -152,5 +152,5 @@ function wtfxConsoleScript {
         Encoding     = 'UTF8'
     }
 
-    return (OPSreturn -Code success -Message "wtfxConsoleScript: Script file created successfully: $ScriptPath" -Data $resultData)
+    return (OPSreturn -Code success -Message "wintwincore.ConsoleScript: Script file created successfully: $ScriptPath" -Data $resultData)
 }

@@ -1,10 +1,10 @@
-function wtfxSetCMDstate {
+function wintwincore.SetCMDstate {
     <#
     .SYNOPSIS
     Shows, hides, or minimizes the current console (cmd/PowerShell) window.
 
     .DESCRIPTION
-    The wtfxSetCMDstate function wraps the native Win32 ShowWindow API (via a small,
+    The wintwincore.SetCMDstate function wraps the native Win32 ShowWindow API (via a small,
     self-contained P/Invoke signature added on first use) to control the visibility
     state of the process's own console window. This is a generic, reusable
     replacement for the various framework-internal, tool-specific console-state
@@ -20,12 +20,12 @@ function wtfxSetCMDstate {
       Maximize  - maximizes the window (SW_MAXIMIZE)
 
     .EXAMPLE
-    wtfxSetCMDstate -State Hide
+    wintwincore.SetCMDstate -State Hide
     Hides the current console window (e.g. while a long-running DISM job runs in
     the background and progress is only shown in a GUI).
 
     .EXAMPLE
-    wtfxSetCMDstate -State Show
+    wintwincore.SetCMDstate -State Show
     Restores the console window again.
 
     .NOTES

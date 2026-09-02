@@ -1,12 +1,9 @@
-function wtfxInstallADK {
+function wintwincore.InstallPEaddon {
     <#
     .SYNOPSIS
-        Installs the Windows ADK silently and completely hidden via adksetup.exe.
+        Installs the Windows ADK WinPE add-on silently and hidden via adkwinpesetup.exe.
     .PARAMETER SetupPath
-        Full path to adksetup.exe.
-    .PARAMETER Features
-        Optional list of ADK features to install. Defaults to the Deployment Tools
-        and the USMT feature. Use 'OptionId.All' to install everything.
+        Full path to adkwinpesetup.exe.
     .PARAMETER LogFile
         Optional path for the setup log file.
     .PARAMETER TimeoutMinutes
@@ -33,9 +30,6 @@ function wtfxInstallADK {
         [string]$SetupPath,
 
         [Parameter(Mandatory = $false)]
-        [string[]]$Features = @('OptionId.DeploymentTools', 'OptionId.UserStateMigrationTool'),
-
-        [Parameter(Mandatory = $false)]
         [string]$LogFile,
 
         [Parameter(Mandatory = $false)]
@@ -49,23 +43,19 @@ function wtfxInstallADK {
         if ([string]::IsNullOrWhiteSpace($SetupPath)) { return $false }
         if (-not (Test-Path -LiteralPath $SetupPath -PathType Leaf)) { return $false }
 
-        # Resolve to an absolute path (Start-Process does not honour the PS location)
         $exePath = (Resolve-Path -LiteralPath $SetupPath -ErrorAction Stop).ProviderPath
         if ([System.IO.Path]::GetExtension($exePath) -ne '.exe') { return $false }
 
         # --- Build silent command line ------------------------------------------
-        # /quiet   -> no UI at all
-        # /norestart -> never reboot automatically
-        # /ceip off -> disable customer experience improvement program
-        $arguments = @('/quiet', '/norestart', '/ceip', 'off')
-
-        if ($Features -and $Features.Count -gt 0) {
-            $arguments += '/features'
-            $arguments += $Features
-        }
+        # The WinPE add-on only ships a single feature: OptionId.WindowsPreinstallationEnvironment
+        $arguments = @(
+            '/quiet',
+            '/norestart',
+            '/ceip', 'off',
+            '/features', 'OptionId.WindowsPreinstallationEnvironment'
+        )
 
         if (-not [string]::IsNullOrWhiteSpace($LogFile)) {
-            # Make sure the log directory exists, otherwise setup may fail
             $logDir = Split-Path -Path $LogFile -Parent
             if (-not [string]::IsNullOrWhiteSpace($logDir) -and -not (Test-Path -LiteralPath $logDir)) {
                 New-Item -Path $logDir -ItemType Directory -Force -ErrorAction SilentlyContinue | Out-Null
@@ -86,7 +76,6 @@ function wtfxInstallADK {
         if ($TimeoutMinutes -gt 0) {
             $timeoutMs = $TimeoutMinutes * 60 * 1000
             if (-not $process.WaitForExit($timeoutMs)) {
-                # Setup hangs -> terminate and report failure
                 try { $process.Kill() } catch { }
                 return $false
             }
@@ -96,8 +85,7 @@ function wtfxInstallADK {
         }
 
         # --- Evaluate exit code --------------------------------------------------
-        $exitCode = $process.ExitCode
-        if ($exitCode -eq 0) { return $true }
+        if ($process.ExitCode -eq 0) { return $true }
 
         return $false
     }

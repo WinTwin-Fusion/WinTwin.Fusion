@@ -1,15 +1,15 @@
-function wtfxUnregisterProcess {
+function wintwincore.UnregisterProcess {
     <#
     .SYNOPSIS
     Deregisters the currently registered process from the framework's central
     process.json database.
 
     .DESCRIPTION
-    The wtfxUnregisterProcess function resolves process.json the same way
-    wtfxRegisterProcess does, moves the current 'running' node into 'lastjob'
+    The wintwincore.UnregisterProcess function resolves process.json the same way
+    wintwincore.RegisterProcess does, moves the current 'running' node into 'lastjob'
     (stamped with a 'job-ended' timestamp and job-state 'finished') and resets
     'running' back to its empty state. Every tool that previously registered a
-    process via wtfxRegisterProcess MUST call this once that process has
+    process via wintwincore.RegisterProcess MUST call this once that process has
     actually finished - including a tool deregistering itself right before
     handing control off to a different process it started (e.g. wim.mounter
     clearing its own lock before WTF.Console takes it over).
@@ -33,12 +33,12 @@ function wtfxUnregisterProcess {
     deregistered).
 
     .EXAMPLE
-    $unreg = wtfxUnregisterProcess -FrameworkRoot "C:\WinTwin.Fusion" -ProcessId $PID
+    $unreg = wintwincore.UnregisterProcess -FrameworkRoot "C:\WinTwin.Fusion" -ProcessId $PID
     if ($unreg.code -ne 0) { Write-Warning $unreg.msg }
 
     .NOTES
     Part of: WinTwin.FXcore
-    See also: wtfxRegisterProcess, wtfxCheckProcess, wtfxKillProcess, wtfxLoadJSON, wtfxWriteJSON
+    See also: wintwincore.RegisterProcess, wintwincore.CheckProcess, wintwincore.KillProcess, wintwincore.LoadJSON, wintwincore.WriteJSON
     #>
 
     [CmdletBinding()]
@@ -59,7 +59,7 @@ function wtfxUnregisterProcess {
     }
 
     $configPath = Join-Path -Path $FrameworkRoot -ChildPath 'Core\config.json'
-    $configResult = wtfxLoadJSON -Path $configPath
+    $configResult = wintwincore.LoadJSON -Path $configPath
     if ($configResult.code -ne 0) {
         return (OPSreturn -Code -1 -Message "Could not load Core\config.json: $($configResult.msg)" -Exception $configResult.exception)
     }
@@ -77,7 +77,7 @@ function wtfxUnregisterProcess {
 
     $processDbPath = Join-Path -Path $FrameworkRoot -ChildPath ($relativeProcessPath.TrimStart('\'))
 
-    $processResult = wtfxLoadJSON -Path $processDbPath
+    $processResult = wintwincore.LoadJSON -Path $processDbPath
     if ($processResult.code -ne 0) {
         return (OPSreturn -Code -1 -Message "Could not load process.json: $($processResult.msg)" -Exception $processResult.exception)
     }
@@ -88,7 +88,7 @@ function wtfxUnregisterProcess {
 
     if ($currentState -ne 'running') {
         # Idempotent: nothing was registered in the first place.
-        return (OPSreturn -Code 0 -Message "wtfxUnregisterProcess: No process was registered, nothing to do." -Data $db.running)
+        return (OPSreturn -Code 0 -Message "wintwincore.UnregisterProcess: No process was registered, nothing to do." -Data $db.running)
     }
 
     if ($ProcessId -gt 0) {
@@ -125,7 +125,7 @@ function wtfxUnregisterProcess {
         return (OPSreturn -Code -1 -Message "Could not update the in-memory process database: $($_.Exception.Message)" -Exception $_.Exception)
     }
 
-    $writeResult = wtfxWriteJSON -Path $processDbPath -Value $db
+    $writeResult = wintwincore.WriteJSON -Path $processDbPath -Value $db
     if ($writeResult.code -ne 0) {
         return (OPSreturn -Code -1 -Message "Process was cleared in memory but could not be persisted to process.json: $($writeResult.msg)" -Exception $writeResult.exception)
     }

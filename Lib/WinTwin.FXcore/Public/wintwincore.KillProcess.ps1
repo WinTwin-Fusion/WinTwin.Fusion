@@ -1,15 +1,15 @@
-function wtfxKillProcess {
+function wintwincore.KillProcess {
     <#
     .SYNOPSIS
     Terminates the process currently registered in the framework's central
     process.json and deregisters it.
 
     .DESCRIPTION
-    wtfxKillProcess first calls wtfxCheckProcess to resolve and verify the
+    wintwincore.KillProcess first calls wintwincore.CheckProcess to resolve and verify the
     currently registered process. If a genuinely running process is found, it
     is terminated via Stop-Process and then deregistered (moved into 'lastjob'
     with job-state 'finished'). If nothing is currently registered, or the
-    registered process turns out to already be dead, wtfxCheckProcess has
+    registered process turns out to already be dead, wintwincore.CheckProcess has
     already cleaned up process.json as a side effect, and this function simply
     returns success - the desired end state ("no process is registered/running
     anymore") is already true.
@@ -38,16 +38,16 @@ function wtfxKillProcess {
     killed and deregistered.
 
     .EXAMPLE
-    $kill = wtfxKillProcess -FrameworkRoot "C:\WinTwin.Fusion"
+    $kill = wintwincore.KillProcess -FrameworkRoot "C:\WinTwin.Fusion"
     if ($kill.code -ne 0) { Write-Warning $kill.msg }
 
     .EXAMPLE
     # Watchdog-style forced recovery, regardless of PID ownership:
-    wtfxKillProcess -FrameworkRoot "C:\WinTwin.Fusion" -Force
+    wintwincore.KillProcess -FrameworkRoot "C:\WinTwin.Fusion" -Force
 
     .NOTES
     Part of: WinTwin.FXcore
-    See also: wtfxRegisterProcess, wtfxUnregisterProcess, wtfxCheckProcess, wtfxLoadJSON, wtfxWriteJSON
+    See also: wintwincore.RegisterProcess, wintwincore.UnregisterProcess, wintwincore.CheckProcess, wintwincore.LoadJSON, wintwincore.WriteJSON
     #>
 
     [CmdletBinding()]
@@ -67,19 +67,19 @@ function wtfxKillProcess {
         return (OPSreturn -Code -1 -Message "Parameter 'FrameworkRoot' is required but was not provided or is empty")
     }
 
-    # wtfxCheckProcess resolves process.json, verifies liveness, and already
+    # wintwincore.CheckProcess resolves process.json, verifies liveness, and already
     # self-heals a stale lock as a side effect - reuse it instead of
     # duplicating that logic here.
-    $checkResult = wtfxCheckProcess -FrameworkRoot $FrameworkRoot
+    $checkResult = wintwincore.CheckProcess -FrameworkRoot $FrameworkRoot
     if ($checkResult.code -ne 0) {
         return (OPSreturn -Code -1 -Message "Could not verify the current process lock: $($checkResult.msg)" -Exception $checkResult.exception)
     }
 
     if (-not $checkResult.data.IsRunning) {
         # Nothing genuinely running (either nothing was registered, or
-        # wtfxCheckProcess just cleaned up a stale lock) - desired end state
+        # wintwincore.CheckProcess just cleaned up a stale lock) - desired end state
         # already reached.
-        return (OPSreturn -Code 0 -Message "wtfxKillProcess: No running process is currently registered, nothing to kill." -Data $checkResult.data.Running)
+        return (OPSreturn -Code 0 -Message "wintwincore.KillProcess: No running process is currently registered, nothing to kill." -Data $checkResult.data.Running)
     }
 
     $registeredPid = 0
@@ -107,7 +107,7 @@ function wtfxKillProcess {
         # own between the check above and this call, or access was denied).
     }
 
-    $unregResult = wtfxUnregisterProcess -FrameworkRoot $FrameworkRoot
+    $unregResult = wintwincore.UnregisterProcess -FrameworkRoot $FrameworkRoot
     if ($unregResult.code -ne 0) {
         if (-not $Force) {
             return (OPSreturn -Code -1 -Message "Process was stopped but could not be deregistered from process.json: $($unregResult.msg)" -Exception $unregResult.exception)
@@ -115,7 +115,7 @@ function wtfxKillProcess {
     }
 
     if ($stopFailed) {
-        return (OPSreturn -Code 0 -Message "wtfxKillProcess: Process '$($runningNode.'proc-name')' (PID $registeredPid) could not be confirmed stopped ($($stopError.Message)), but the lock was cleared via -Force." -Data $runningNode)
+        return (OPSreturn -Code 0 -Message "wintwincore.KillProcess: Process '$($runningNode.'proc-name')' (PID $registeredPid) could not be confirmed stopped ($($stopError.Message)), but the lock was cleared via -Force." -Data $runningNode)
     }
 
     return (OPSreturn -Code 0 -Message "Process '$($runningNode.'proc-name')' (PID $registeredPid) was killed and deregistered successfully." -Data $runningNode)

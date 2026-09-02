@@ -11,8 +11,8 @@
 
 .NOTES
     Creation Date: 28.03.2026  (as WinISO.ScriptFXLib)
-    Last Update:   26.08.2026
-    Version:       1.00.09
+    Last Update:   01.09.2026
+    Version:       1.00.11
     Author:        Praetoriani (a.k.a. M.Sczepanski)
     Website:       https://github.com/WinTwin-Fusion/WinTwin.FXcore
 
@@ -27,7 +27,7 @@
 # ⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆
 $script:appinfo = @{
     AppName     = 'WinTwin.FXcore'
-    AppVers     = '1.00.09'
+    AppVers     = '1.00.11'
     AppDevName  = 'Praetoriani'
     AppDevMail  = 'mr.praetoriani{at}gmail.com'
     AppWebsite  = 'https://github.com/WinTwin-Fusion/WinTwin.FXcore'
