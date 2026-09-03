@@ -114,9 +114,9 @@ catch {
 
 #--------------------------------------------------------------------------------
 # Hide Console Window -> Using Function from WinTwin.FXcore
-# -> We can use wtfxSystemMessageBox to display Error-Messages!
+# -> We can use wintwincore.SystemMessageBox to display Error-Messages!
 #--------------------------------------------------------------------------------
-#wtfxSetCMDstate -State Hide
+#wintwincore.SetCMDstate -State Hide
 
 #--------------------------------------------------------------------------------
 # Load additional Libraries (Required to build the UI)
@@ -130,9 +130,9 @@ Add-Type -AssemblyName System.Xml
 # Time to load the other JSON Config files (using Functions from WinTwin.FXcore)
 #--------------------------------------------------------------------------------
 # Load the .\Core\db\jobaction.json
-$result = wtfxLoadJSON -Path $config.jobaction
+$result = wintwincore.LoadJSON -Path $config.jobaction
 if($result.code -ne 0) {
-    $null = wtfxSystemMessageBox -smbTitle "DISM UI Control Center (wim.mounter)" `
+    $null = wintwincore.SystemMessageBox -smbTitle "DISM UI Control Center (wim.mounter)" `
     -smbText "Failed loading file: $($config.jobaction)`n$($result.msg)" `
     -smbIcon Error -smbButtons OK
     exit 1
@@ -140,9 +140,9 @@ if($result.code -ne 0) {
 $script:jobconf = $result.data
 
 # Load the .\dism.config.json
-$result = wtfxLoadJSON -Path $config.ducctools
+$result = wintwincore.LoadJSON -Path $config.ducctools
 if($result.code -ne 0) {
-    $null = wtfxSystemMessageBox -smbTitle "DISM UI Control Center (wim.mounter)" `
+    $null = wintwincore.SystemMessageBox -smbTitle "DISM UI Control Center (wim.mounter)" `
     -smbText "Failed loading file: $($config.ducctools)`n$($result.msg)" `
     -smbIcon Error -smbButtons OK
     exit 1
@@ -177,28 +177,28 @@ $wimmount.conscript = "$($script:toolcfg.apptool."wim-mount".require.console[1])
 #--------------------------------------------------------------------------------
 # Process-Registration (.\Core\db\process.json)
 #--------------------------------------------------------------------------------
-$processCheck = wtfxCheckProcess -FrameworkRoot $wintwin.root
+$processCheck = wintwincore.CheckProcess -FrameworkRoot $wintwin.root
 if ($processCheck.code -ne 0) {
-    $null = wtfxSystemMessageBox -smbTitle "DISM UI Control Center (wim.mounter)" `
+    $null = wintwincore.SystemMessageBox -smbTitle "DISM UI Control Center (wim.mounter)" `
     -smbText "Could not verify the framework process lock.`n$($processCheck.msg)" `
     -smbIcon Error -smbButtons OK
     exit 1
 }
 # Running Process detected
 if ($processCheck.data.IsRunning) {
-    $null = wtfxSystemMessageBox -smbTitle 'DISM UI Control Center (wim.mounter)' `
+    $null = wintwincore.SystemMessageBox -smbTitle 'DISM UI Control Center (wim.mounter)' `
     -smbText "Another framework process is currently running:`n$($processCheck.data.Running.'proc-name')`n`nPlease wait until it has finished." `
     -smbIcon Warning -smbButtons OK
     exit 0
 }
 
-$selfRegister = wtfxRegisterProcess -FrameworkRoot $wintwin.root `
+$selfRegister = wintwincore.RegisterProcess -FrameworkRoot $wintwin.root `
                                      -ProcName "$($wimmount.appname)" `
                                      -ProcPath $PSCommandPath `
                                      -ActionId "$($wimmount.acionid)" `
                                      -ProcessId $PID
 if ($selfRegister.code -ne 0) {
-    $null = wtfxSystemMessageBox -smbTitle "DISM UI Control Center (wim.mounter)" `
+    $null = wintwincore.SystemMessageBox -smbTitle "DISM UI Control Center (wim.mounter)" `
     -smbText "Could not register as the active framework process.`n$($selfRegister.msg)"
     -smbIcon Error -smbButtons OK
     exit 1
@@ -213,10 +213,10 @@ switch ($Language) {
     'de-de' { $wimmount.language = Join-Path "$($wintwin.root)" "$($script:toolcfg.apptool."wim-mount".langfile."de-de")" }
     default { $wimmount.language = Join-Path "$($wintwin.root)" "$($script:toolcfg.apptool."wim-mount".langfile."en-us")" }
 }
-$result = wtfxLoadJSON -Path $wimmount.language
+$result = wintwincore.LoadJSON -Path $wimmount.language
 if ($result.code -eq 0) { $apptxt = $result.data }
 else {
-    $null = wtfxSystemMessageBox -smbTitle "DISM UI Control Center (wim.mounter)" `
+    $null = wintwincore.SystemMessageBox -smbTitle "DISM UI Control Center (wim.mounter)" `
     -smbText "Faild loading language package:`n$($wimmount.language)`n$($result.message)"
     -smbIcon Error -smbButtons OK
     exit 1
@@ -225,9 +225,9 @@ else {
 #--------------------------------------------------------------------------------
 # Try to load the XML-UI (including app icon)
 #--------------------------------------------------------------------------------
-$LoadXML = xuiLoadWindow -XMLfile $wimmount.xmlfile
+$LoadXML = xuiLoadWindow -XMLfile $wimmount.xmlfile -extended
 if ($LoadXML.code -ne 0) {
-    $null = wtfxSystemMessageBox -smbTitle "DISM UI Control Center (wim.mounter)" `
+    $null = wintwincore.SystemMessageBox -smbTitle "DISM UI Control Center (wim.mounter)" `
     -smbText "Faild loading User Interface:`n$($wimmount.xmlfile)`n$($LoadXML.message)"
     -smbIcon Error -smbButtons OK
     exit 1
@@ -382,7 +382,7 @@ $btnMount.Add_Click({
     }
 
     if (-not (Test-Path -LiteralPath $wintwin.console -PathType Leaf)) {
-        $null = wtfxSystemMessageBox -smbTitle "$($ducc.appname) ($($wimmount.appname))" `
+        $null = wintwincore.SystemMessageBox -smbTitle "$($ducc.appname) ($($wimmount.appname))" `
         -smbText "WTF.Console (PS.Tweak.Tools) was not found:`n$($wintwin.console)" `
         -smbIcon Error -smbButtons OK
         return
@@ -423,10 +423,10 @@ foreach (`$modulePath in `$moduleCandidates) {
 }
 
 if ($($createMountPoint) -and -not (Test-Path -LiteralPath '$($mountDir.Replace("'", "''"))')) {
-    Write-Output 'Mount point does not exist. Creating directory via wtfxCreateNewDir...'
-    `$createResult = wtfxCreateNewDir -Path '$($mountDir.Replace("'", "''"))' -Force
+    Write-Output 'Mount point does not exist. Creating directory via wintwincore.CreateNewDir...'
+    `$createResult = wintwincore.CreateNewDir -Path '$($mountDir.Replace("'", "''"))' -Force
     if (`$createResult.code -ne 0) {
-        throw ('wtfxCreateNewDir failed: {0}' -f `$createResult.msg)
+        throw ('wintwincore.CreateNewDir failed: {0}' -f `$createResult.msg)
     }
 }
 
@@ -449,18 +449,18 @@ exit 0
         
         # Write the generated console script to a file (path defined in dism.congif.json)
         $scriptFile = Join-Path "$($wintwin.export)" "$($wimmount.conscript)"
-        $result = wtfxConsoleScript -ScriptPath $scriptFile `
+        $result = wintwincore.ConsoleScript -ScriptPath $scriptFile `
                                    -ScriptType ps1 `
                                    -ScriptData $scriptContent
         if ($result.code -ne 0) {
-            $null = wtfxSystemMessageBox -smbTitle "$($ducc.appname) ($($wimmount.appname))" `
+            $null = wintwincore.SystemMessageBox -smbTitle "$($ducc.appname) ($($wimmount.appname))" `
             -smbText "Error while creating console script!`n$($result.msg)" `
-            #-smbText "Following console script was created:`n$($script:toolcfg.apptool."wim-mount".require.console[1])`nReturn from 'wtfxConsoleScript':`n$($result.data.Path)" `
+            #-smbText "Following console script was created:`n$($script:toolcfg.apptool."wim-mount".require.console[1])`nReturn from 'wintwincore.ConsoleScript':`n$($result.data.Path)" `
             -smbIcon Error -smbButtons OK
         }
         
         if (-not (Test-Path -LiteralPath $wintwin.logs)) {
-            $createLogDir = wtfxCreateNewDir -Path $wintwin.logs
+            $createLogDir = wintwincore.CreateNewDir -Path $wintwin.logs
             if ($createLogDir.code -ne 0 -and -not (Test-Path -LiteralPath $wintwin.logs -PathType Container)) {
                 throw $createLogDir.msg
             }
@@ -475,16 +475,16 @@ exit 0
         $logFileName = $logPattern -replace '\[DATETIME\]', $timestamp
         $logFilePath = $logFileName
 
-        $logInitResult = wtfxWriteLogmsg -Logfile $logFilePath -Message "wim.mounter launched WTF.Console mount workflow." -Flag "INFO" -Override 1
+        $logInitResult = wintwincore.WriteLogmsg -Logfile $logFilePath -Message "wim.mounter launched WTF.Console mount workflow." -Flag "INFO" -Override 1
         if ($logInitResult.code -ne 0) {
             Write-Verbose "DISM UI Control Center (wim.mounter):  Failed to precreate log file: $($logInitResult.msg)"
         }
         
         # Unregister wim.mounter.ps1 befeore launching the console
-        $null = wtfxUnregisterProcess -FrameworkRoot $wintwin.root -ProcessId $PID
+        $null = wintwincore.UnregisterProcess -FrameworkRoot $wintwin.root -ProcessId $PID
         # Launch the WTF.Console Process
         # Typical wim.mounter hand-off after the tool has cleared process.json:
-        $launch = wtfxLaunchConsole -Script $scriptFile `
+        $launch = wintwincore.LaunchConsole -Script $scriptFile `
                             -Mode framework `
                             -Action $wimmount.acionid `
                             -Logging $true `
@@ -494,12 +494,12 @@ exit 0
         # Looks like there was an error while launching WTF.Console
         if ($launch.code -ne 0) {
             # Show a Win32-Dialog
-            $null = wtfxSystemMessageBox -smbTitle "Debugging" `
+            $null = wintwincore.SystemMessageBox -smbTitle "Debugging" `
             -smbText "Error while launching WTF.Console!`n$($launch.msg)" `
             -smbIcon Error -smbButtons OK
             
             # Failed launching WTF.Console. We need to re-register wim.mounter
-            $null = wtfxRegisterProcess -FrameworkRoot $wintwin.root -ProcName 'wim.mounter' `
+            $null = wintwincore.RegisterProcess -FrameworkRoot $wintwin.root -ProcName 'wim.mounter' `
             -ProcPath $PSCommandPath -ActionId $wimmount.acionid -ProcessId $PID
             
             #throw $launch.msg
@@ -526,7 +526,7 @@ exit 0
         $chkCreateMountPoint.IsEnabled = $true
         $statusText.Text          = $apptxt.status.ready
         # Show a Win32-Dialog
-        $null = wtfxSystemMessageBox -smbTitle "$($ducc.appname) ($($wimmount.appname))" `
+        $null = wintwincore.SystemMessageBox -smbTitle "$($ducc.appname) ($($wimmount.appname))" `
         -smbText "Error while preparing WTF.Console!`n$($_.Exception.Message)" `
         -smbIcon Error -smbButtons OK
     }
@@ -546,7 +546,7 @@ $window.Add_Loaded({
 $window.ShowDialog() | Out-Null
 # Cleanup ...
 # Unregister wim.mounter.ps1 befeore launching the console
-$null = wtfxUnregisterProcess -FrameworkRoot $wintwin.root -ProcessId $PID
+$null = wintwincore.UnregisterProcess -FrameworkRoot $wintwin.root -ProcessId $PID
 # Show the console again
-wtfxSetCMDstate -State Show
+wintwincore.SetCMDstate -State Show
 exit 0
