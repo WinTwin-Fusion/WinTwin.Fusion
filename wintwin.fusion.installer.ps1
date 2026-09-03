@@ -1052,111 +1052,54 @@ $script:app.control.BtnInstall.Add_Click({
     }
 
     # We still need to update some details for the uupd components
-    #$script:writeJSON = wintwincore.WriteJSON -Path $script:requirement.configfile.jobaction -KeyPath "uupd-catch.system.name" -Value "Windows 11"
-    #if ($script:writeJSON.code -ne 0) { <# ... ERROR ... #> }
-    #$script:writeJSON = wintwincore.WriteJSON -Path $script:requirement.configfile.jobaction -KeyPath "uupd-catch.system.type" -Value "25H2"
-    #if ($script:writeJSON.code -ne 0) { <# ... ERROR ... #> }
-    #$script:writeJSON = wintwincore.WriteJSON -Path $script:requirement.configfile.jobaction -KeyPath "uupd-catch.system.arch" -Value "amd64"
-    #if ($script:writeJSON.code -ne 0) { <# ... ERROR ... #> }
-    #$script:writeJSON = wintwincore.WriteJSON -Path $script:requirement.configfile.jobaction -KeyPath "uupd-catch.system.vers" -Value "pro"
-    #if ($script:writeJSON.code -ne 0) { <# ... ERROR ... #> }
-    #$script:writeJSON = wintwincore.WriteJSON -Path $script:requirement.configfile.jobaction -KeyPath "uupd-catch.download.uupdname" -Value "Windows 11-pro-25H2-amd64.zip"
-    #if ($script:writeJSON.code -ne 0) { <# ... ERROR ... #> }
+    # And therefore we need to get once more the detais about the system
+    $script:osinfo = wintwincore.GetWinVersion
+    if ($script:osinfo.code -eq 0) { $script:osinfo = $script:osinfo.data }
+
+    $script:scanerror = 0;
+    if ( $script:osinfo.osname.ToString().ToLower() -match "windows 11" ) {
+        $script:writeJSON = wintwincore.WriteJSON -Path $script:requirement.configfile.jobaction -KeyPath "uupd-catch.system.name" -Value "Windows 11"
+        if ($script:writeJSON.code -ne 0) { $script:scanerror++ }
+    } else {
+        $script:writeJSON = wintwincore.WriteJSON -Path $script:requirement.configfile.jobaction -KeyPath "uupd-catch.system.name" -Value ""
+        if ($script:writeJSON.code -ne 0) { $script:scanerror++ }
+    }
     
-    $script:app.control.CBjobsconfigured.IsChecked = $true
-    script:SetStatusUpdate -StepCount 13
-    script:uiEvent
-
-    <# PREVIOUS CODE-BLOCK FOR PATCHING THE JOBACTION.JSON
-        $script:readJSON = wintwincore.LoadJSON -Path $script:requirement.configfile.jobaction
-        if ($script:readJSON.code -ne 0) {
-            $script:app.control.CBjobsconfigured.IsChecked = $false
-            script:Add-Error "Job-Configuration failed!"
-            $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Job-Configuration failed!")"
-            script:uiEvent
-            $null = wintwincore.SystemMessageBox -smbTitle $script:errorhead `
-            -smbText "$($script:apptxt.message.InstallError -f "Failed reading the job configuration!")" `
-            -smbIcon Warning -smbButtons OK
-            return $false # <- we cannot continue if we cannot edit the jobaction.json
-        }
-        $script:readJSON = $script:readJSON.data
+    $script:writeJSON = wintwincore.WriteJSON -Path $script:requirement.configfile.jobaction -KeyPath "uupd-catch.system.type" -Value "$($script:osinfo.osvers)"
+    if ($script:writeJSON.code -ne 0) { $script:scanerror++ }
     
-        $script:scanerror = 0
-        $script:newPath = script:ReplaceRootPath -location "$($script:readJSON."uupd-catch".download.location)" -newRoot "$($script:setupconfig.currentDir)"
-        if ($script:newPath.code -eq 0) { $script:readJSON."uupd-catch".download.location = $script:newPath.data }
-        else { $script:scanerror++ }
+    $script:writeJSON = wintwincore.WriteJSON -Path $script:requirement.configfile.jobaction -KeyPath "uupd-catch.system.arch" -Value @($($script:osinfo.nativearchitecture) , $($script:osinfo.nativearchitectureraw))
+    if ($script:writeJSON.code -ne 0) { $script:scanerror++ }
 
-        $script:newPath = script:ReplaceRootPath -location "$($script:readJSON."uupd-catch".logfile[1])" -newRoot "$($script:setupconfig.currentDir)"
-        if ($script:newPath.code -eq 0) { $script:readJSON."uupd-catch".logfile[1] = $script:newPath.data ; $script:readJSON."uupd-catch".logfile[0] = $true }
-        else { $script:scanerror++ }
+    if ( $script:osinfo.osname.ToString().ToLower() -match "pro" ) {
+        $script:writeJSON = wintwincore.WriteJSON -Path $script:requirement.configfile.jobaction -KeyPath "uupd-catch.system.vers" -Value "pro"
+        if ($script:writeJSON.code -ne 0) { $script:scanerror++ }
+    } else {
+        $script:writeJSON = wintwincore.WriteJSON -Path $script:requirement.configfile.jobaction -KeyPath "uupd-catch.system.vers" -Value ""
+        if ($script:writeJSON.code -ne 0) { $script:scanerror++ }
+    }
 
-        $script:newPath = script:ReplaceRootPath -location "$($script:readJSON."uupd-compose".zipfile)" -newRoot "$($script:setupconfig.currentDir)"
-        if ($script:newPath.code -eq 0) { $script:readJSON."uupd-compose".zipfile = $script:newPath.data }
-        else { $script:scanerror++ }
+    if ( $script:osinfo.osname.ToString().ToLower() -match "windows 11" -and $script:osinfo.osname.ToString().ToLower() -match "pro" ) {
+        $script:writeJSON = wintwincore.WriteJSON -Path $script:requirement.configfile.jobaction -KeyPath "uupd-catch.download.uupdname" -Value "Windows11-pro-$($script:osinfo.osvers)-$($script:osinfo.nativearchitectureraw).zip"
+        if ($script:writeJSON.code -ne 0) { $script:scanerror++ }
+    } else {
+        $script:writeJSON = wintwincore.WriteJSON -Path $script:requirement.configfile.jobaction -KeyPath "uupd-catch.download.uupdname" -Value "Windows11-$($script:osinfo.osvers)-$($script:osinfo.nativearchitectureraw).zip"
+        if ($script:writeJSON.code -ne 0) { $script:scanerror++ }
+    }
 
-        $script:newPath = script:ReplaceRootPath -location "$($script:readJSON."uupd-compose".isopath)" -newRoot "$($script:setupconfig.currentDir)"
-        if ($script:newPath.code -eq 0) { $script:readJSON."uupd-compose".isopath = $script:newPath.data }
-        else { $script:scanerror++ }
-
-        $script:newPath = script:ReplaceRootPath -location "$($script:readJSON."uupd-compose".logfile[1])" -newRoot "$($script:setupconfig.currentDir)"
-        if ($script:newPath.code -eq 0) { $script:readJSON."uupd-compose".logfile[1] = $script:newPath.data ; $script:readJSON."uupd-compose".logfile[0] = $true }
-        else { $script:scanerror++ }
-
-        $script:newPath = script:ReplaceRootPath -location "$($script:readJSON."uupd-isodump".isofile)" -newRoot "$($script:setupconfig.currentDir)"
-        if ($script:newPath.code -eq 0) { $script:readJSON."uupd-isodump".isofile = $script:newPath.data }
-        else { $script:scanerror++ }
-
-        $script:newPath = script:ReplaceRootPath -location "$($script:readJSON."uupd-isodump".output)" -newRoot "$($script:setupconfig.currentDir)"
-        if ($script:newPath.code -eq 0) { $script:readJSON."uupd-isodump".output = $script:newPath.data }
-        else { $script:scanerror++ }
-
-        $script:newPath = script:ReplaceRootPath -location "$($script:readJSON."uupd-isodump".logfile[1])" -newRoot "$($script:setupconfig.currentDir)"
-        if ($script:newPath.code -eq 0) { $script:readJSON."uupd-isodump".logfile[1] = $script:newPath.data ; $script:readJSON."uupd-isodump".logfile[0] = $true }
-        else { $script:scanerror++ }
-
-        $script:newPath = script:ReplaceRootPath -location "$($script:readJSON."wim-mount".path)" -newRoot "$($script:setupconfig.currentDir)"
-        if ($script:newPath.code -eq 0) { $script:readJSON."wim-mount".path = $script:newPath.data }
-        else { $script:scanerror++ }
-
-        $script:newPath = script:ReplaceRootPath -location "$($script:readJSON."wim-mount".imgfile)" -newRoot "$($script:setupconfig.currentDir)"
-        if ($script:newPath.code -eq 0) { $script:readJSON."wim-mount".imgfile = $script:newPath.data }
-        else { $script:scanerror++ }
-
-        $script:newPath = script:ReplaceRootPath -location "$($script:readJSON."wim-mount".logfile[1])" -newRoot "$($script:setupconfig.currentDir)"
-        if ($script:newPath.code -eq 0) { $script:readJSON."wim-mount".logfile[1] = $script:newPath.data ; $script:readJSON."wim-mount".logfile[0] = $true }
-        else { $script:scanerror++ }
-
-        $script:newPath = script:ReplaceRootPath -location "$($script:readJSON."wim-eject".path)" -newRoot "$($script:setupconfig.currentDir)"
-        if ($script:newPath.code -eq 0) { $script:readJSON."wim-eject".path = $script:newPath.data }
-        else { $script:scanerror++ }
-
-        $script:newPath = script:ReplaceRootPath -location "$($script:readJSON."wim-eject".imgfile)" -newRoot "$($script:setupconfig.currentDir)"
-        if ($script:newPath.code -eq 0) { $script:readJSON."wim-eject".imgfile = $script:newPath.data }
-        else { $script:scanerror++ }
-
-        $script:newPath = script:ReplaceRootPath -location "$($script:readJSON."wim-eject".logfile[1])" -newRoot "$($script:setupconfig.currentDir)"
-        if ($script:newPath.code -eq 0) { $script:readJSON."wim-eject".logfile[1] = $script:newPath.data ; $script:readJSON."wim-eject".logfile[0] = $true }
-        else { $script:scanerror++ }
-
-        $script:newPath = script:ReplaceRootPath -location "$($script:readJSON."wtfconsole".logfile[1])" -newRoot "$($script:setupconfig.currentDir)"
-        if ($script:newPath.code -eq 0) { $script:readJSON."wtfconsole".logfile[1] = $script:newPath.data ; $script:readJSON."wtfconsole".logfile[0] = $true }
-        else { $script:scanerror++ }
-
-        $script:writeJSON = wintwincore.WriteJSON -Path $script:requirement.configfile.jobaction -Value $script:readJSON
-        if ($script:writeJSON.code -ne 0) {
-            $script:app.control.CBjobsconfigured.IsChecked = $false
-            script:Add-Error "Framework-Configuration failed!"
-            $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Job-Configuration failed!")"
-            script:uiEvent
-            $null = wintwincore.SystemMessageBox -smbTitle $script:errorhead `
-            -smbText "$($script:apptxt.message.InstallError -f "Failed writing changes to job configuration!")" `
-            -smbIcon Warning -smbButtons OK
-            return $false # <- we cannot continue if we cannot edit the jobaction.json
-        }
+    if ( $script:scanerror -eq 0) {
         $script:app.control.CBjobsconfigured.IsChecked = $true
         script:SetStatusUpdate -StepCount 13
-        script:uiEvent
-    #>
+    } else {
+        $script:logmsg=@("All default paths could be successfully replaced inside","$($script:requirement.configfile.jobaction)",`
+        "But somehow there was at least one error updating details for the uupd-catcher jobs!",`
+        "This is just dropped as a WARNING, because the Framework can still operate with these errors.")
+        $null = wintwincore.WriteLogmsg -Logfile $script:setupconfig.logfile -Message $script:logmsg -Flag "WARN"
+        $script:app.control.CBjobsconfigured.IsChecked = $false
+        #script:Add-Error "Failed updating config for UUPD.Catcher!"
+        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Failed updating config for UUPD.Catcher!")"
+    }
+    script:uiEvent
 
     # Check No. 14: process database configuration
     $script:app.control.StatusText.Text = $script:apptxt.status.task14
@@ -1291,6 +1234,19 @@ $script:app.control.BtnInstall.Add_Click({
     # Check No. 17: Finan Checkup/Cleanup
     $script:app.control.StatusText.Text = $script:apptxt.status.task17
     script:uiEvent
+
+    <# --------------------------------------------------
+    SPONTANE IDEE:
+    WIR KÖNNTEN ZWEI ZUSÄTZLICHE ARRAYS/OBJEKTE DEFINIEREN
+    DER EINE ENTHÄLT "FOLDERS_TO_REMOVE"
+    DER ANDERE IST "FILES_TO_REMOVE"
+    IN DEN JEWEILIGEN ARRAYS/OBJEKTEN SIND DATEIEN/ORDNDER
+    (WIE Z.B. .GITIGNORE oder .GITHUB) DEFINIERT, DIE
+    AM ENDE DURCH DEN INSTALLER AUTOMATISCH ENTFERNT
+    WERDEN. NACHTEIL: KÖNNTE ZU ERNSTHAFTEN PROBLEMEN
+    FÜHREN, WENN ES IN DER ENTWICKLUNGSUMGEBUNG LÄUFT!
+    -------------------------------------------------- #>
+
     # We need to count all 'Add-Error' Entries !!
     if ( $script:errorlist.Count -ge 1 ) {
         # We had at least one error
