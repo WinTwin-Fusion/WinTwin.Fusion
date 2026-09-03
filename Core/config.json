@@ -1,11 +1,11 @@
 {
     "appinfo": {
         "name":         "WinTwin Fusion",
-        "version":      "v1.00.00",
+        "version":      "v1.00.10",
         "devname":      "praetoriani",
         "website":      "https://github.com/praetoriani/WinTwin.Fusion",
         "datecreate":   "18.08.2026",
-        "dateupdate":   "31.08.2026"
+        "dateupdate":   "02.09.2026"
     },
 
     "appconfig": {
