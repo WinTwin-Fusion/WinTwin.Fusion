@@ -3,7 +3,7 @@
         "system": {
             "name": "Windows 11",
             "type": "25H2",
-            "arch": "amd64",
+            "arch": [ "x64" , "AMD64" ],
             "vers": "pro",
             "lang": "en-us"
         },
