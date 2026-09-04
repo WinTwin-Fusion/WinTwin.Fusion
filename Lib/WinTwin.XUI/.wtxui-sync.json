@@ -2,13 +2,13 @@
   "component": "WinTwin.XUI",
   "sourceRepository": "WinTwin-Fusion/WinTwin.XUI",
   "sourceBranch": "main",
-  "sourceCommit": "20b7a202c3dedb18acb094e1f3f8ceeb41a6f5db",
-  "sourceCommitShort": "20b7a20",
+  "sourceCommit": "e15e53631fa143c2c9b43d71d0a5043c9a658f75",
+  "sourceCommitShort": "e15e536",
   "sourcePullRequest": {
-    "number": 8,
-    "title": "Functions added/upated",
+    "number": 9,
+    "title": "Updated xuiSelectFolder",
     "mergedBy": "praetoriani",
-    "mergedAt": "2026-08-30T20:25:01Z"
+    "mergedAt": "2026-09-04T13:22:15Z"
   },
   "targetRepository": "WinTwin-Fusion/WinTwin.Fusion",
   "targetBaseBranch": "main",
@@ -19,7 +19,7 @@
   ],
   "syncedBy": "GitHub Actions",
   "workflow": "Sync WinTwin.XUI to WinTwin.Fusion",
-  "workflowRunId": "33333584708",
-  "workflowRunNumber": "7",
-  "syncDate": "2026-08-30T20:25:15Z"
+  "workflowRunId": "33877682552",
+  "workflowRunNumber": "8",
+  "syncDate": "2026-09-04T13:22:27Z"
 }
