@@ -582,7 +582,7 @@ $script:app.control.BtnDownload.Add_Click({
         $script:logmsg=@("Download from https://uupdump.net/ was successfull.","Here are some details about the download:",`
         "Location:   $($Local:DLresult.data.FileName)","File size:  $($Local:DLresult.data.FileSize)",`
         "Edition:    $($Local:DLresult.data.Edition)","Language:   $($Local:DLresult.data.Language)",`
-        "BuildNo:    $($Local:DLresult.data.BuildNo) ($($Local:DLresult.data.BuildText))","UUIDBuild:   $($Local:DLresult.data.BuildUUID)")
+        "BuildNo:    $($Local:DLresult.data.BuildNo) ($($Local:DLresult.data.BuildText))","UUIDBuild:   $($Local:DLresult.data.UUIDBuild)")
         $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "OKAY"
         # Update the text in the statusbar
         $script:app.control.StatusText.Text = $Script:apptxt.status.dlsuccess
