@@ -213,7 +213,10 @@ $script:JSONresult = wintwincore.LoadJSON -Path $script:app.langfile
 if ( $script:JSONresult.code -ne 0) { script:Show-RuntimeError -errortext "Failed loading following json file:`n$($script:app.langfile)`n$($script:JSONresult.msg)" -exitapp }
 $Script:apptxt = $script:JSONresult.data
 
-$script:logmsg=@("$($script:app.name) $($script:app.version) successfully initialized.")
+# Prepare the Logfile and write the first line
+$Script:timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
+$script:app.logfile = $script:app.logfile -replace '\[DATETIME\]', $Script:timestamp
+$script:logmsg=@("$($script:app.name) $($script:app.version) was launched.")
 $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "INFO" -Override 1
 
 #--------------------------------------------------------------------------------
@@ -318,7 +321,7 @@ function script:uiEvent {
     ) | Out-Null
     [System.Windows.Threading.Dispatcher]::PushFrame($frame)
     
-    Start-Sleep -Milliseconds 500
+    #Start-Sleep -Milliseconds 50
 }
 
 function script:LoadUUPDsettings {
@@ -432,6 +435,10 @@ $script:app.control.BtnBrowseLocation.Add_Click({
 
 # Download-Button was clicked
 $script:app.control.BtnDownload.Add_Click({
+    
+    $script:logmsg=@("$($script:app.control.BtnDownload.Content)-Button was pressed.")
+    $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "INFO"
+    
     # 1st Step: We're going to reset the action buttons
     $script:app.control.BtnDownload.IsEnabled = $false
     $script:app.control.BtnReset.IsEnabled    = $false
@@ -445,7 +452,7 @@ $script:app.control.BtnDownload.Add_Click({
     $script:app.control.TxtZIPLocation.BorderBrush = $Script:BrushInputBorder
     $script:app.control.TxtFilename.Background     = $Script:BrushInputBg
     $script:app.control.TxtFilename.BorderBrush    = $Script:BrushInputBorder
-
+    script:uiEvent
 
     $Local:errorcount = 0
     # Initialize the required values
@@ -463,34 +470,43 @@ $script:app.control.BtnDownload.Add_Click({
 
     if     ($script:app.control.RadioWin24H2.IsChecked) { $Local:osvers = "24H2"}
     elseif ($script:app.control.RadioWin25H2.IsChecked) { $Local:osvers = "25H2"}
-    else   { $Local:errorcount++ ; $script:app.control.LblWinVersion.Foreground = $Script:BrushInputError }
+    else   { $Local:errorcount++ ; $script:app.control.LblWinVersion.Foreground = $Script:BrushInputError ; script:uiEvent }
 
     if     ($script:app.control.RadioHome.IsChecked) { $Local:osedit = "home"}
     elseif ($script:app.control.RadioPro.IsChecked) { $Local:osedit = "pro"}
-    else   { $Local:errorcount++ ; $script:app.control.LblEditions.Foreground = $Script:BrushInputError }
-
+    else   { $Local:errorcount++ ; $script:app.control.LblEditions.Foreground = $Script:BrushInputError ; script:uiEvent }
+    
     if     ($script:app.control.RadioArchAmd64.IsChecked) { $Local:osarch = "amd64"}
     elseif ($script:app.control.RadioArchArm64.IsChecked) { $Local:osarch = "arm64"}
-    else   { $Local:errorcount++ ; $script:app.control.LblArch.Foreground = $Script:BrushInputError }
-
+    else   { $Local:errorcount++ ; $script:app.control.LblArch.Foreground = $Script:BrushInputError ; script:uiEvent }
+    
     if     ($script:app.control.RadioLangENUS.IsChecked) { $Local:oslang = "en-us"}
     elseif ($script:app.control.RadioLangDEDE.IsChecked) { $Local:oslang = "de-de"}
-    else   { $Local:errorcount++ ; $script:app.control.LblLanguage.Foreground = $Script:BrushInputError }
-
+    else   { $Local:errorcount++ ; $script:app.control.LblLanguage.Foreground = $Script:BrushInputError ; script:uiEvent }
+    
     if     ($script:app.control.ChkAddUpdates.IsChecked) { $Local:updates = "1" }
     else   { $Local:updates = "0" }
-
+    
     if     ($script:app.control.ChkCleanup.IsChecked) { $Local:cleanup = "1" }
     else   { $Local:cleanup = "0" }
-
+    
     if     ($script:app.control.ChkNetFx35.IsChecked) { $Local:dotnet3 = "1" }
     else   { $Local:dotnet3 = "0" }
 
-    if ( [string]::IsNullOrWhiteSpace($script:app.control.TxtZIPLocation.Text) -or (-not (Test-Path -LiteralPath $script:app.control.TxtZIPLocation.Text -PathType Container))) {
+    # -or (-not (Test-Path -LiteralPath $script:app.control.TxtZIPLocation.Text -PathType Container))
+    if ( [string]::IsNullOrWhiteSpace($script:app.control.TxtZIPLocation.Text) ) {
         $Local:errorcount++
         $script:app.control.TxtZIPLocation.Background  = $Script:BrushInputError
         $script:app.control.TxtZIPLocation.BorderBrush = $Script:BrushInputErrorBrdr
-    } else {
+        script:uiEvent
+    }
+    elseif ( -not (Test-Path -LiteralPath $script:app.control.TxtZIPLocation.Text -PathType Container) ) {
+        $Local:errorcount++
+        $script:app.control.TxtZIPLocation.Background  = $Script:BrushInputError
+        $script:app.control.TxtZIPLocation.BorderBrush = $Script:BrushInputErrorBrdr
+        script:uiEvent
+    }    
+    else {
         $Local:location = $script:app.control.TxtZIPLocation.Text
     }
 
@@ -498,19 +514,28 @@ $script:app.control.BtnDownload.Add_Click({
         $Local:errorcount++
         $script:app.control.TxtFilename.Background  = $Script:BrushInputError
         $script:app.control.TxtFilename.BorderBrush = $Script:BrushInputErrorBrdr
+        script:uiEvent
     }
     elseif ( $script:app.control.TxtFilename.Text.Substring($script:app.control.TxtFilename.Text.Length - 4) -ne ".zip") {
         $Local:errorcount++
         $script:app.control.TxtFilename.Background  = $Script:BrushInputError
         $script:app.control.TxtFilename.BorderBrush = $Script:BrushInputErrorBrdr
+        script:uiEvent
     }
     else {
         $Local:filename = $script:app.control.TxtFilename.Text
     }
-    $Local:fullpath = Join-Path $Local:location $Local:filename
 
-    if (Test-Path -LiteralPath $Local:fullpath -PathType Leaf) {
-        $Local:errorcount++
+    if (-not ([string]::IsNullOrWhiteSpace($script:app.control.TxtZIPLocation.Text)) -and -not ([string]::IsNullOrWhiteSpace($script:app.control.TxtFilename.Text))) {
+        $Local:fullpath = Join-Path $Local:location $Local:filename -ErrorAction SilentlyContinue
+        Write-Host "$($Local:fullpath)"
+        if ( Test-Path -LiteralPath $Local:fullpath -PathType Leaf ) {
+            $Local:errorcount++
+            $script:app.control.TxtZIPLocation.Background  = $Script:BrushInputError
+            $script:app.control.TxtZIPLocation.BorderBrush = $Script:BrushInputErrorBrdr
+            $script:app.control.TxtFilename.Background  = $Script:BrushInputError
+            $script:app.control.TxtFilename.BorderBrush = $Script:BrushInputErrorBrdr
+        }
     }
 
     if ( $Local:errorcount -ge 1 ) {
@@ -518,11 +543,15 @@ $script:app.control.BtnDownload.Add_Click({
         $script:app.control.BtnDownload.IsEnabled = $true
         $script:app.control.BtnReset.IsEnabled    = $true
         $script:app.control.BtnExit.IsEnabled     = $true
+        $script:logmsg=@("$($Local:errorcount) errors found in the form. Download cannot be started!")
+        $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "WARN"
         return $false
     }
     
-    $Local:DLresult = $null
-    
+    $script:logmsg=@("No errors found. Start downloading reqeusted file from https://uupdump.net/.")
+    $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "OAKY"
+
+    $Local:DLresult = $nul
     # Download Windows 11 Pro 24H2 with .NET FX 3.5 included and WIM format (default settings)
     if ( $Local:dotnet3 -eq 0) {
         $Local:DLresult = wintwincore.DownloadUUPDump -OStype "$($Local:osname)" `
@@ -539,11 +568,28 @@ $script:app.control.BtnDownload.Add_Click({
     }
     
     if ( $Local:DLresult.code -eq 1 ) {
+        # Write something into the logfile
+        $script:logmsg=@("The Download from https://uupdump.net/ failed. Reason:`n$($Local:DLresult.msg)")
+        $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "FAIL"
+        # Update the text in the statusbar
+        $script:app.control.StatusText.Text = $Script:apptxt.status.dlerror
+        # Display a dialog
         $null = wintwincore.SystemMessageBox -smbTitle "$($Script:errorhead)" `
-        -smbText "Failed downloading requested file from uupdump.net!`n$($Local:DLresult.msg)" `
+        -smbText "Failed downloading requested file from uupdump.net!`nPlease check the logfile for further informations." `
         -smbIcon Warning -smbButtons OK
     } else {
-
+        # Drop a long message about the download result to the logfile
+        $script:logmsg=@("Download from https://uupdump.net/ was successfull.","Here are some details about the download:",`
+        "Location:   $($Local:DLresult.data.FileName)","File size:  $($Local:DLresult.data.FileSize)",`
+        "Edition:    $($Local:DLresult.data.Edition)","Language:   $($Local:DLresult.data.Language)",`
+        "BuildNo:    $($Local:DLresult.data.BuildNo) ($($Local:DLresult.data.BuildText))","UUIDBuild:   $($Local:DLresult.data.BuildUUID)")
+        $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "OKAY"
+        # Update the text in the statusbar
+        $script:app.control.StatusText.Text = $Script:apptxt.status.dlsuccess
+        # Display a dialog 
+        $null = wintwincore.SystemMessageBox -smbTitle "$($Script:errorhead)" `
+        -smbText "Download from https://uupdump.net/ successfully finished.`nThe Download is stored here:`n$($Local:fullpath)" `
+        -smbIcon None -smbButtons OK
     }
 
     # Release the action buttons again
@@ -610,6 +656,6 @@ $script:app.window.Add_ContentRendered({
 $script:app.window.ShowDialog() | Out-Null
 # Cleanup/Exit
 #wintwincore.SetCMDstate -State Show
-#$script:logmsg=@("WinTwin.Fusion Install Manager Window was closed.","Application will exit now.","Thanks for using WinTwin. Fusion Install Manager :)")
-#$null = wintwincore.WriteLogmsg -Logfile $script:setupconfig.logfile -Message $script:logmsg -Flag "INFO"
+$script:logmsg=@("$($script:app.name) $($script:app.version) was closed.","Thank you for using UUPD.Catcher (PS.Tweak.Tools)")
+$null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "INFO"
 exit 0
