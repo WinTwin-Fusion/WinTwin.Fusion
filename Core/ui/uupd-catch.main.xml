@@ -381,7 +381,7 @@
                 <!-- Row 02 -->
                 <Grid Grid.Row="3">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="200"/><ColumnDefinition Width="110"/><ColumnDefinition Width="110"/><ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="225"/><ColumnDefinition Width="150"/><ColumnDefinition Width="150"/><ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     <TextBlock x:Name="LblWinVersion" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Windows 11" Margin="0,0,30,0"/>
                     <RadioButton x:Name="RadioWin24H2" Grid.Column="1" GroupName="WindowsVersion" Style="{StaticResource RadioButtonStyle}" Content="24H2"/>
@@ -391,17 +391,17 @@
                 <!-- Row 03 -->
                 <Grid Grid.Row="4">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="200"/><ColumnDefinition Width="110"/><ColumnDefinition Width="110"/><ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="225"/><ColumnDefinition Width="150"/><ColumnDefinition Width="150"/><ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     <TextBlock x:Name="LblEditions" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Editions" Margin="0,0,30,0"/>
-                    <RadioButton x:Name="RdoHome" Grid.Column="1" GroupName="Edition" Style="{StaticResource RadioButtonStyle}" Content="Home"/>
-                    <RadioButton x:Name="RdoPro" Grid.Column="2" GroupName="Edition" Style="{StaticResource RadioButtonStyle}" Content="Pro"/>
+                    <RadioButton x:Name="RadioHome" Grid.Column="1" GroupName="Edition" Style="{StaticResource RadioButtonStyle}" Content="Home"/>
+                    <RadioButton x:Name="RadioPro" Grid.Column="2" GroupName="Edition" Style="{StaticResource RadioButtonStyle}" Content="Pro"/>
                 </Grid>
 
                 <!-- Row 04 -->
                 <Grid Grid.Row="5">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="200"/><ColumnDefinition Width="110"/><ColumnDefinition Width="110"/><ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="225"/><ColumnDefinition Width="150"/><ColumnDefinition Width="150"/><ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     <TextBlock x:Name="LblArch" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Architecture" Margin="0,0,30,0"/>
                     <RadioButton x:Name="RadioArchAmd64" Grid.Column="1" GroupName="Architecture" Style="{StaticResource RadioButtonStyle}" Content="amd64"/>
@@ -411,7 +411,7 @@
                 <!-- Row 05 -->
                 <Grid Grid.Row="6">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="200"/><ColumnDefinition Width="110"/><ColumnDefinition Width="110"/><ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="225"/><ColumnDefinition Width="150"/><ColumnDefinition Width="150"/><ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     <TextBlock x:Name="LblLanguage" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Language" Margin="0,0,30,0"/>
                     <RadioButton x:Name="RadioLangENUS" Grid.Column="1" GroupName="Language" Style="{StaticResource RadioButtonStyle}" Content="English (US)"/>
