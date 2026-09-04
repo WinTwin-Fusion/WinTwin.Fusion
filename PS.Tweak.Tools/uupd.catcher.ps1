@@ -323,7 +323,11 @@ function script:LoadUUPDsettings {
     $Local:filename = $Script:config.jobaction."uupd-catch".download.uupdname
     $Local:finished = [bool]$Script:config.jobaction."uupd-catch".download.finished
     # Simulate a click on the "Reset"-Button to reset the form
-    $script:app.control.BtnReset.Click()
+
+    $script:app.control.BtnReset.RaiseEvent([System.Windows.RoutedEventArgs]::new(
+        [System.Windows.Controls.Primitives.ButtonBase]::ClickEvent
+    ))
+    
     # Assign the values from the jobaction.json
     if     ($Local:type -eq "24H2") { $script:app.control.RadioWin24H2.IsChecked = $true }
     elseif ($Local:type -eq "25H2") { $script:app.control.RadioWin25H2.IsChecked = $true }
