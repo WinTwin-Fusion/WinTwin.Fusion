@@ -340,7 +340,7 @@ function script:LoadUUPDsettings {
 
     $Local:vers = $Local:vers.ToString().ToLower()
     if     ($Local:vers -eq "home") { $script:app.control.RadioHome.IsChecked = $true }
-    elseif ($Local:vers -eq "pro ") { $script:app.control.RadioPro.IsChecked = $true }
+    elseif ($Local:vers -eq "pro") { $script:app.control.RadioPro.IsChecked = $true }
     else   { $script:app.control.RadioHome.IsChecked = $false ; $script:app.control.RadioPro.IsChecked = $false }
 
     $Local:lang = $Local:lang.ToString().ToLower()
@@ -358,7 +358,10 @@ function script:LoadUUPDsettings {
     else   { $script:app.control.ChkNetFx35.IsChecked = $false }
 
     $Local:name = $Local:name -replace '\s', ''
-    $Local:filename = $Local:filename -f "$($Local:name)-$($Local:vers)-$($Local:type)-$($Local:arch).zip"
+    $Local:filename = $Local:filename -f "$($Local:name)-$($Local:vers)-$($Local:type)-$($Local:arch)"
+	if ($Local:filename.Substring($Local:filename.Length - 4) -ne ".zip") {
+		$Local:filename = "$($Local:filename).zip"
+	}
     $script:app.control.TxtZIPLocation.Text = "$($Local:location)"
     $script:app.control.TxtFilename.Text = "$($Local:filename)"
 

@@ -2,13 +2,13 @@
   "component": "PS.Tweak.Tools",
   "sourceRepository": "WinTwin-Fusion/PS.Tweak.Tools",
   "sourceBranch": "main",
-  "sourceCommit": "3e16e9d3e05175dcb396c02cd4fbfb3b518eb7c0",
-  "sourceCommitShort": "3e16e9d",
+  "sourceCommit": "ecdf2824f8c0a69db06acd1f1d1050d887035eca",
+  "sourceCommitShort": "ecdf282",
   "sourcePullRequest": {
-    "number": 17,
-    "title": "Updated UUPD.Catcher",
+    "number": 18,
+    "title": "Update UUPD.Catcher",
     "mergedBy": "praetoriani",
-    "mergedAt": "2026-09-04T13:02:00Z"
+    "mergedAt": "2026-09-04T13:25:21Z"
   },
   "targetRepository": "WinTwin-Fusion/WinTwin.Fusion",
   "targetBaseBranch": "main",
@@ -20,7 +20,7 @@
   ],
   "syncedBy": "GitHub Actions",
   "workflow": "Sync PS.Tweak.Tools to WinTwin.Fusion",
-  "workflowRunId": "33875835941",
-  "workflowRunNumber": "14",
-  "syncDate": "2026-09-04T13:02:17Z"
+  "workflowRunId": "33877971341",
+  "workflowRunNumber": "15",
+  "syncDate": "2026-09-04T13:25:31Z"
 }
