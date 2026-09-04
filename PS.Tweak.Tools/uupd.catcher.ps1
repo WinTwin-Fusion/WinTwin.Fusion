@@ -335,7 +335,21 @@ $script:app.control.BtnDownload.Add_Click({
 })
 # Reset-Button was clicked
 $script:app.control.BtnReset.Add_Click({
-    <# WE NEED TO RESET THE WHOLE FORM #>
+    $script:app.control.RadioWin24H2.IsChecked     = $false
+    $script:app.control.RadioWin25H2.IsChecked     = $false
+    $script:app.control.RadioHome.IsChecked        = $false
+    $script:app.control.RadioPro.IsChecked         = $false
+    $script:app.control.RadioArchAmd64.IsChecked   = $false
+    $script:app.control.RadioArchArm64.IsChecked   = $false
+    $script:app.control.RadioLangENUS.IsChecked    = $false
+    $script:app.control.RadioLangDEDE.IsChecked    = $false
+    $script:app.control.ChkAddUpdates.IsChecked    = $false
+    $script:app.control.ChkCleanup.IsChecked       = $false
+    $script:app.control.ChkNetFx35.IsChecked       = $false
+    $script:app.control.TxtZIPLocation.Clear()
+    $script:app.control.TxtFilename.Clear()
+    $script:app.control.ChkCloseWhenDone.IsChecked = $false
+    $script:app.control.StatusText.Text            = $Script:apptxt.status.isready
 })
 # Exit was clicked
 $script:app.control.BtnExit.Add_Click({
