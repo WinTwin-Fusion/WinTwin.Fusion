@@ -125,6 +125,11 @@ function wintwincore.DownloadUUPDump {
         [ValidateSet('Pro', 'Home')]
         [string]$Edition = 'Pro',
 
+        [Parameter(Mandatory = $false, HelpMessage = "Windows edition: 'Pro' (default) or 'Home'. For other editions use GetUUPDumpPackage.")]
+        [ValidateNotNullOrEmpty()]
+        [ValidateSet('en-us', 'de-de')]
+        [string]$Language = 'en-us',
+
         [Parameter(Mandatory = $false, HelpMessage = "Optional build number in format '00000.0000'.")]
         [AllowEmptyString()]
         [string]$BuildNo = '',
@@ -134,10 +139,14 @@ function wintwincore.DownloadUUPDump {
         [string]$Target,
 
         [Parameter(Mandatory = $false, HelpMessage = "Adds updates to the ISO (if available).")]
-        [switch]$AddUpdates,
+        [ValidateNotNullOrEmpty()]
+        [ValidateSet('0', '1')]
+        [int]$AddUpdates = 0,
 
         [Parameter(Mandatory = $false, HelpMessage = "Performs a cleanup after adding the updates to the ISO.")]
-        [switch]$DoCleanup,
+        [ValidateNotNullOrEmpty()]
+        [ValidateSet('0', '1')]
+        [int]$DoCleanup = 0,
 
         [Parameter(Mandatory = $false, HelpMessage = "Include .NET Framework 3.5 in the conversion package (default behavior).")]
         [switch]$IncludeNetFX,
@@ -170,10 +179,7 @@ function wintwincore.DownloadUUPDump {
     }
 
     # Resolve Update-Uptions
-    $UpdatesOption = if ($AddUpdates.IsPresent) { '1' } else { '0' }
-    if ($UpdatesOption -eq '1') {
-        $CleanupOption = if ($DoCleanup.IsPresent)  { '1' } else { '0' }
-    } else { $CleanupOption = '0' }
+    if ($DoCleanup -eq 1 -and $AddUpdates -eq 0) { $DoCleanup = 0 }
 
     # Resolve ESD setting
     $ESDValue = if ($UseESD.IsPresent) { '1' } else { '0' }
@@ -301,7 +307,7 @@ function wintwincore.DownloadUUPDump {
 
         $DownloadParams = @{
             id      = $BuildUUID
-            pack    = 'de-de'
+            pack    = $Language
             edition = $UUPEditionID
         }
 
@@ -377,6 +383,7 @@ function wintwincore.DownloadUUPDump {
         ZIPfile   = $ZipFileName
         FileSize  = $FinalSizeKB
         Edition   = $EditionDisplay
+        Language  = $Language
         BuildText = $BuildTitle
         BuildNo   = $BuildNumber
         UUIDBuild = $BuildUUID

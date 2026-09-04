@@ -2,13 +2,13 @@
   "component": "WinTwin.FXcore",
   "sourceRepository": "WinTwin-Fusion/WinTwin.FXcore",
   "sourceBranch": "main",
-  "sourceCommit": "a4b89386848c3a70069cf8929a55b13ae7f12e4f",
-  "sourceCommitShort": "a4b8938",
+  "sourceCommit": "c2414443669f1708618ac09d020963828f119df0",
+  "sourceCommitShort": "c241444",
   "sourcePullRequest": {
-    "number": 32,
-    "title": "Features added",
+    "number": 33,
+    "title": "Add language support to UUPDump",
     "mergedBy": "praetoriani",
-    "mergedAt": "2026-09-04T16:21:44Z"
+    "mergedAt": "2026-09-04T19:39:23Z"
   },
   "targetRepository": "WinTwin-Fusion/WinTwin.Fusion",
   "targetBaseBranch": "main",
@@ -19,7 +19,7 @@
   ],
   "syncedBy": "GitHub Actions",
   "workflow": "Sync WinTwin.FXcore to WinTwin.Fusion",
-  "workflowRunId": "33894696914",
-  "workflowRunNumber": "29",
-  "syncDate": "2026-09-04T16:21:57Z"
+  "workflowRunId": "33912276555",
+  "workflowRunNumber": "30",
+  "syncDate": "2026-09-04T19:39:38Z"
 }
