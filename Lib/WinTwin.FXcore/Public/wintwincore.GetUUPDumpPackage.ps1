@@ -131,6 +131,12 @@ function wintwincore.GetUUPDumpPackage {
         [ValidateNotNullOrEmpty()]
         [string]$Target,
 
+        [Parameter(Mandatory = $false, HelpMessage = "Adds updates to the ISO (if available).")]
+        [switch]$AddUpdates,
+
+        [Parameter(Mandatory = $false, HelpMessage = "Performs a cleanup after adding the updates to the ISO.")]
+        [switch]$DoCleanup,
+
         [Parameter(Mandatory = $false, HelpMessage = "Explicitly exclude .NET Framework 3.5 from the conversion package.")]
         [switch]$ExcludeNetFX,
 
@@ -165,6 +171,12 @@ function wintwincore.GetUUPDumpPackage {
     # Semicolon-joined display names stored in $script:uupdump['multiedition']
     $MultiEditionStr = ($UniqueEditions | ForEach-Object { $EditionIDMap[$_].Display }) -join ';'
 
+    # Resolve Update-Uptions
+    $UpdatesOption = if ($AddUpdates.IsPresent) { '1' } else { '0' }
+    if ($UpdatesOption -eq '1') {
+        $CleanupOption = if ($DoCleanup.IsPresent)  { '1' } else { '0' }
+    } else { $CleanupOption = '0' }
+    
     # Resolve NetFX and ESD settings
     $NetFXValue = if ($ExcludeNetFX.IsPresent) { '0' } else { '1' }
     $ESDValue   = if ($UseESD.IsPresent) { '1' } else { '0' }
@@ -282,11 +294,11 @@ function wintwincore.GetUUPDumpPackage {
         # POST body for Virtual Editions mode:
         # autodl=3: Download, add additional editions and convert to ISO (StartVirtual=1 in ConvertConfig.ini)
         $PostBody = @{
-            autodl  = '3'           # Virtual Editions conversion mode
-            updates = '0'           # Do not integrate cumulative updates
-            cleanup = '0'           # Do not run cleanup after conversion
-            netfx   = $NetFXValue   # .NET Framework 3.5 integration (parameterized)
-            esd     = $ESDValue     # ESD vs WIM format (parameterized)
+            autodl  = '3'             # Virtual Editions conversion mode
+            updates = $UpdatesOption  # 0=Do not integrate cumulative updates
+            cleanup = $CleanupOption  # 0=Do not run cleanup after conversion
+            netfx   = $NetFXValue     # .NET Framework 3.5 integration (parameterized)
+            esd     = $ESDValue       # ESD vs WIM format (parameterized)
         }
     }
     catch {
@@ -334,28 +346,19 @@ function wintwincore.GetUUPDumpPackage {
     $FinalSizeKB = [math]::Round($WrittenSize / 1KB, 2)
     $ZipFileName = [System.IO.Path]::GetFileName($Target)
 
-    # ----------------------------------------------------------------
-    # STEP 7 >> Write all relevant download metadata to module-scope $script:uupdump
-    #           All keys MUST be written successfully for the function to report success.
-    # ----------------------------------------------------------------
-    $WriteOps = @(
-        @{ VarKeyID = 'ostype';        SetNewVal = $OStype         },
-        @{ VarKeyID = 'osvers';        SetNewVal = $OSvers         },
-        @{ VarKeyID = 'osarch';        SetNewVal = $OSarch         },
-        @{ VarKeyID = 'edition';       SetNewVal = ''              },
-        @{ VarKeyID = 'multiedition';  SetNewVal = $MultiEditionStr },
-        @{ VarKeyID = 'buildno';       SetNewVal = $BuildNumber    },
-        @{ VarKeyID = 'kbsize';        SetNewVal = $FinalSizeKB    },
-        @{ VarKeyID = 'zipname';       SetNewVal = $ZipFileName    }
-    )
-
-    foreach ($Op in $WriteOps) {
-        $WriteResult = WinISOcore -Scope 'env' -GlobalVar 'uupdump' -Permission 'write' `
-                                  -VarKeyID $Op.VarKeyID -SetNewVal $Op.SetNewVal
-        if ($WriteResult.code -ne 0) {
-            return (OPSreturn -Code -1 -Message "Function GetUUPDumpPackage failed! Download succeeded but could not write '$($Op.VarKeyID)' to `$script:uupdump. Reason: $($WriteResult.msg)")
-        }
+    $returnData = [PSCustomObject]@{
+        OStype    = $OStype
+        OSvers    = $OSvers
+        OSarch    = $OSarch
+        MultiEdit = $MultiEditionStr
+        ZIPfile   = $ZipFileName
+        FileSize  = $FinalSizeKB
+        BuildNo   = $BuildNumber
+        UUIDBuild = $BuildUUID
+        Updates   = $UpdatesOption
+        Cleanup   = $CleanupOption
+        NetFX     = $NetFXValue
+        ESD       = $ESDValue
     }
 
-    return (OPSreturn -Code 0 -Message "GetUUPDumpPackage successfully finished! Editions: '$DisplayEditions' | Build: '$BuildTitle' | BuildNo: $BuildNumber | UUID: $BuildUUID | NetFX: $NetFXValue | ESD: $ESDValue | File: '$Target' ($FinalSizeKB KB)" -Data $Target)
-}
+    return (OPSreturn -Code 0 -Message "DownloadUUPDump successfully finished!" -Data $returnData)}
