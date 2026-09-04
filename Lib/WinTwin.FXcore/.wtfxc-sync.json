@@ -2,13 +2,13 @@
   "component": "WinTwin.FXcore",
   "sourceRepository": "WinTwin-Fusion/WinTwin.FXcore",
   "sourceBranch": "main",
-  "sourceCommit": "4c60e12fbe13f9a62e59aa9c66031d2949a39571",
-  "sourceCommitShort": "4c60e12",
+  "sourceCommit": "4253455f49c2760f4145e699ba4b604386568f8f",
+  "sourceCommitShort": "4253455",
   "sourcePullRequest": {
-    "number": 29,
-    "title": "Updated private functions",
+    "number": 30,
+    "title": "Updated wintwincore.WriteLogmsg",
     "mergedBy": "praetoriani",
-    "mergedAt": "2026-09-02T20:51:27Z"
+    "mergedAt": "2026-09-04T09:26:50Z"
   },
   "targetRepository": "WinTwin-Fusion/WinTwin.Fusion",
   "targetBaseBranch": "main",
@@ -19,7 +19,7 @@
   ],
   "syncedBy": "GitHub Actions",
   "workflow": "Sync WinTwin.FXcore to WinTwin.Fusion",
-  "workflowRunId": "33681771648",
-  "workflowRunNumber": "26",
-  "syncDate": "2026-09-02T20:51:42Z"
+  "workflowRunId": "33858385586",
+  "workflowRunNumber": "27",
+  "syncDate": "2026-09-04T09:27:07Z"
 }

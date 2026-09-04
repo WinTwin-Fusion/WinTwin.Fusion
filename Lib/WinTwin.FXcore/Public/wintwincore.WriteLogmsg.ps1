@@ -68,13 +68,14 @@ function wintwincore.WriteLogmsg {
         
         # Adjust flag formatting for consistent spacing
         switch ($Flag) {
-            "INFO"  { $FormattedFlag = "[INFO] " }
-            "OKAY " { $FormattedFlag = "[OKAY] " }
-            "DEBUG" { $FormattedFlag = "[DEBUG]" }
-            "WARN"  { $FormattedFlag = "[WARN] " }
-            "ERROR" { $FormattedFlag = "[ERROR]" }
-            "FAIL " { $FormattedFlag = "[FAIL] " }
-            default { $FormattedFlag = "[DEBUG]" }
+            "INFO"   { $FormattedFlag = "[INFO]   " }
+            "OKAY"   { $FormattedFlag = "[OKAY]   " }
+            "RESULT" { $FormattedFlag = "[RESULT] " }
+            "DEBUG"  { $FormattedFlag = "[DEBUG]  " }
+            "WARN"   { $FormattedFlag = "[WARN]   " }
+            "ERROR"  { $FormattedFlag = "[ERROR]  " }
+            "FAIL"   { $FormattedFlag = "[FAIL]   " }
+            default  { $FormattedFlag = "[DEBUG]  " }
         }
         
         # Generate timestamp in specified format [2026.02.01 ; 19:50:24]
