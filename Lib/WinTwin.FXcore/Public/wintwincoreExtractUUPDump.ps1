@@ -1,4 +1,4 @@
-function ExtractUUPDump {
+function wintwincore.ExtractUUPDump {
     <#
     .SYNOPSIS
         Extracts the contents of a UUPDump ZIP archive to a specified target directory.
@@ -78,10 +78,6 @@ function ExtractUUPDump {
         [ValidateSet(0, 1)]
         [int]$Cleanup
     )
-
-    # Retrieve module-scope variables via the AppScope getter
-    $AppInfo = AppScope -KeyID 'appinfo'
-    $EnvData  = AppScope -KeyID 'appenv'
 
     # ⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆
     # STEP 1 » Validate that the source ZIP file exists and has a .zip extension
