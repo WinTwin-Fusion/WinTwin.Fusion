@@ -441,35 +441,6 @@ function script:SetStatusUpdate {
     script:uiEvent
 }
 
-function script:ReplaceRootPath {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
-        [string]$location,
-        [Parameter(Mandatory = $false)]
-        [string]$oldRoot = "C:\WinTwin.Fusion",
-
-        [Parameter(Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
-        [string]$newRoot
-    )
-    $local:error = $null
-    try {
-        $local:tail = $location.Substring($oldRoot.Length).TrimStart('\')
-        $location = Join-Path $newRoot $local:tail        
-    }
-    catch {
-        $local:error = $_.ErrorDetails.Message ? $_.ErrorDetails.Message : $_.Exception.Message
-    }
-
-    if (Test-Path -Path $location -PathType Container) {
-        return [pscustomobject]@{ code=0 ; message="success" ; data=$location }
-    } else {
-        return [pscustomobject]@{ code=1 ; message="failed" ; data=$local:error }
-    }
-}
-
 function script:CheckElevatedRights {
     [CmdletBinding()]
     [OutputType([bool])]
@@ -494,54 +465,7 @@ function script:CheckElevatedRights {
         return $false
     }
 }
-function script:GetSystemInfo {
-    [CmdletBinding()]
-    [OutputType([bool])]
-    param()
 
-    try {
-        # The registry keys ProductName / CurrentMajorVersionNumber still report
-        # "Windows 10 ..." / 10 on Windows 11 for compatibility reasons. The
-        # correct product name is available via Win32_OperatingSystem.
-        $currentVersion = Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -ErrorAction Stop
-        $cimOs = Get-CimInstance Win32_OperatingSystem -ErrorAction Stop
-
-        $registryProductName = $currentVersion.ProductName
-        $buildNumber = [int]$currentVersion.CurrentBuild
-        $majorVersion = [int]$currentVersion.CurrentMajorVersionNumber
-        $cimProductName = $cimOs.Caption
-
-        # Determine the product name: CIM is reliable, the registry is the fallback.
-        if ($cimProductName -and ($cimProductName -like '*Windows 11*')) { $productName = $cimProductName }
-        elseif ($cimProductName -and ($cimProductName -like '*Windows 10*')) { $productName = $cimProductName }
-        elseif ($registryProductName) {
-            # Correct the registry name if the build already indicates Windows 11.
-            if (($buildNumber -ge 22000) -and ($registryProductName -like '*Windows 10*')) { $productName = $registryProductName -replace 'Windows 10', 'Windows 11' }
-            else { $productName = $registryProductName }
-        }
-        else { $productName = 'Unknown' }
-
-        # Windows 11 intentionally keeps MajorVersion = 10. The build number is
-        # the unambiguous differentiator: >= 22000 = Windows 11.
-        $isWindows11 = ($majorVersion -eq 10 -and $buildNumber -ge 22000) -or ($productName -like '*Windows 11*')
-
-        # Only allow Windows 11
-        if (-not $isWindows11) { return $false }
-
-        # Windows 11 24H2 = Build 26100
-        # Windows 11 25H2 = Build 26200+ (current branch)
-        # Accepts exclusively 24H2 and 25H2
-        if ($buildNumber -ge 26100 -and $buildNumber -lt 27000) {
-            return $true
-        }
-
-        return $false
-    }
-    catch {
-        #Write-Verbose "Fehler bei der Ermittlung der Betriebssystemversion: $_"
-        return $false
-    }
-}
 
 function script:CheckDISM {
     [CmdletBinding()]
@@ -588,12 +512,12 @@ function script:CheckDISM {
 # Helper-Functions for the UI-Events
 #--------------------------------------------------------------------------------
 
-# Closes the window
+# Mnimizes the window
 $script:app.control.BtnMinimize.Add_Click({
     $script:app.window.WindowState = [System.Windows.WindowState]::Minimized
 })
 
-# Minimizes the window
+# Closes the window
 $script:app.control.BtnClose.Add_Click({
     $script:app.window.Close()
 })
