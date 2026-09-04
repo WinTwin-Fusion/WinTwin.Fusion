@@ -1,0 +1,44 @@
+{
+    "ui": {
+        "LblInstruction":     "Please configure your download",
+        "LblInfotmation":     "UUPD.Catcher downloads a ZIP-File from uupdump.net based on your configuration",
+        "LblWinConfig":       "Windows 11 Configuration",
+        "LblWinVersion":      "Windows 11:",
+        "RadioWin24H2":       "24H2",
+        "RadioWin25H2":       "25H2",
+        "LblEditions":        "Editions:",
+        "RadioHome":          "Home",
+        "RadioPro":           "Pro",
+        "LblArch":            "Architecture:",
+        "RadioArchAmd64":     "amd64",
+        "RadioArchArm64":     "arm64",
+        "LblLanguage":        "Language:",
+        "RadioLangENUS":      "English (en-us)",
+        "RadioLangDEDE":      "German (de-de)",
+        "LblConverter":       "Converter-Options:",
+        "ChkAddUpdates":      "Integrate updates if available",
+        "ChkCleanup":         "Perform cleanup after update integration",
+        "ChkNetFx35":         "Integration of .NET Framework 3.5",
+        "LblDownloadConfig":  "Download-Settings",
+        "LblZIPLocation":     "Download-Location",
+        "LblFilename":        "Filename (.zip)",
+        "ChkCloseWhenDone":   "Close UUPDcatcher after Download has finished",
+        "BtnDownload":        "Download",
+        "BtnCancel":          "Reset",
+        "BtnExit":            "Exit",
+        "StatusText":         "",
+        "StatusInfo":         ""
+    },
+    "status": {
+        "isready": "Ready."
+    },
+    "message": {
+    }
+}
+
+
+
+
+
+
+
