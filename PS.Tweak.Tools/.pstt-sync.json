@@ -2,13 +2,13 @@
   "component": "PS.Tweak.Tools",
   "sourceRepository": "WinTwin-Fusion/PS.Tweak.Tools",
   "sourceBranch": "main",
-  "sourceCommit": "459b5642a87bd33c53472936d618ebb8c87a7c04",
-  "sourceCommitShort": "459b564",
+  "sourceCommit": "45e3c371104356d86d59dda0f7b9e582432a92f8",
+  "sourceCommitShort": "45e3c37",
   "sourcePullRequest": {
-    "number": 11,
-    "title": "Re-Upload",
+    "number": 12,
+    "title": "General Update",
     "mergedBy": "praetoriani",
-    "mergedAt": "2026-08-29T15:32:35Z"
+    "mergedAt": "2026-09-04T09:24:30Z"
   },
   "targetRepository": "WinTwin-Fusion/WinTwin.Fusion",
   "targetBaseBranch": "main",
@@ -20,7 +20,7 @@
   ],
   "syncedBy": "GitHub Actions",
   "workflow": "Sync PS.Tweak.Tools to WinTwin.Fusion",
-  "workflowRunId": "33260534305",
-  "workflowRunNumber": "8",
-  "syncDate": "2026-08-29T15:32:51Z"
+  "workflowRunId": "33858190323",
+  "workflowRunNumber": "9",
+  "syncDate": "2026-09-04T09:24:44Z"
 }

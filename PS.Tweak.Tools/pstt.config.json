@@ -1,11 +1,11 @@
 {
     "appinfo": {
         "name":         "PS.Tweak.Tools",
-        "version":      "v1.00.02",
+        "version":      "v1.00.05",
         "devname":      "praetoriani",
         "website":      "https://github.com/WinTwin-Fusion/PS.Tweak.Tools",
         "datecreate":   "26.08.2026",
-        "dateupdate":   "27.08.2026"
+        "dateupdate":   "03.09.2026"
     },
 
     "apptool": {
@@ -17,6 +17,16 @@
             "langfile":  {
                 "en-us": "\\Core\\lang\\wtf.console.en-us.json",
                 "de-de": "\\Core\\lang\\wtf.console.de-de.json"
+            }
+        },
+        "uupd-catch": {
+            "appname":   "UUPD.Catcher",
+            "action-id": "uupd-catch",
+            "apppath":   "\\PS.Tweak.Tools\\uupd.catcher.ps1",
+            "xmlui":     "\\Core\\ui\\uupd.catcher.main.xml",
+            "langfile":  {
+                "en-us": "\\Core\\lang\\uupd-catch.en-us.json",
+                "de-de": "\\Core\\lang\\uupd-catch.de-de.json"
             }
         }
     }

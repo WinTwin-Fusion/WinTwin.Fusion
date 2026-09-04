@@ -433,7 +433,7 @@ $global:apptxt = $script:result.data
 # Load the WTF.Console UI from the XML-File
 #--------------------------------------------------------------------------------
 $global:config.app.xmlui = Join-Path "$($global:config.homepath)" "$($global:psttconfig.apptool.wtfc.xmlui)"
-$script:LoadXML = xuiLoadWindow -XMLfile $global:config.app.xmlui
+$script:LoadXML = xuiLoadWindow -XMLfile $global:config.app.xmlui -extended
 if ($script:LoadXML.code -ne 0) {
     $null = wtfxSystemMessageBox -smbTitle "DISM UI Control Center (wim.mounter)" `
     -smbText "Faild loading User Interface:`n$($global:config.app.xmlui)`n$($script:LoadXML.message)"
