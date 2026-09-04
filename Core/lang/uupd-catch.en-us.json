@@ -30,7 +30,9 @@
         "StatusInfo":         ""
     },
     "status": {
-        "isready": "Ready."
+        "isready":   "Ready.",
+        "dlerror":   "Failed downloading requested file!",
+        "dlsuccess": "Requested file successfully downloaded :)"
     },
     "message": {
     }
