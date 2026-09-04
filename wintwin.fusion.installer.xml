@@ -414,7 +414,7 @@
       <!-- PROGRESS -->
       <ProgressBar x:Name="PrgInstallation" Grid.Row="2" Margin="1,0,1,2" Height="14" Minimum="0" Maximum="100" Value="0"></ProgressBar>
       <!-- STATUS BAR -->
-      <Border Grid.Row="3" Background="{StaticResource BrushTitleBar}" BorderBrush="{StaticResource BrushBorder}" BorderThickness="0,1,0,0">
+      <Border Grid.Row="3" Background="{StaticResource BrushTitleBar}" CornerRadius="0,0,10,10" BorderBrush="{StaticResource BrushBorder}" BorderThickness="0,1,0,0">
         <Grid Margin="14,0">
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"></ColumnDefinition>
