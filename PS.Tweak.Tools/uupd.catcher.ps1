@@ -192,15 +192,15 @@ $Script:config.processdb = $script:JSONresult.data
 $script:JSONresult = wintwincore.LoadJSON -Path $script:app.config.pstt
 if ( $script:JSONresult.code -ne 0) { script:Show-RuntimeError -errortext "Failed loading following json file:`n$($script:app.config.pstt)`n$($script:JSONresult.msg)" -exitapp }
 # Store the required values from the pstt.config.json
-$script:app.name     = "$($script:JSONresult.data."uupd-catch".appname)"
+$script:app.name     = "$($script:JSONresult.data.apptool."uupd-catch".appname)"
 $script:app.version  = "$($script:JSONresult.data.appinfo.version)"
-$script:app.actionid = "$($script:JSONresult.data."uupd-catch"."action-id")"
-$script:app.xmlui    = Join-Path "$($Script:wintwin.root)" "$($script:JSONresult.data."uupd-catch".xmlui)"
+$script:app.actionid = "$($script:JSONresult.data.apptool."uupd-catch"."action-id")"
+$script:app.xmlui    = Join-Path "$($Script:wintwin.root)" "$($script:JSONresult.data.apptool."uupd-catch".xmlui)"
 # Set the correct language file
 switch ($Script:config.framework.appconfig.defaultlanguage) {
-    'en-us' { $script:app.langfile = Join-Path "$($Script:wintwin.root)" "$($script:toolcfg.apptool."wim-mount".langfile."en-us")" }
-    'de-de' { $script:app.langfile = Join-Path "$($Script:wintwin.root)" "$($script:toolcfg.apptool."wim-mount".langfile."de-de")" }
-    default { $script:app.langfile = Join-Path "$($Script:wintwin.root)" "$($script:toolcfg.apptool."wim-mount".langfile."en-us")" }
+    'en-us' { $script:app.langfile = Join-Path "$($Script:wintwin.root)" "$($script:JSONresult.data.apptool."uupd-catch".langfile."en-us")" }
+    'de-de' { $script:app.langfile = Join-Path "$($Script:wintwin.root)" "$($script:JSONresult.data.apptool."uupd-catch".langfile."de-de")" }
+    default { $script:app.langfile = Join-Path "$($Script:wintwin.root)" "$($script:JSONresult.data.apptool."uupd-catch".langfile."en-us")" }
 }
 # Load the language file and store the results
 $script:JSONresult = wintwincore.LoadJSON -Path $script:app.langfile

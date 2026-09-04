@@ -23,7 +23,7 @@
             "appname":   "UUPD.Catcher",
             "action-id": "uupd-catch",
             "apppath":   "\\PS.Tweak.Tools\\uupd.catcher.ps1",
-            "xmlui":     "\\Core\\ui\\uupd.catcher.main.xml",
+            "xmlui":     "\\Core\\ui\\uupd-catch.main.xml",
             "langfile":  {
                 "en-us": "\\Core\\lang\\uupd-catch.en-us.json",
                 "de-de": "\\Core\\lang\\uupd-catch.de-de.json"
