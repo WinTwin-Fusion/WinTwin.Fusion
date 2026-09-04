@@ -92,6 +92,7 @@ $Script:configfile = [PSCustomObject]@{
 }
 
 $Script:app = [PSCustomObject]@{
+    icon     = "ps.tweak.tools.ico"
     name     = $null
     version  = $null
     langfile = $null
@@ -146,7 +147,7 @@ $Script:configfile.jobaction = Join-Path "$($Script:wintwin.root)" "$($Script:co
 # Set the real/full paths to the app-internal json files
 $Script:app.config.self = Join-Path "$($Script:wintwin.pstt)" "$($Script:app.config.self)"
 $Script:app.config.pstt = Join-Path "$($Script:wintwin.pstt)" "$($Script:app.config.pstt)"
-
+$Script:app.icon        = Join-Path "$($Script:wintwin.root)" "$($Script:app.icon)"
 #--------------------------------------------------------------------------------
 # Try to load required Libraries from the WinTwin.Fusion Framework
 #--------------------------------------------------------------------------------
@@ -248,15 +249,15 @@ $script:app.control.LblFilename.Text         = $Script:apptxt.ui.LblFilename
 #$script:app.control.TxtFilename.Text
 $script:app.control.ChkCloseWhenDone.Content = $Script:apptxt.ui.ChkCloseWhenDone
 $script:app.control.BtnDownload.Content      = $Script:apptxt.ui.BtnDownload
-$script:app.control.BtnCancel.Content        = $Script:apptxt.ui.BtnCancel
+$script:app.control.BtnReset.Content         = $Script:apptxt.ui.BtnReset
 $script:app.control.BtnExit.Content          = $Script:apptxt.ui.BtnExit
 $script:app.control.StatusText.Text          = $Script:apptxt.status.isready
 $script:app.control.StatusInfo.Text          = "$($script:app.name) ($($script:app.version))"
 
 
-if (Test-Path -LiteralPath $global:appicon) {
+if (Test-Path -LiteralPath $Script:app.icon) {
     try {
-        $titleBarLogo.Source = [System.Windows.Media.Imaging.BitmapImage]::new([System.Uri]::new($global:appicon))
+        $titleBarLogo.Source = [System.Windows.Media.Imaging.BitmapImage]::new([System.Uri]::new($Script:app.icon))
     }
     catch {
         Write-Verbose "DISM UI Control Center (wim.mounter):  Could not set title bar logo: $($_.Exception.Message)"
