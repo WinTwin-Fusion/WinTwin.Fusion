@@ -73,6 +73,7 @@ function xuiSelectFolder {
     try {
         $owner  = xui-GetDialogOwner
         $dialog = New-Object System.Windows.Forms.FolderBrowserDialog
+        $dialog.AutoUpgradeEnabled = $false
         $dialog.Description         = $(if ([string]::IsNullOrWhiteSpace($Title)) { 'Select a folder' } else { $Title })
         $dialog.ShowNewFolderButton = $ShowNewFolderButton
 
