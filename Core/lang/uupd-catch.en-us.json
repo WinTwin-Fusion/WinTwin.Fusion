@@ -24,7 +24,7 @@
         "LblFilename":        "Filename (.zip)",
         "ChkCloseWhenDone":   "Close UUPDcatcher after Download has finished",
         "BtnDownload":        "Download",
-        "BtnCancel":          "Reset",
+        "BtnReset":           "Reset",
         "BtnExit":            "Exit",
         "StatusText":         "",
         "StatusInfo":         ""
