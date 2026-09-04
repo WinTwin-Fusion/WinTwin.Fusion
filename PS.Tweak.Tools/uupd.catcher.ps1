@@ -307,6 +307,62 @@ function script:uiEvent {
     Start-Sleep -Milliseconds 500
 }
 
+function script:LoadUUPDsettings {
+    # Load System-Details from jobaction.json
+    $Local:name = $Script:config.jobaction."uupd-catch".system.name
+    $Local:type = $Script:config.jobaction."uupd-catch".system.type
+    $Local:arch = $Script:config.jobaction."uupd-catch".system.arch[1]
+    $Local:vers = $Script:config.jobaction."uupd-catch".system.vers
+    $Local:lang = $Script:config.jobaction."uupd-catch".system.lang
+    # Get the converter options frmo jobaction.json
+    $Local:updates = [bool]$Script:config.jobaction."uupd-catch".config.updates
+    $Local:cleanup = [bool]$Script:config.jobaction."uupd-catch".config.cleanup
+    $Local:dotnet  = [bool]$Script:config.jobaction."uupd-catch".config.dotnet35
+    # Get the download options from jobsction.json
+    $Local:location = $Script:config.jobaction."uupd-catch".download.location
+    $Local:filename = $Script:config.jobaction."uupd-catch".download.uupdname
+    $Local:finished = [bool]$Script:config.jobaction."uupd-catch".download.finished
+    # Simulate a click on the "Reset"-Button to reset the form
+    $script:app.control.BtnReset.Click()
+    # Assign the values from the jobaction.json
+    if     ($Local:type -eq "24H2") { $script:app.control.RadioWin24H2.IsChecked = $true }
+    elseif ($Local:type -eq "25H2") { $script:app.control.RadioWin25H2.IsChecked = $true }
+    else   { $script:app.control.RadioWin24H2.IsChecked = $false ; $script:app.control.RadioWin25H2.IsChecked = $false }
+
+    $Local:arch = $Local:arch.ToString().ToLower()
+    if     ($Local:arch -eq "amd64") { $script:app.control.RadioArchAmd64.IsChecked = $true }
+    elseif ($Local:arch -eq "arm64") { $script:app.control.RadioArchArm64.IsChecked = $true }
+    else   { $script:app.control.RadioArchAmd64.IsChecked = $false ; $script:app.control.RadioArchArm64.IsChecked = $false }
+
+    $Local:vers = $Local:vers.ToString().ToLower()
+    if     ($Local:vers -eq "home") { $script:app.control.RadioHome.IsChecked = $true }
+    elseif ($Local:vers -eq "pro ") { $script:app.control.RadioPro.IsChecked = $true }
+    else   { $script:app.control.RadioHome.IsChecked = $false ; $script:app.control.RadioPro.IsChecked = $false }
+
+    $Local:lang = $Local:lang.ToString().ToLower()
+    if     ($Local:lang -eq "en-us") { $script:app.control.RadioLangENUS.IsChecked = $true }
+    elseif ($Local:lang -eq "de-de") { $script:app.control.RadioLangDEDE.IsChecked = $true }
+    else   { $script:app.control.RadioLangENUS.IsChecked = $false ; $script:app.control.RadioLangDEDE.IsChecked = $false }
+
+    if     ($Local:updates) { $script:app.control.ChkAddUpdates.IsChecked = $true }
+    else   { $script:app.control.ChkAddUpdates.IsChecked = $false }
+
+    if     ($Local:cleanup) { $script:app.control.ChkCleanup.IsChecked = $true }
+    else   { $script:app.control.ChkCleanup.IsChecked = $false }
+
+    if     ($Local:dotnet) { $script:app.control.ChkNetFx35.IsChecked = $true }
+    else   { $script:app.control.ChkNetFx35.IsChecked = $false }
+
+    $Local:name = $Local:name -replace '\s', ''
+    $Local:filename = $Local:filename -f "$($Local:name)-$($Local:vers)-$($Local:type)-$($Local:arch).zip"
+    $script:app.control.TxtZIPLocation.Text = "$($Local:location)"
+    $script:app.control.TxtFilename.Text = "$($Local:filename)"
+
+    if     ($Local:finished) { $script:app.control.ChkCloseWhenDone.IsChecked = $true }
+    else   { $script:app.control.ChkCloseWhenDone.IsChecked = $false }
+
+}
+
 #--------------------------------------------------------------------------------
 # UI-Events / Triggers
 #--------------------------------------------------------------------------------
@@ -365,6 +421,13 @@ $script:app.window.Add_Loaded({
     $script:app.window.Activate()
     $script:app.window.Focus()
     $script:app.window.Topmost = $false
+})
+
+$script:app.window.Add_ContentRendered({
+    # Load the current settings (jobaction.json)
+    script:LoadUUPDsettings
+    # Push the changes to the ui
+    script:uiEvent
 })
 
 #$script:logmsg=@("Showing Install Manager Window using 'ShowDialog() | Out-Null'")
