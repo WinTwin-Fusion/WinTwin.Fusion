@@ -22,7 +22,7 @@
         "LblDownloadConfig":  "Download-Settings",
         "LblZIPLocation":     "Download-Location",
         "LblFilename":        "Filename (.zip)",
-        "ChkCloseWhenDone":   "Close UUPDcatcher after Download has finished",
+        "ChkCloseWhenDone":   "Close UUPD.Catcher after Download has finished",
         "BtnDownload":        "Download",
         "BtnReset":           "Reset",
         "BtnExit":            "Exit",
