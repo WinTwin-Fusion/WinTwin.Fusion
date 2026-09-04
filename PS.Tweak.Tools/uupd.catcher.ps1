@@ -7,9 +7,9 @@
 .NOTES
     CREATOR:    Praetoriani (a.k.a M.Sczepanski)
     WEBSITE:    https://github.com/WinTwin-Fusion/PS.Tweak.Tools
-    VERSION:    v1.00.00
+    VERSION:    v1.00.04
     CREATED:    03.09.2026
-    UPDATED:    03.09.2026
+    UPDATED:    04.09.2026
 
     REQUIREMENTS & DEPENDENCIES:
     - PowerShell 5.1 or higher
@@ -96,6 +96,7 @@ $Script:app = [PSCustomObject]@{
     name     = $null
     version  = $null
     langfile = $null
+    logfile  = $null
     xmlui    = $null
     actionid = $null
     config = [PSCustomObject]@{
@@ -111,6 +112,9 @@ $Script:config = [PSCustomObject]@{
     processdb = $null
     jobaction = $null
 }
+
+# Needed to determine of we have a current background-process running
+$Script:bgprocess = $false
 
 # --------------------------------------------------------------------------
 # Load the config.json from the WinTwin.Fusion Framework
@@ -197,6 +201,7 @@ $script:app.name     = "$($script:JSONresult.data.apptool."uupd-catch".appname)"
 $script:app.version  = "$($script:JSONresult.data.appinfo.version)"
 $script:app.actionid = "$($script:JSONresult.data.apptool."uupd-catch"."action-id")"
 $script:app.xmlui    = Join-Path "$($Script:wintwin.root)" "$($script:JSONresult.data.apptool."uupd-catch".xmlui)"
+$script:app.logfile  = $Script:config.jobaction."uupd-catch".logfile[1]
 # Set the correct language file
 switch ($Script:config.framework.appconfig.defaultlanguage) {
     'en-us' { $script:app.langfile = Join-Path "$($Script:wintwin.root)" "$($script:JSONresult.data.apptool."uupd-catch".langfile."en-us")" }
@@ -207,6 +212,9 @@ switch ($Script:config.framework.appconfig.defaultlanguage) {
 $script:JSONresult = wintwincore.LoadJSON -Path $script:app.langfile
 if ( $script:JSONresult.code -ne 0) { script:Show-RuntimeError -errortext "Failed loading following json file:`n$($script:app.langfile)`n$($script:JSONresult.msg)" -exitapp }
 $Script:apptxt = $script:JSONresult.data
+
+$script:logmsg=@("$($script:app.name) $($script:app.version) successfully initialized.")
+$null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "INFO" -Override 1
 
 #--------------------------------------------------------------------------------
 # Load/Create the Window
@@ -219,6 +227,12 @@ if ( $script:LoadXML.code -ne 0) { script:Show-RuntimeError -errortext "Faild lo
 # Store the window and all controls inside the window
 $script:app.window  = $script:LoadXML.data.Window
 $script:app.control = $script:LoadXML.data.Controls
+
+$Script:BrushInputError     = $script:app.window.FindResource('BrushInputError')
+$Script:BrushInputErrorBrdr = $script:app.window.FindResource('BrushInputErrorBrdr')
+$Script:BrushInputBg        = $script:app.window.FindResource('BrushInputBg')
+$Script:BrushInputBorder    = $script:app.window.FindResource('BrushInputBorder')
+$Script:BrushText           = $script:app.window.FindResource('BrushText')
 
 #--------------------------------------------------------------------------------
 # Applying loaded language file to the interface
@@ -392,12 +406,164 @@ $script:app.control.TitleBarPanel.Add_MouseLeftButtonDown({
         $script:app.window.DragMove()
     }
 })
+
+# The "include updates" checkbox was unchecked
+$script:app.control.ChkAddUpdates.Add_Unchecked({
+    if ($script:app.control.ChkCleanup.IsChecked -eq $true) {
+        $script:app.control.ChkCleanup.IsChecked = $false
+    }
+})
+
+# "Set a location" was clicked
+$script:app.control.BtnBrowseLocation.Add_Click({
+    # Keep the old input
+    $Local:oldinput = $script:app.control.TxtZIPLocation.Text
+    # Clear the input field
+    $script:app.control.TxtZIPLocation.Clear()
+    # Show the Dialog
+    $Local:pickfolder = xuiSelectFolder -Title 'Where to save the ZIP-File?'
+    # Set the new/old path to the input field
+    if ($Local:pickfolder.code -eq 0) {
+        $script:app.control.TxtZIPLocation.Text = $Local:pickfolder.data.Path
+    } else {
+        $script:app.control.TxtZIPLocation.Text = $Local:oldinput
+    }
+})
+
 # Download-Button was clicked
 $script:app.control.BtnDownload.Add_Click({
-    <# STARTS THE DOWNLOAD FROM UUPDUMP.NET #>
+    # 1st Step: We're going to reset the action buttons
+    $script:app.control.BtnDownload.IsEnabled = $false
+    $script:app.control.BtnReset.IsEnabled    = $false
+    $script:app.control.BtnExit.IsEnabled     = $false
+    # We have to reset error indicators
+    $script:app.control.LblWinVersion.Foreground   = $Script:BrushText
+    $script:app.control.LblEditions.Foreground     = $Script:BrushText
+    $script:app.control.LblArch.Foreground         = $Script:BrushText
+    $script:app.control.LblLanguage.Foreground     = $Script:BrushText
+    $script:app.control.TxtZIPLocation.Background  = $Script:BrushInputBg
+    $script:app.control.TxtZIPLocation.BorderBrush = $Script:BrushInputBorder
+    $script:app.control.TxtFilename.Background     = $Script:BrushInputBg
+    $script:app.control.TxtFilename.BorderBrush    = $Script:BrushInputBorder
+
+
+    $Local:errorcount = 0
+    # Initialize the required values
+    $Local:osname   = "windows11"
+    $Local:osvers   = $null
+    $Local:osedit   = $null
+    $Local:osarch   = $null
+    $Local:oslang   = $null
+    $Local:updates  = $null
+    $Local:cleanup  = $null
+    $Local:dotnet3  = $null
+    $Local:location = $null
+    $Local:filename = $null
+    $Local:fullpath = $null
+
+    if     ($script:app.control.RadioWin24H2.IsChecked) { $Local:osvers = "24H2"}
+    elseif ($script:app.control.RadioWin25H2.IsChecked) { $Local:osvers = "25H2"}
+    else   { $Local:errorcount++ ; $script:app.control.LblWinVersion.Foreground = $Script:BrushInputError }
+
+    if     ($script:app.control.RadioHome.IsChecked) { $Local:osedit = "home"}
+    elseif ($script:app.control.RadioPro.IsChecked) { $Local:osedit = "pro"}
+    else   { $Local:errorcount++ ; $script:app.control.LblEditions.Foreground = $Script:BrushInputError }
+
+    if     ($script:app.control.RadioArchAmd64.IsChecked) { $Local:osarch = "amd64"}
+    elseif ($script:app.control.RadioArchArm64.IsChecked) { $Local:osarch = "arm64"}
+    else   { $Local:errorcount++ ; $script:app.control.LblArch.Foreground = $Script:BrushInputError }
+
+    if     ($script:app.control.RadioLangENUS.IsChecked) { $Local:oslang = "en-us"}
+    elseif ($script:app.control.RadioLangDEDE.IsChecked) { $Local:oslang = "de-de"}
+    else   { $Local:errorcount++ ; $script:app.control.LblLanguage.Foreground = $Script:BrushInputError }
+
+    if     ($script:app.control.ChkAddUpdates.IsChecked) { $Local:updates = "1" }
+    else   { $Local:updates = "0" }
+
+    if     ($script:app.control.ChkCleanup.IsChecked) { $Local:cleanup = "1" }
+    else   { $Local:cleanup = "0" }
+
+    if     ($script:app.control.ChkNetFx35.IsChecked) { $Local:dotnet3 = "1" }
+    else   { $Local:dotnet3 = "0" }
+
+    if ( [string]::IsNullOrWhiteSpace($script:app.control.TxtZIPLocation.Text) -or (-not (Test-Path -LiteralPath $script:app.control.TxtZIPLocation.Text -PathType Container))) {
+        $Local:errorcount++
+        $script:app.control.TxtZIPLocation.Background  = $Script:BrushInputError
+        $script:app.control.TxtZIPLocation.BorderBrush = $Script:BrushInputErrorBrdr
+    } else {
+        $Local:location = $script:app.control.TxtZIPLocation.Text
+    }
+
+    if ( [string]::IsNullOrWhiteSpace($script:app.control.TxtFilename.Text) ) {
+        $Local:errorcount++
+        $script:app.control.TxtFilename.Background  = $Script:BrushInputError
+        $script:app.control.TxtFilename.BorderBrush = $Script:BrushInputErrorBrdr
+    }
+    elseif ( $script:app.control.TxtFilename.Text.Substring($script:app.control.TxtFilename.Text.Length - 4) -ne ".zip") {
+        $Local:errorcount++
+        $script:app.control.TxtFilename.Background  = $Script:BrushInputError
+        $script:app.control.TxtFilename.BorderBrush = $Script:BrushInputErrorBrdr
+    }
+    else {
+        $Local:filename = $script:app.control.TxtFilename.Text
+    }
+    $Local:fullpath = Join-Path $Local:location $Local:filename
+
+    if (Test-Path -LiteralPath $Local:fullpath -PathType Leaf) {
+        $Local:errorcount++
+    }
+
+    if ( $Local:errorcount -ge 1 ) {
+        # Release the action buttons again
+        $script:app.control.BtnDownload.IsEnabled = $true
+        $script:app.control.BtnReset.IsEnabled    = $true
+        $script:app.control.BtnExit.IsEnabled     = $true
+        return $false
+    }
+    
+    $Local:DLresult = $null
+    
+    # Download Windows 11 Pro 24H2 with .NET FX 3.5 included and WIM format (default settings)
+    if ( $Local:dotnet3 -eq 0) {
+        $Local:DLresult = wintwincore.DownloadUUPDump -OStype "$($Local:osname)" `
+        -OSvers "$($Local:osvers)" -OSarch "$($Local:osarch)" `
+        -Edition "$($Local:osedit)" -Language "$($Local:oslang)" `
+        -AddUpdates "$($Local:updates)" -DoCleanup "$($Local:cleanup)" -ExcludeNetFX `
+        -Target "$($Local:fullpath)"
+    } else {
+        $Local:DLresult = wintwincore.DownloadUUPDump -OStype "$($Local:osname)" `
+        -OSvers "$($Local:osvers)" -OSarch "$($Local:osarch)" `
+        -Edition "$($Local:osedit)" -Language "$($Local:oslang)" `
+        -AddUpdates "$($Local:updates)" -DoCleanup "$($Local:cleanup)" -IncludeNetFX `
+        -Target "$($Local:fullpath)"
+    }
+    
+    if ( $Local:DLresult.code -eq 1 ) {
+        $null = wintwincore.SystemMessageBox -smbTitle "$($Script:errorhead)" `
+        -smbText "Failed downloading requested file from uupdump.net!`n$($Local:DLresult.msg)" `
+        -smbIcon Warning -smbButtons OK
+    } else {
+
+    }
+
+    # Release the action buttons again
+    $script:app.control.BtnDownload.IsEnabled = $true
+    $script:app.control.BtnReset.IsEnabled    = $true
+    $script:app.control.BtnExit.IsEnabled     = $true
 })
+
 # Reset-Button was clicked
-$script:app.control.BtnReset.Add_Click({
+$script:app.control.BtnReset.Add_Click({    
+    # We have to reset error indicators
+    $script:app.control.LblWinVersion.Foreground   = $Script:BrushText
+    $script:app.control.LblEditions.Foreground     = $Script:BrushText
+    $script:app.control.LblArch.Foreground         = $Script:BrushText
+    $script:app.control.LblLanguage.Foreground     = $Script:BrushText
+    $script:app.control.TxtZIPLocation.Background  = $Script:BrushInputBg
+    $script:app.control.TxtZIPLocation.BorderBrush = $Script:BrushInputBorder
+    $script:app.control.TxtFilename.Background     = $Script:BrushInputBg
+    $script:app.control.TxtFilename.BorderBrush    = $Script:BrushInputBorder
+    # Reset the rest of the form
     $script:app.control.RadioWin24H2.IsChecked     = $false
     $script:app.control.RadioWin25H2.IsChecked     = $false
     $script:app.control.RadioHome.IsChecked        = $false
@@ -414,6 +580,7 @@ $script:app.control.BtnReset.Add_Click({
     $script:app.control.ChkCloseWhenDone.IsChecked = $false
     $script:app.control.StatusText.Text            = $Script:apptxt.status.isready
 })
+
 # Exit was clicked
 $script:app.control.BtnExit.Add_Click({
     $script:app.window.Close()
