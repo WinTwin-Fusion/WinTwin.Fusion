@@ -551,7 +551,7 @@ $script:app.control.BtnDownload.Add_Click({
     $script:logmsg=@("No errors found. Start downloading reqeusted file from https://uupdump.net/.")
     $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "OKAY"
 
-    $Local:DLresult = $nul
+    $Local:DLresult = $null
     # Download Windows 11 Pro 24H2 with .NET FX 3.5 included and WIM format (default settings)
     if ( $Local:dotnet3 -eq 0) {
         $Local:DLresult = wintwincore.DownloadUUPDump -OStype "$($Local:osname)" `
