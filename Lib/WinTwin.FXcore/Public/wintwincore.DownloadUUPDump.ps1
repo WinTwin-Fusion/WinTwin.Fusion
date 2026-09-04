@@ -80,6 +80,11 @@ function wintwincore.DownloadUUPDump {
         $result = DownloadUUPDump -OStype 'Windows11' -OSvers '24H2' -OSarch 'amd64' `
                                   -Edition 'Pro' -IncludeNetFX `
                                   -Target 'C:\WinISO\uupdump\Win11_Pro_24H2.zip'
+    .EXAMPLE
+        # Download Windows 11 Pro 24H2 with .NET FX 3.5 included and WIM format (default settings)
+        $result = DownloadUUPDump -OStype 'Windows11' -OSvers '25H2' -OSarch 'amd64' `
+                                  -Edition 'Pro' -AddUpdates -DoCleanup -IncludeNetFX `
+                                  -Target 'C:\WinISO\uupdump\Win11_Pro_24H2.zip'
 
     .EXAMPLE
         # Download Windows 11 Pro 25H2, no .NET FX 3.5, with ESD format
@@ -128,6 +133,12 @@ function wintwincore.DownloadUUPDump {
         [ValidateNotNullOrEmpty()]
         [string]$Target,
 
+        [Parameter(Mandatory = $false, HelpMessage = "Adds updates to the ISO (if available).")]
+        [switch]$AddUpdates,
+
+        [Parameter(Mandatory = $false, HelpMessage = "Performs a cleanup after adding the updates to the ISO.")]
+        [switch]$DoCleanup,
+
         [Parameter(Mandatory = $false, HelpMessage = "Include .NET Framework 3.5 in the conversion package (default behavior).")]
         [switch]$IncludeNetFX,
 
@@ -157,6 +168,12 @@ function wintwincore.DownloadUUPDump {
     if ($ExcludeNetFX.IsPresent) {
         $NetFXValue = '0'
     }
+
+    # Resolve Update-Uptions
+    $UpdatesOption = if ($AddUpdates.IsPresent) { '1' } else { '0' }
+    if ($UpdatesOption -eq '1') {
+        $CleanupOption = if ($DoCleanup.IsPresent)  { '1' } else { '0' }
+    } else { $CleanupOption = '0' }
 
     # Resolve ESD setting
     $ESDValue = if ($UseESD.IsPresent) { '1' } else { '0' }
@@ -298,11 +315,11 @@ function wintwincore.DownloadUUPDump {
         # POST body tells UUP Dump which conversion options to include in the package
         # autodl=2: Download and convert to ISO (standard single-edition mode)
         $PostBody = @{
-            autodl  = '2'           # Download and convert to ISO
-            updates = '0'           # Do not integrate cumulative updates
-            cleanup = '0'           # Do not run cleanup after conversion
-            netfx   = $NetFXValue   # .NET Framework 3.5 integration (parameterized)
-            esd     = $ESDValue     # ESD vs WIM format (parameterized)
+            autodl  = '2'             # Download and convert to ISO
+            updates = $UpdatesOption  # 0=Do not integrate cumulative updates
+            cleanup = $CleanupOption  # 0=Do not run cleanup after conversion
+            netfx   = $NetFXValue     # .NET Framework 3.5 integration (parameterized)
+            esd     = $ESDValue       # ESD vs WIM format (parameterized)
         }
     }
     catch {
@@ -355,34 +372,19 @@ function wintwincore.DownloadUUPDump {
     $FinalSizeKB = [math]::Round($WrittenSize / 1KB, 2)
     $ZipFileName = [System.IO.Path]::GetFileName($Target)
 
-    # ----------------------------------------------------------------
-    # STEP 8 >> Write all relevant download metadata to module-scope $script:uupdump
-    #           All keys MUST be written successfully for the function to report success.
-    # ----------------------------------------------------------------
-    $WriteOps = @(
-        @{ VarKeyID = 'ostype';   SetNewVal = $OStype        },
-        @{ VarKeyID = 'osvers';   SetNewVal = $OSvers        },
-        @{ VarKeyID = 'osarch';   SetNewVal = $OSarch        },
-        @{ VarKeyID = 'edition';  SetNewVal = $EditionDisplay },
-        @{ VarKeyID = 'buildno';  SetNewVal = $BuildNumber   },
-        @{ VarKeyID = 'kbsize';   SetNewVal = $FinalSizeKB   },
-        @{ VarKeyID = 'zipname';  SetNewVal = $ZipFileName   }
-    )
-
-    foreach ($Op in $WriteOps) {
-        $WriteResult = WinISOcore -Scope 'env' -GlobalVar 'uupdump' -Permission 'write' `
-                                  -VarKeyID $Op.VarKeyID -SetNewVal $Op.SetNewVal
-        if ($WriteResult.code -ne 0) {
-            return (OPSreturn -Code -1 -Message "Function DownloadUUPDump failed! Download succeeded but could not write '$($Op.VarKeyID)' to `$script:uupdump. Reason: $($WriteResult.msg)")
-        }
+    $returnData = [PSCustomObject]@{
+        FileName  = $Target
+        ZIPfile   = $ZipFileName
+        FileSize  = $FinalSizeKB
+        Edition   = $EditionDisplay
+        BuildText = $BuildTitle
+        BuildNo   = $BuildNumber
+        UUIDBuild = $BuildUUID
+        Updates   = $UpdatesOption
+        Cleanup   = $CleanupOption
+        NetFX     = $NetFXValue
+        ESD       = $ESDValue
     }
 
-    # Also clear multiedition field to prevent stale data from a previous GetUUPDumpPackage call
-    $ClearMulti = WinISOcore -Scope 'env' -GlobalVar 'uupdump' -Permission 'write' `
-                              -VarKeyID 'multiedition' -SetNewVal ''
-    if ($ClearMulti.code -ne 0) {
-        return (OPSreturn -Code -1 -Message "Function DownloadUUPDump failed! Download succeeded but could not clear 'multiedition' in `$script:uupdump. Reason: $($ClearMulti.msg)")
-    }
-
-    return (OPSreturn -Code 0 -Message "DownloadUUPDump successfully finished! Edition: '$EditionDisplay' | Build: '$BuildTitle' | BuildNo: $BuildNumber | UUID: $BuildUUID | NetFX: $NetFXValue | ESD: $ESDValue | File: '$Target' ($FinalSizeKB KB)" -Data $Target)
+    return (OPSreturn -Code 0 -Message "DownloadUUPDump successfully finished!" -Data $returnData)
 }
