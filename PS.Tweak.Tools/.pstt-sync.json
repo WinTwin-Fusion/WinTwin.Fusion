@@ -2,13 +2,13 @@
   "component": "PS.Tweak.Tools",
   "sourceRepository": "WinTwin-Fusion/PS.Tweak.Tools",
   "sourceBranch": "main",
-  "sourceCommit": "a72faa7ca50fd8b63bd962f0ed4c189c72cfa880",
-  "sourceCommitShort": "a72faa7",
+  "sourceCommit": "81a7bae4b22e745eedd2c388463e79627d24597a",
+  "sourceCommitShort": "81a7bae",
   "sourcePullRequest": {
-    "number": 28,
-    "title": "Add ISO creation handoff flow",
+    "number": 29,
+    "title": "Update uupd.compose.ps1",
     "mergedBy": "praetoriani",
-    "mergedAt": "2026-09-05T20:34:40Z"
+    "mergedAt": "2026-09-05T21:54:54Z"
   },
   "targetRepository": "WinTwin-Fusion/WinTwin.Fusion",
   "targetBaseBranch": "main",
@@ -20,7 +20,7 @@
   ],
   "syncedBy": "GitHub Actions",
   "workflow": "Sync PS.Tweak.Tools to WinTwin.Fusion",
-  "workflowRunId": "33990528392",
-  "workflowRunNumber": "25",
-  "syncDate": "2026-09-05T20:34:54Z"
+  "workflowRunId": "33994401805",
+  "workflowRunNumber": "26",
+  "syncDate": "2026-09-05T21:55:06Z"
 }
