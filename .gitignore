@@ -26,3 +26,4 @@ wintwin.fusion.installer.log
 wintwin.installer.cmd.old.ps1
 Core/ui/uupd.catcher.main.revised.xml
 wintwin.fusion.window.afphoto
+Core/ui/Show-DialogWindow.example.ps1
