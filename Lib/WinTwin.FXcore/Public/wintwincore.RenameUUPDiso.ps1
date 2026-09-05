@@ -1,4 +1,4 @@
-function RenameUUPDiso {
+function wintwincore.RenameUUPDiso {
     <#
     .SYNOPSIS
         Renames the ISO file found in the UUPDump working directory.
@@ -56,10 +56,6 @@ function RenameUUPDiso {
         [ValidateNotNullOrEmpty()]
         [string]$ISOname
     )
-
-    # Retrieve module-scope variables via the AppScope getter
-    $AppInfo = AppScope -KeyID 'appinfo'
-    $EnvData  = AppScope -KeyID 'appenv'
 
     # ⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆
     # STEP 1 » Validate that the UUPDump directory exists
