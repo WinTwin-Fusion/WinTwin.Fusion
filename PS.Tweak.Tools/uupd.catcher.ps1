@@ -36,12 +36,9 @@ try {
     Add-Type -AssemblyName System.Windows.Forms -ErrorAction Stop
 }
 catch {
-    [System.Windows.MessageBox]::Show(
-        "Required assemblies could not be loaded!`n$($_.Exception.Message)",
-        "Runtime-Error!",
-        [System.Windows.MessageBoxButton]::OK,
-        [System.Windows.MessageBoxImage]::Error
-    ) | Out-Null
+    Write-Host "Runtime-Error!" -ForegroundColor DarkRed
+    Write-Host "****************" -ForegroundColor DarkRed
+    Write-Host "Required assemblies could not be loaded!`n$($_.Exception.Message)" -ForegroundColor DarkRed
     exit 1
 }
 
@@ -277,7 +274,7 @@ if (Test-Path -LiteralPath $Script:app.icon) {
         $titleBarLogo.Source = [System.Windows.Media.Imaging.BitmapImage]::new([System.Uri]::new($Script:app.icon))
     }
     catch {
-        Write-Verbose "DISM UI Control Center (wim.mounter):  Could not set title bar logo: $($_.Exception.Message)"
+        Write-Verbose "Could not set title bar logo: $($_.Exception.Message)"
     }
 }
 

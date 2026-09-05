@@ -2,13 +2,13 @@
   "component": "PS.Tweak.Tools",
   "sourceRepository": "WinTwin-Fusion/PS.Tweak.Tools",
   "sourceBranch": "main",
-  "sourceCommit": "7f5dd755dc76380fbea30edeaa519a32e7d9e51b",
-  "sourceCommitShort": "7f5dd75",
+  "sourceCommit": "c25e40f6b8375e66e3d9c17f6bb0134d70971be8",
+  "sourceCommitShort": "c25e40f",
   "sourcePullRequest": {
-    "number": 24,
-    "title": "Improved UUPD.Catcher",
+    "number": 25,
+    "title": "Add UUPD.Compose and update pstt config",
     "mergedBy": "praetoriani",
-    "mergedAt": "2026-09-05T07:24:44Z"
+    "mergedAt": "2026-09-05T10:43:18Z"
   },
   "targetRepository": "WinTwin-Fusion/WinTwin.Fusion",
   "targetBaseBranch": "main",
@@ -20,7 +20,7 @@
   ],
   "syncedBy": "GitHub Actions",
   "workflow": "Sync PS.Tweak.Tools to WinTwin.Fusion",
-  "workflowRunId": "33952477267",
-  "workflowRunNumber": "21",
-  "syncDate": "2026-09-05T07:24:54Z"
+  "workflowRunId": "33961413188",
+  "workflowRunNumber": "22",
+  "syncDate": "2026-09-05T10:43:30Z"
 }
