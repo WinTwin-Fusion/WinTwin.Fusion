@@ -418,7 +418,7 @@
                         <ColumnDefinition Width="150"/><ColumnDefinition Width="*"/><ColumnDefinition Width="46"/>
                     </Grid.ColumnDefinitions>
                     <TextBlock x:Name="LblISOFilename" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Filename (.iso)" Margin="0,0,30,0"/>
-                    <TextBox x:Name="TxtFilename" Height="40" Grid.Column="1" Grid.ColumnSpan="2" Style="{StaticResource InputBox}"/>
+                    <TextBox x:Name="TxtISOFilename" Height="40" Grid.Column="1" Grid.ColumnSpan="2" Style="{StaticResource InputBox}"/>
                 </Grid>
 
                 <!-- Row 13: Important information -->
