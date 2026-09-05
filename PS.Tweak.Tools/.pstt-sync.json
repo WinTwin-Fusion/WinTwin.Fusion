@@ -2,13 +2,13 @@
   "component": "PS.Tweak.Tools",
   "sourceRepository": "WinTwin-Fusion/PS.Tweak.Tools",
   "sourceBranch": "main",
-  "sourceCommit": "5742653f1d9f41459f03177bfa6c17cb9bd60fed",
-  "sourceCommitShort": "5742653",
+  "sourceCommit": "7f5dd755dc76380fbea30edeaa519a32e7d9e51b",
+  "sourceCommitShort": "7f5dd75",
   "sourcePullRequest": {
-    "number": 23,
-    "title": "Fix UUP dump UUID log field",
+    "number": 24,
+    "title": "Improved UUPD.Catcher",
     "mergedBy": "praetoriani",
-    "mergedAt": "2026-09-04T22:31:06Z"
+    "mergedAt": "2026-09-05T07:24:44Z"
   },
   "targetRepository": "WinTwin-Fusion/WinTwin.Fusion",
   "targetBaseBranch": "main",
@@ -20,7 +20,7 @@
   ],
   "syncedBy": "GitHub Actions",
   "workflow": "Sync PS.Tweak.Tools to WinTwin.Fusion",
-  "workflowRunId": "33925846722",
-  "workflowRunNumber": "20",
-  "syncDate": "2026-09-04T22:31:17Z"
+  "workflowRunId": "33952477267",
+  "workflowRunNumber": "21",
+  "syncDate": "2026-09-05T07:24:54Z"
 }
