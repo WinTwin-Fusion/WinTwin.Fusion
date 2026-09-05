@@ -7,9 +7,9 @@
 .NOTES
     CREATOR:    Praetoriani (a.k.a M.Sczepanski)
     WEBSITE:    https://github.com/WinTwin-Fusion/PS.Tweak.Tools
-    VERSION:    v1.00.04
+    VERSION:    v1.00.05
     CREATED:    03.09.2026
-    UPDATED:    04.09.2026
+    UPDATED:    05.09.2026
 
     REQUIREMENTS & DEPENDENCIES:
     - PowerShell 5.1 or higher
@@ -91,6 +91,7 @@ $Script:configfile = [PSCustomObject]@{
 $Script:app = [PSCustomObject]@{
     icon     = "ps.tweak.tools.ico"
     name     = $null
+    path     = $null
     version  = $null
     langfile = $null
     logfile  = $null
@@ -197,6 +198,7 @@ if ( $script:JSONresult.code -ne 0) { script:Show-RuntimeError -errortext "Faile
 $script:app.name     = "$($script:JSONresult.data.apptool."uupd-catch".appname)"
 $script:app.version  = "$($script:JSONresult.data.appinfo.version)"
 $script:app.actionid = "$($script:JSONresult.data.apptool."uupd-catch"."action-id")"
+$script:app.path     = Join-Path "$($Script:wintwin.root)" "$($script:JSONresult.data.apptool."uupd-catch".apppath)"
 $script:app.xmlui    = Join-Path "$($Script:wintwin.root)" "$($script:JSONresult.data.apptool."uupd-catch".xmlui)"
 $script:app.logfile  = $Script:config.jobaction."uupd-catch".logfile[1]
 # Set the correct language file
@@ -586,6 +588,24 @@ $script:app.control.BtnDownload.Add_Click({
         $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "OKAY"
         # Update the text in the statusbar
         $script:app.control.StatusText.Text = $Script:apptxt.status.dlsuccess
+
+        # Update the job-actions for UUPD.Compose
+        $script:config.jobaction."uupd-compose".zipfile = "$($Local:DLresult.data.FileName)"
+        $script:config.jobaction."uupd-compose".isopath = "$($Local:location)"
+        # Prepare a ISO-Filename based on the ZIP-Filename
+        $script:isoFilename = $Local:DLresult.data.FileName.Substring(0, $Local:DLresult.data.FileName.Length - 4)
+        $script:isoFilename = "$($script:isoFilename).iso"
+        $script:config.jobaction."uupd-compose".isoname = "$($script:isoFilename)"
+        # Write the current job action config to the JSON-File
+        $script:writeJSON = wintwincore.WriteJSON -Path $script:configfile.jobaction -Value $script:config.jobaction
+        if ($script:writeJSON.code -ne 0) {
+            $script:logmsg=@("Failed updating job action details for $($script:app.name)","zipfile:  $($Local:DLresult.data.FileName)",`
+            "isopath:  $($Local:location)","isonane:  $($script:isoFilename)")
+            $null = wintwincore.WriteLogmsg -Logfile $script:setupconfig.logfile -Message $script:logmsg -Flag "FAIL"
+            $script:logmsg=@("Function wintwincore.writeJSON failed:","File: $($script:configfile.jobaction)",`
+            "Exit Code: $($script:writeJSON.code)","Message: $($script:writeJSON.msg)","Exception: $($script:writeJSON.exception)")
+            $null = wintwincore.WriteLogmsg -Logfile $script:setupconfig.logfile -Message $script:logmsg -Flag "FAIL"
+        }
         # Display a dialog 
         $null = wintwincore.SystemMessageBox -smbTitle "$($Script:errorhead)" `
         -smbText "Download from https://uupdump.net/ successfully finished.`nThe Download is stored here:`n$($Local:fullpath)" `

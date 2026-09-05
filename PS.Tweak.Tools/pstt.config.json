@@ -22,7 +22,7 @@
         },
         "uupd-catch": {
             "appname":   "UUPD.Catcher",
-            "appvers":   "v1.00.04",
+            "appvers":   "v1.00.05",
             "action-id": "uupd-catch",
             "apppath":   "\\PS.Tweak.Tools\\uupd.catcher.ps1",
             "xmlui":     "\\Core\\ui\\uupd-catch.main.xml",
@@ -33,8 +33,8 @@
         },
         "uupd-compose": {
             "appname":   "UUPD.Compose",
-            "appvers":    "v1.00.01",
-            "action-id": "uupd-catch",
+            "appvers":    "v1.00.02",
+            "action-id": "uupd-compose",
             "apppath":   "\\PS.Tweak.Tools\\uupd.compose.ps1",
             "xmlui":     "\\Core\\ui\\uupd-compose.main.xml",
             "langfile":  {
