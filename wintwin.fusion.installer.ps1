@@ -9,7 +9,7 @@
 .NOTES
     CREATOR:    Praetoriani (a.k.a M.Sczepanski)
     WEBSITE:    https://github.com/WinTwin-Fusion/WinTwin.Fusion
-    VERSION:    v1.01.05
+    VERSION:    v1.01.06
     CREATED:    29.08.2026
     UPDATED:    02.09.2026
 #>
@@ -245,7 +245,7 @@ $null = wintwincore.WriteLogmsg -Logfile $script:setupconfig.logfile -Message $s
 # Hide Console Window -> Using Function from WinTwin.FXcore
 # -> We can use wintwincore.SystemMessageBox to display Error-Messages!
 #--------------------------------------------------------------------------------
-#wintwincore.SetCMDstate -State Hide
+$null = wintwincore.SetCMDstate -State Hide
 
 #--------------------------------------------------------------------------------
 # Load/Create the Window
@@ -503,7 +503,8 @@ function script:CheckDISM {
         return $false
     }
     catch {
-        Write-Verbose "DISM-Prüfung fehlgeschlagen: $_"
+        $script:logmsg=@("$($Script:apptxt.error.dismcheck)","$($_)")
+        $null = wintwincore.WriteLogmsg -Logfile $script:setupconfig.logfile -Message $script:logmsg -Flag "OKAY"
         return $false
     }
 }
@@ -549,10 +550,10 @@ $script:app.control.BtnInstall.Add_Click({
     script:uiEvent
     if (-not (script:CheckElevatedRights)) {
         $null = wintwincore.SystemMessageBox -smbTitle $script:errorhead `
-        -smbText "The Install Manager requires elevated rights!`nPlease restart it as an administrator." `
+        -smbText "$($script:apptxt.error.noadminpopup)" `
         -smbIcon Warning -smbButtons OK
         $script:app.control.CBiselevated.IsChecked = $false
-        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Not running with elevated priviledges!")"
+        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f $script:apptxt.error.noadminstatus)"
         $script:app.control.BtnInstall.IsEnabled = $true
         $script:app.control.BtnCancel.IsEnabled  = $true
         return $false # We cannot perform any further checks without admin rights
@@ -572,7 +573,7 @@ $script:app.control.BtnInstall.Add_Click({
         $script:logmsg=@("Function wintwincore.GetWinVersion failed!","Exit Code: $($script:result.code)","Message:  $($script:result.message)")
         $null = wintwincore.WriteLogmsg -Logfile $script:setupconfig.logfile -Message $script:logmsg -Flag "ERROR"
         $script:app.control.CBiswindows11.IsChecked = $false
-        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Failed reading system informations!")"
+        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "$($script:apptxt.error.scanonfail)")"
         $script:app.control.BtnInstall.IsEnabled = $true
         $script:app.control.BtnCancel.IsEnabled  = $true
         return $false # Same here: no need to continue if the current system is not supported!
@@ -598,19 +599,19 @@ $script:app.control.BtnInstall.Add_Click({
             script:SetStatusUpdate -StepCount 2
             script:uiEvent
         } else {
-            $script:logmsg=@("The current system is not supported!","Note: Only Windows 11 24H2/25H2 are supported right now")
+            $script:logmsg=@("The current system is not supported!","Note: Only Windows 11 24H2/25H2 are supported right now!")
             $null = wintwincore.WriteLogmsg -Logfile $script:setupconfig.logfile -Message $script:logmsg -Flag "FAIL"
             $script:app.control.CBiswindows11.IsChecked = $false
-            $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Current OS is not supported")"
+            $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "$($script:apptxt.error.nosupport)")"
             $script:app.control.BtnInstall.IsEnabled = $true
             $script:app.control.BtnCancel.IsEnabled  = $true
             return $false # Same here: no need to continue if the current system is not supported!
         }
     } else {
-        $script:logmsg=@("The current system is not supported!","Note: Only Windows 11 24H2/25H2 are supported right now")
+        $script:logmsg=@("The current system is not supported!","Note: Only Windows 11 24H2/25H2 are supported right now!")
         $null = wintwincore.WriteLogmsg -Logfile $script:setupconfig.logfile -Message $script:logmsg -Flag "FAIL"
         $script:app.control.CBiswindows11.IsChecked = $false
-        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Current OS is not supported")"
+        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "$($script:apptxt.error.nosupport)")"
         $script:app.control.BtnInstall.IsEnabled = $true
         $script:app.control.BtnCancel.IsEnabled  = $true
         return $false # Same here: no need to continue if the current system is not supported!
@@ -620,10 +621,10 @@ $script:app.control.BtnInstall.Add_Click({
     $script:app.control.StatusText.Text = $script:apptxt.status.task03
     script:uiEvent
     if (-not (script:CheckDISM)) {
-        $script:logmsg=@("DISM either not found or it's not working!")
+        $script:logmsg=@("DISM was either not found on the system or it's not working!")
         $null = wintwincore.WriteLogmsg -Logfile $script:setupconfig.logfile -Message $script:logmsg -Flag "ERROR"
         $script:app.control.CBisdismworking.IsChecked = $false
-        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "DISM not found or not working!")"
+        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "$($script:apptxt.error.dismfail)")"
         $script:app.control.BtnInstall.IsEnabled = $true
         $script:app.control.BtnCancel.IsEnabled  = $true
         return $false # Same here: no need to continue without DISM
@@ -640,7 +641,7 @@ $script:app.control.BtnInstall.Add_Click({
         $script:logmsg=@("Windows 11 ADK wasn't found on the system. Checking alternative options.")
         $null = wintwincore.WriteLogmsg -Logfile $script:setupconfig.logfile -Message $script:logmsg -Flag "ERROR"
         $script:app.control.CBhaswindowsadk.IsChecked = $false
-        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Windows 11 ADK not found!")"
+        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "$($script:apptxt.error.nowinadk)")"
         script:uiEvent
         # In this special case we have to perfom some special checks
         if ($SkipAdkInstall.IsPresent) {
@@ -668,7 +669,7 @@ $script:app.control.BtnInstall.Add_Click({
                 if (-not (wintwincore.InstallADK -SetupPath $script:setupconfig.adkexe)) {
                     $script:logmsg=@("Function wintwincore.InstallADK failed! Windows 11 ADK could not be installed!")
                     $null = wintwincore.WriteLogmsg -Logfile $script:setupconfig.logfile -Message $script:logmsg -Flag "ERROR"
-                    $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Failed installing Windows ADK")"
+                    $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "$($script:apptxt.error.adkfail)")"
                     $response = wintwincore.SystemMessageBox -smbTitle $script:errorhead `
                     -smbText "$($script:apptxt.message.InstallFailed -f "Windows ADK")" `
                     -smbIcon Warning -smbButtons OK
@@ -702,7 +703,7 @@ $script:app.control.BtnInstall.Add_Click({
         $script:logmsg=@("Windows 11 ADK PE AddOn wasn't found on the system. Checking alternative options.")
         $null = wintwincore.WriteLogmsg -Logfile $script:setupconfig.logfile -Message $script:logmsg -Flag "ERROR"
         $script:app.control.CBhasadkpeaddon.IsChecked = $false
-        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Windows 11 ADK PE AddOn not found!")"
+        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "$($script:apptxt.error.nopeaddon)")"
         script:uiEvent
         if ($SkipWinPEInstall.IsPresent) {
             # SkipWinPEInstall was used. So we have to skip it
@@ -727,7 +728,7 @@ $script:app.control.BtnInstall.Add_Click({
                 if (-not (wintwincore.InstallPEaddon -SetupPath $script:setupconfig.peexe)) {
                     $script:logmsg=@("Function wintwincore.InstallPEaddon failed! Windows 11 ADK PE AddOn could not be installed!")
                     $null = wintwincore.WriteLogmsg -Logfile $script:setupconfig.logfile -Message $script:logmsg -Flag "ERROR"
-                    $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Failed installing ADK PE AddOn")"
+                    $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "$($script:apptxt.error.peaddonfail)")"
                     $response = wintwincore.SystemMessageBox -smbTitle $script:errorhead `
                     -smbText "$($script:apptxt.message.InstallFailed -f "ADK PE AddOn")" `
                     -smbIcon Warning -smbButtons OK
@@ -762,7 +763,7 @@ $script:app.control.BtnInstall.Add_Click({
         $null = wintwincore.WriteLogmsg -Logfile $script:setupconfig.logfile -Message $script:logmsg -Flag "ERROR"
         $script:app.control.CBrootdirfound.IsChecked = $false
         script:Add-Error "Could not determine root directory!"
-        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Could not determine root directory!")"
+        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "$($script:apptxt.error.rootdirfail)")"
         $script:app.control.BtnInstall.IsEnabled = $true
         $script:app.control.BtnCancel.IsEnabled  = $true
         return $false
@@ -796,7 +797,7 @@ $script:app.control.BtnInstall.Add_Click({
         $null = wintwincore.WriteLogmsg -Logfile $script:setupconfig.logfile -Message $script:logmsg -Flag "WARN"
         $script:app.control.CBverifylicense.IsChecked = $false
         script:Add-Error "License Integrity Check failed!"
-        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "License Integrity Check failed!")"
+        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "$($script:apptxt.error.licensefail)")"
     }
     script:uiEvent
 
@@ -818,7 +819,7 @@ $script:app.control.BtnInstall.Add_Click({
     } else {
         $script:app.control.CBhasallfolders.IsChecked = $false
         script:Add-Error "Folder structure is damaged!"
-        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Folder structure is damaged!")"
+        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "$($script:apptxt.error.foldererror)")"
         $script:logmsg=@("Looks like we have a damaged folder structure! A Clean Install is recommended.")
         $null = wintwincore.WriteLogmsg -Logfile $script:setupconfig.logfile -Message $script:logmsg -Flag "WARN"
         $script:app.control.BtnInstall.IsEnabled = $true
@@ -845,7 +846,7 @@ $script:app.control.BtnInstall.Add_Click({
     } else {
         $script:app.control.CBalltoolsfound.IsChecked = $false
         script:Add-Error "Missing Framework-Tool(s) detected!"
-        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Missing Framework-Tool(s) detected!")"
+        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "$($script:apptxt.error.toolserror)")"
         $script:logmsg=@("One or more missing framework tool(s) found! A Clean Install is recommended!")
         $null = wintwincore.WriteLogmsg -Logfile $script:setupconfig.logfile -Message $script:logmsg -Flag "WARN"
         $script:app.control.BtnInstall.IsEnabled = $true
@@ -872,7 +873,7 @@ $script:app.control.BtnInstall.Add_Click({
     } else {
         $script:app.control.CBjsonfilesfound.IsChecked = $false
         script:Add-Error "Missing config file(s) detected!"
-        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Missing config file(s) detected!")"
+        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "$($script:apptxt.error.noconffiles)")"
         $script:logmsg=@("One or more missing config file(s) found! A Clean Install is recommended!")
         $null = wintwincore.WriteLogmsg -Logfile $script:setupconfig.logfile -Message $script:logmsg -Flag "WARN"
         $script:app.control.BtnInstall.IsEnabled = $true
@@ -899,7 +900,7 @@ $script:app.control.BtnInstall.Add_Click({
     } else {
         $script:app.control.CBlibrariesfound.IsChecked = $false
         script:Add-Error "Missing framework library detected!"
-        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Missing framework library detected!")"
+        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "$($script:apptxt.error.libraryfail)")"
         $script:logmsg=@("One or more missing library/libraries found! A Clean Install is recommended!")
         $null = wintwincore.WriteLogmsg -Logfile $script:setupconfig.logfile -Message $script:logmsg -Flag "WARN"
         $script:app.control.BtnInstall.IsEnabled = $true
@@ -917,10 +918,10 @@ $script:app.control.BtnInstall.Add_Click({
         $null = wintwincore.WriteLogmsg -Logfile $script:setupconfig.logfile -Message $script:logmsg -Flag "ERROR"
         $script:app.control.CBcoreconfigdone.IsChecked = $false
         script:Add-Error "Framework-Configuration failed!"
-        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Framework-Configuration failed!")"
+        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "$($script:apptxt.error.frameworkfail)")"
         script:uiEvent
         $null = wintwincore.SystemMessageBox -smbTitle $script:errorhead `
-        -smbText "$($script:apptxt.message.InstallError -f "Failed reading the configuration file!")" `
+        -smbText "$($script:apptxt.message.InstallError -f "$($script:apptxt.error.filereadfail)")" `
         -smbIcon Warning -smbButtons OK
         $script:app.control.BtnInstall.IsEnabled = $true
         $script:app.control.BtnCancel.IsEnabled  = $true
@@ -937,10 +938,10 @@ $script:app.control.BtnInstall.Add_Click({
         $null = wintwincore.WriteLogmsg -Logfile $script:setupconfig.logfile -Message $script:logmsg -Flag "ERROR"
         $script:app.control.CBcoreconfigdone.IsChecked = $false
         script:Add-Error "Framework-Configuration failed!"
-        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Framework-Configuration failed!")"
+        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "$($script:apptxt.error.frameworkfail)")"
         script:uiEvent
         $null = wintwincore.SystemMessageBox -smbTitle $script:errorhead `
-        -smbText "$($script:apptxt.message.InstallError -f "Failed writing changes to configuration file!")" `
+        -smbText "$($script:apptxt.message.InstallError -f "$($script:apptxt.error.filewritefail)")" `
         -smbIcon Warning -smbButtons OK
         $script:app.control.BtnInstall.IsEnabled = $true
         $script:app.control.BtnCancel.IsEnabled  = $true
@@ -965,10 +966,10 @@ $script:app.control.BtnInstall.Add_Click({
         $null = wintwincore.WriteLogmsg -Logfile $script:setupconfig.logfile -Message $script:logmsg -Flag "ERROR"
         $script:app.control.CBjobsconfigured.IsChecked = $false
         script:Add-Error "Job-Configuration failed!"
-        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Job-Configuration failed!")"
+        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "$($script:apptxt.error.jobconfstatus)")"
         script:uiEvent
         $null = wintwincore.SystemMessageBox -smbTitle $script:errorhead `
-        -smbText "$($script:apptxt.message.InstallError -f "Failed updating the job configuration!")" `
+        -smbText "$($script:apptxt.message.InstallError -f "$($script:apptxt.error.jobconfpopup)")" `
         -smbIcon Warning -smbButtons OK
         $script:app.control.BtnInstall.IsEnabled = $true
         $script:app.control.BtnCancel.IsEnabled  = $true
@@ -1021,7 +1022,7 @@ $script:app.control.BtnInstall.Add_Click({
         $null = wintwincore.WriteLogmsg -Logfile $script:setupconfig.logfile -Message $script:logmsg -Flag "WARN"
         $script:app.control.CBjobsconfigured.IsChecked = $false
         #script:Add-Error "Failed updating config for UUPD.Catcher!"
-        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Failed updating config for UUPD.Catcher!")"
+        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "$($script:apptxt.error.uupdupdatefail)")"
     }
     script:uiEvent
 
@@ -1034,10 +1035,10 @@ $script:app.control.BtnInstall.Add_Click({
         $null = wintwincore.WriteLogmsg -Logfile $script:setupconfig.logfile -Message $script:logmsg -Flag "ERROR"
         $script:app.control.CBprocessdbdone.IsChecked = $false
         script:Add-Error "Failed setting up process database!"
-        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Failed setting up process database!")"
+        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "$($script:apptxt.error.processwrite)")"
         script:uiEvent
         $null = wintwincore.SystemMessageBox -smbTitle $script:errorhead `
-        -smbText "$($script:apptxt.message.InstallError -f "Failed reading current process database!")" `
+        -smbText "$($script:apptxt.message.InstallError -f "$($script:apptxt.error.processread)")" `
         -smbIcon Warning -smbButtons OK
         $script:app.control.BtnInstall.IsEnabled = $true
         $script:app.control.BtnCancel.IsEnabled  = $true
@@ -1081,10 +1082,10 @@ $script:app.control.BtnInstall.Add_Click({
         $null = wintwincore.WriteLogmsg -Logfile $script:setupconfig.logfile -Message $script:logmsg -Flag "ERROR"
         $script:app.control.CBprocessdbdone.IsChecked = $false
         script:Add-Error "Failed setting up process database!"
-        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Failed setting up process database!")"
+        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "$($script:apptxt.error.processwrite)")"
         script:uiEvent
         $null = wintwincore.SystemMessageBox -smbTitle $script:errorhead `
-        -smbText "$($script:apptxt.message.InstallError -f "Failed writing changes to process database!")" `
+        -smbText "$($script:apptxt.message.InstallError -f "$($script:apptxt.error.processupdate)")" `
         -smbIcon Warning -smbButtons OK
         $script:app.control.BtnInstall.IsEnabled = $true
         $script:app.control.BtnCancel.IsEnabled  = $true
@@ -1103,10 +1104,10 @@ $script:app.control.BtnInstall.Add_Click({
         $null = wintwincore.WriteLogmsg -Logfile $script:setupconfig.logfile -Message $script:logmsg -Flag "ERROR"
         $script:app.control.CBworkflowsdone.IsChecked = $false
         script:Add-Error "Failed setting up workflow-feature!"
-        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Failed setting up workflow-feature!")"
+        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "$($script:apptxt.error.workflowinit)")"
         script:uiEvent
         $null = wintwincore.SystemMessageBox -smbTitle $script:errorhead `
-        -smbText "$($script:apptxt.message.InstallError -f "Failed reading current workflow configuration!")" `
+        -smbText "$($script:apptxt.message.InstallError -f "$($script:apptxt.error.wrokflowread)")" `
         -smbIcon Warning -smbButtons OK
         $script:app.control.BtnInstall.IsEnabled = $true
         $script:app.control.BtnCancel.IsEnabled  = $true
@@ -1123,10 +1124,10 @@ $script:app.control.BtnInstall.Add_Click({
         $null = wintwincore.WriteLogmsg -Logfile $script:setupconfig.logfile -Message $script:logmsg -Flag "ERROR"
         $script:app.control.CBworkflowsdone.IsChecked = $false
         script:Add-Error "Failed setting up workflow-feature!"
-        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Failed setting up workflow-feature!")"
+        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "$($script:apptxt.error.workflowinit)")"
         script:uiEvent
         $null = wintwincore.SystemMessageBox -smbTitle $script:errorhead `
-        -smbText "$($script:apptxt.message.InstallError -f "Failed writing changes to workflow configuration!")" `
+        -smbText "$($script:apptxt.message.InstallError -f "$($script:apptxt.error.workflowupdate)")" `
         -smbIcon Warning -smbButtons OK
         $script:app.control.BtnInstall.IsEnabled = $true
         $script:app.control.BtnCancel.IsEnabled  = $true
@@ -1151,7 +1152,7 @@ $script:app.control.BtnInstall.Add_Click({
         $null = wintwincore.WriteLogmsg -Logfile $script:setupconfig.logfile -Message $script:logmsg -Flag "ERROR"
         $script:app.control.CBfontsinstalled.IsChecked = $false
         script:Add-Error "Font-Installation failed!"
-        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Font-Installation failed!")"
+        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "$($script:apptxt.error.fontinstall)")"
         script:uiEvent
     }
 
@@ -1175,7 +1176,7 @@ $script:app.control.BtnInstall.Add_Click({
     if ( $script:errorlist.Count -ge 1 ) {
         # We had at least one error
         $script:app.control.CBfinalcheckup.IsChecked = $false
-        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "Not all checks were successfull!")"
+        $script:app.control.StatusText.Text = "$($script:apptxt.status.taskfail -f "$($script:apptxt.error.checkhaserror)")"
         $script:logmsg=@("$($script:setupconfig.appname) ($($script:setupconfig.appvers)) has finished with errors!",`
         "Following errors were recorded during the process:")
         $null = wintwincore.WriteLogmsg -Logfile $script:setupconfig.logfile -Message $script:logmsg -Flag "WARN"
@@ -1193,7 +1194,7 @@ $script:app.control.BtnInstall.Add_Click({
     if ( $script:errorlist.Count -ge 1 ) {
         $script:app.control.CBwintwinready.IsChecked = $false
         $null = wintwincore.SystemMessageBox -smbTitle $script:errorhead `
-        -smbText "$($script:setupconfig.appname) has finished with errors!`nIt is not recommended to use WinTwin.Fusion!`nPlease check the logfile for more informations." `
+        -smbText "$($script:apptxt.error.resultpopup -f $script:setupconfig.appname) " `
         -smbIcon None -smbButtons OK
     } else {
         $script:app.control.CBwintwinready.IsChecked = $true
@@ -1242,7 +1243,7 @@ $null = wintwincore.WriteLogmsg -Logfile $script:setupconfig.logfile -Message $s
 
 $script:app.window.ShowDialog() | Out-Null
 # Cleanup/Exit
-#wintwincore.SetCMDstate -State Show
+$null = wintwincore.SetCMDstate -State Show -Focus $false
 $script:logmsg=@("WinTwin.Fusion Install Manager Window was closed.","Application will exit now.","Thanks for using WinTwin. Fusion Install Manager :)")
 $null = wintwincore.WriteLogmsg -Logfile $script:setupconfig.logfile -Message $script:logmsg -Flag "INFO"
 exit 0
