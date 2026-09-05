@@ -180,7 +180,7 @@ catch {
 # Hide Console Window -> Using Function from WinTwin.FXcore
 # -> We can use wintwincore.SystemMessageBox to display Error-Messages!
 #--------------------------------------------------------------------------------
-#wintwincore.SetCMDstate -State Hide
+$null = wintwincore.SetCMDstate -State Hide
 
 #--------------------------------------------------------------------------------
 # Load the other JSON-Files
@@ -528,7 +528,6 @@ $script:app.control.BtnDownload.Add_Click({
 
     if (-not ([string]::IsNullOrWhiteSpace($script:app.control.TxtZIPLocation.Text)) -and -not ([string]::IsNullOrWhiteSpace($script:app.control.TxtFilename.Text))) {
         $Local:fullpath = Join-Path $Local:location $Local:filename -ErrorAction SilentlyContinue
-        Write-Host "$($Local:fullpath)"
         if ( Test-Path -LiteralPath $Local:fullpath -PathType Leaf ) {
             $Local:errorcount++
             $script:app.control.TxtZIPLocation.Background  = $Script:BrushInputError
@@ -580,9 +579,13 @@ $script:app.control.BtnDownload.Add_Click({
     } else {
         # Drop a long message about the download result to the logfile
         $script:logmsg=@("Download from https://uupdump.net/ was successfull.","Here are some details about the download:",`
-        "Location:   $($Local:DLresult.data.FileName)","File size:  $($Local:DLresult.data.FileSize)",`
-        "Edition:    $($Local:DLresult.data.Edition)","Language:   $($Local:DLresult.data.Language)",`
-        "BuildNo:    $($Local:DLresult.data.BuildNo) ($($Local:DLresult.data.BuildText))","UUIDBuild:   $($Local:DLresult.data.UUIDBuild)")
+        "Location:   $($Local:DLresult.data.FileName)",
+        "File size:  $($Local:DLresult.data.FileSize) KB",
+        "Full Name:  $($Local:DLresult.data.BuildText)"
+        "Edition:    $($Local:DLresult.data.Edition)",
+        "Language:   $($Local:DLresult.data.Language)",
+        "BuildNo:    $($Local:DLresult.data.BuildNo) ($($Local:DLresult.data.BuildText))",
+        "UUIDBuild:   $($Local:DLresult.data.UUIDBuild)")
         $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "OKAY"
         # Update the text in the statusbar
         $script:app.control.StatusText.Text = $Script:apptxt.status.dlsuccess
@@ -655,7 +658,7 @@ $script:app.window.Add_ContentRendered({
 
 $script:app.window.ShowDialog() | Out-Null
 # Cleanup/Exit
-#wintwincore.SetCMDstate -State Show
+$null = wintwincore.SetCMDstate -State Show -Focus $false
 $script:logmsg=@("$($script:app.name) $($script:app.version) was closed.","Thank you for using UUPD.Catcher (PS.Tweak.Tools)")
 $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "INFO"
 exit 0
