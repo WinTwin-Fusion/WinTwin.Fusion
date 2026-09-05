@@ -101,7 +101,7 @@ function wintwincore.RegisterProcess {
         return (OPSreturn -Code -1 -Message "Could not verify the current process lock: $($checkResult.msg)" -Exception $checkResult.exception)
     }
     if ($checkResult.data.IsRunning) {
-        return (OPSreturn -Code -1 -Message "Cannot register '$ProcName' (PID $ProcessId): a framework process is already running ('$($checkResult.data.Running.'proc-name')', PID $($checkResult.data.Running.pid)).")
+        return (OPSreturn -Code -1 -Message "Cannot register '$ProcName' (PID $ProcessId): a framework process is already running ('$($checkResult.data.Running.'proc-name')', PID $($checkResult.data.Running.processid)).")
     }
 
     $configPath = Join-Path -Path $FrameworkRoot -ChildPath 'Core\config.json'

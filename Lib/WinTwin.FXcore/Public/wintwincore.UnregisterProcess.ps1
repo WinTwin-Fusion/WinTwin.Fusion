@@ -93,7 +93,7 @@ function wintwincore.UnregisterProcess {
 
     if ($ProcessId -gt 0) {
         $registeredPid = 0
-        try { $registeredPid = [int]$db.running.pid } catch { $registeredPid = 0 }
+        try { $registeredPid = [int]$db.running.processid } catch { $registeredPid = 0 }
         if ($registeredPid -ne $ProcessId) {
             return (OPSreturn -Code -1 -Message "Cannot deregister: the registered process (PID $registeredPid) does not match the supplied ProcessId ($ProcessId).")
         }
