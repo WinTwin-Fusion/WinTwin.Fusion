@@ -2,13 +2,13 @@
   "component": "WinTwin.FXcore",
   "sourceRepository": "WinTwin-Fusion/WinTwin.FXcore",
   "sourceBranch": "main",
-  "sourceCommit": "c2414443669f1708618ac09d020963828f119df0",
-  "sourceCommitShort": "c241444",
+  "sourceCommit": "dd1fdcc36ea7bbb67cda8465616a436c302c123d",
+  "sourceCommitShort": "dd1fdcc",
   "sourcePullRequest": {
-    "number": 33,
-    "title": "Add language support to UUPDump",
+    "number": 34,
+    "title": "Add console focus control and log formatting fix",
     "mergedBy": "praetoriani",
-    "mergedAt": "2026-09-04T19:39:23Z"
+    "mergedAt": "2026-09-05T07:19:32Z"
   },
   "targetRepository": "WinTwin-Fusion/WinTwin.Fusion",
   "targetBaseBranch": "main",
@@ -19,7 +19,7 @@
   ],
   "syncedBy": "GitHub Actions",
   "workflow": "Sync WinTwin.FXcore to WinTwin.Fusion",
-  "workflowRunId": "33912276555",
-  "workflowRunNumber": "30",
-  "syncDate": "2026-09-04T19:39:38Z"
+  "workflowRunId": "33952235451",
+  "workflowRunNumber": "31",
+  "syncDate": "2026-09-05T07:19:45Z"
 }

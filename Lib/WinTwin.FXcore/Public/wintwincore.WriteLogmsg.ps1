@@ -87,19 +87,19 @@ function wintwincore.WriteLogmsg {
             $LogEntry = "$($Timestamp)  $($FormattedFlag)  $($Message)"
         }
         elseif ($Message.Count -eq 2) {
-            $LogEntry = "$($Timestamp)  $($FormattedFlag)  $($Message[0])`n                                  $($Message[1])"
+            $LogEntry = "$($Timestamp)  $($FormattedFlag)  $($Message[0])`n                                    $($Message[1])"
         }
         elseif ($Message.Count -ge 3) {
             $LogEntry = "$($Timestamp)  $($FormattedFlag)  $($Message[0])"
             $Message  = $Message[1..($Message.Count - 1)]
             if ($Message.Count -eq 2) {
-                $Message  = $Message -join "`n                                  "
-                $LogEntry = "$($LogEntry)`n                                  $($Message)"
+                $Message  = $Message -join "`n                                    "
+                $LogEntry = "$($LogEntry)`n                                    $($Message)"
             } else {
-                $msgLast  = "                                  $($Message[-1])"
+                $msgLast  = "                                    $($Message[-1])"
                 $Message = $Message[0..($Message.Count - 2)]
-                $Message  = $Message -join "`n                                  "
-                $LogEntry = "$($LogEntry)`n                                  $($Message)`n$($msgLast)"
+                $Message  = $Message -join "`n                                    "
+                $LogEntry = "$($LogEntry)`n                                    $($Message)`n$($msgLast)"
             }
         }
         else {
