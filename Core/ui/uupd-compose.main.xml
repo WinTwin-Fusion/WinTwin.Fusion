@@ -414,58 +414,34 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="150"/><ColumnDefinition Width="*"/><ColumnDefinition Width="46"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock x:Name="LblFilename" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Filename (.iso)" Margin="0,0,30,0"/>
+                    <TextBlock x:Name="LblISOFilename" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Filename (.iso)" Margin="0,0,30,0"/>
                     <TextBox x:Name="TxtFilename" Height="40" Grid.Column="1" Grid.ColumnSpan="2" Style="{StaticResource InputBox}"/>
                 </Grid>
 
                 <!-- Row 13: Important information -->
-                <Border Grid.Row="8"
-                        Margin="0,8,0,8"
-                        Padding="16,10,16,10"
-                        Background="{StaticResource BrushSurface}"
-                        BorderBrush="{StaticResource BrushBorder}"
-                        BorderThickness="1"
-                        CornerRadius="6">
+                <Border Grid.Row="8" Margin="0,8,0,8" Padding="16,10,16,10" Background="{StaticResource BrushSurface}" BorderBrush="{StaticResource BrushBorder}" BorderThickness="1" CornerRadius="6">
                     <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Center">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,7">
                             <Viewbox Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center">
                                 <Canvas Width="24" Height="24">
-                                    <Ellipse Canvas.Left="2" Canvas.Top="2" Width="20" Height="20"
-                                             Stroke="{StaticResource BrushAccent}" StrokeThickness="2"/>
-                                    <Ellipse Canvas.Left="11" Canvas.Top="6" Width="2" Height="2"
-                                             Fill="{StaticResource BrushAccent}"/>
-                                    <Path Data="M12,10 L12,17"
-                                          Stroke="{StaticResource BrushAccent}"
-                                          StrokeThickness="2"
-                                          StrokeStartLineCap="Round"
-                                          StrokeEndLineCap="Round"/>
+                                    <Ellipse Canvas.Left="2" Canvas.Top="2" Width="20" Height="20" Stroke="{StaticResource BrushAccent}" StrokeThickness="2"/>
+                                    <Ellipse Canvas.Left="11" Canvas.Top="6" Width="2" Height="2" Fill="{StaticResource BrushAccent}"/>
+                                    <Path Data="M12,10 L12,17" Stroke="{StaticResource BrushAccent}" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
                                 </Canvas>
                             </Viewbox>
-                            <TextBlock x:Name="LblImportantInformation"
-                                       Text="Important Information!"
-                                       Foreground="{StaticResource BrushText}"
-                                       FontFamily="Segoe UI Semibold"
-                                       FontSize="14"
-                                       FontWeight="Bold"
-                                       VerticalAlignment="Center"/>
+                            <TextBlock x:Name="LblImportantInformation" Text="Important Information!" Foreground="{StaticResource BrushText}" FontFamily="Segoe UI Semibold" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
                         </StackPanel>
                         <TextBlock x:Name="TxtImportantInformation"
                                    Text="Creating the ISO file can take a considerable amount of time (depending on the computer).&#10;It may appear as though the program has stopped responding. Terminating the program&#10;prematurely could result in data loss. Therefore, please wait until the program indicates&#10;that the ISO file has been created."
-                                   Foreground="{StaticResource BrushTextMuted}"
-                                   FontFamily="Segoe UI Semilight"
-                                   FontSize="14"
-                                   FontWeight="Light"
-                                   TextAlignment="Justify"
-                                   TextWrapping="Wrap"
-                                   HorizontalAlignment="Stretch"/>
+                                   Foreground="{StaticResource BrushTextMuted}" FontFamily="Segoe UI Semilight" FontSize="14" FontWeight="Light" TextAlignment="Justify" TextWrapping="Wrap" HorizontalAlignment="Stretch"/>
                     </StackPanel>
                 </Border>
 
                 <!-- Row 14 -->
                 <StackPanel Grid.Row="10" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <Button x:Name="BtnDownload" Style="{StaticResource ActionButton}" Content="Create ISO" Margin="0,0,30,0"/>
+                    <Button x:Name="BtnCreateISO" Style="{StaticResource ActionButton}" Content="Create ISO" Margin="0,0,30,0"/>
                     <!-- <Button x:Name="BtnCancel" Style="{StaticResource ActionButton}" Content="Cancel" Margin="0,0,30,0"/> -->
-                    <Button x:Name="BtnExit" Style="{StaticResource ActionButton}" Content="Exit"/>
+                    <Button x:Name="BtnExitApp" Style="{StaticResource ActionButton}" Content="Exit"/>
                 </StackPanel>
             </Grid>
 

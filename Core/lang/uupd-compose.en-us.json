@@ -1,0 +1,27 @@
+{
+    "ui": {
+        "LblInstructions": "Please configure UUPD.Compose to create your ISO",
+        "LblComposeInfo": "UUPD.Compose creates an ISO-File from a previous download from https://uupdump.net.",
+        "LblDownloadSettings": "Where is the download from uupdump.net?",
+        "LblZIPlocation": "ZIP-File Location:",
+        "LblISOfileSettings": "Where to create the ISO-File?",
+        "LblISOlocation": "ISO-File Location:",
+        "LblISOFilename": "Filename (.iso)",
+        "LblImportantInformation": "Important Information",
+        "TxtImportantInformation": "Creating the ISO file can take a considerable amount of time (depending on the computer).\nIt may appear as though the program has stopped responding. Terminating the program\nprematurely could result in data loss. Therefore, please wait until the program clearly\nindicates that creating the ISO file has been finished.",
+        "BtnCreateISO": "Create ISO",
+        "BtnExitApp": "Exit"
+    },
+    "status": {
+        "isready": "Ready."
+    },
+    "message": {
+    }
+}
+
+
+
+
+
+
+
