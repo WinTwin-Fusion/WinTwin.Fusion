@@ -1,16 +1,17 @@
 {
     "appinfo": {
         "name":         "PS.Tweak.Tools",
-        "version":      "v1.00.05",
+        "version":      "v1.00.06",
         "devname":      "praetoriani",
         "website":      "https://github.com/WinTwin-Fusion/PS.Tweak.Tools",
         "datecreate":   "26.08.2026",
-        "dateupdate":   "03.09.2026"
+        "dateupdate":   "05.09.2026"
     },
 
     "apptool": {
         "wtfc": {
             "appname":   "WTF.Console",
+            "appvers":   "v1.00.04",
             "action-id": "wtfconsole",
             "apppath":   "\\PS.Tweak.Tools\\WTF.Console.ps1",
             "xmlui":     "\\Core\\ui\\wtf.console.main.xml",
@@ -21,12 +22,24 @@
         },
         "uupd-catch": {
             "appname":   "UUPD.Catcher",
+            "appvers":   "v1.00.04",
             "action-id": "uupd-catch",
             "apppath":   "\\PS.Tweak.Tools\\uupd.catcher.ps1",
             "xmlui":     "\\Core\\ui\\uupd-catch.main.xml",
             "langfile":  {
                 "en-us": "\\Core\\lang\\uupd-catch.en-us.json",
                 "de-de": "\\Core\\lang\\uupd-catch.de-de.json"
+            }
+        },
+        "uupd-compose": {
+            "appname":   "UUPD.Compose",
+            "appvers":    "v1.00.01",
+            "action-id": "uupd-catch",
+            "apppath":   "\\PS.Tweak.Tools\\uupd.compose.ps1",
+            "xmlui":     "\\Core\\ui\\uupd-compose.main.xml",
+            "langfile":  {
+                "en-us": "\\Core\\lang\\uupd-compose.en-us.json",
+                "de-de": "\\Core\\lang\\uupd-compose.de-de.json"
             }
         }
     }
