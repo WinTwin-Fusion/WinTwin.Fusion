@@ -1005,10 +1005,10 @@ $script:app.control.BtnInstall.Add_Click({
     }
 
     if ( $script:osinfo.osname.ToString().ToLower() -match "windows 11" -and $script:osinfo.osname.ToString().ToLower() -match "pro" ) {
-        $script:writeJSON = wintwincore.WriteJSON -Path $script:requirement.configfile.jobaction -KeyPath "uupd-catch.download.uupdname" -Value "Windows11-pro-$($script:osinfo.osvers)-$($script:osinfo.nativearchitectureraw).zip"
+        $script:writeJSON = wintwincore.WriteJSON -Path $script:requirement.configfile.jobaction -KeyPath "uupd-catch.download.uupdname" -Value "Windows11-pro-$($script:osinfo.osvers)-$($script:osinfo.nativearchitectureraw)-$($Language).zip"
         if ($script:writeJSON.code -ne 0) { $script:scanerror++ }
     } else {
-        $script:writeJSON = wintwincore.WriteJSON -Path $script:requirement.configfile.jobaction -KeyPath "uupd-catch.download.uupdname" -Value "Windows11-$($script:osinfo.osvers)-$($script:osinfo.nativearchitectureraw).zip"
+        $script:writeJSON = wintwincore.WriteJSON -Path $script:requirement.configfile.jobaction -KeyPath "uupd-catch.download.uupdname" -Value "Windows11-$($script:osinfo.osvers)-$($script:osinfo.nativearchitectureraw)-$($Language).zip"
         if ($script:writeJSON.code -ne 0) { $script:scanerror++ }
     }
 
