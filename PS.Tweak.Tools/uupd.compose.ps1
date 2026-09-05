@@ -82,6 +82,8 @@ function script:Show-RuntimeError {
 # Required Vars for UUPD.Compose
 # --------------------------------------------------------------------------
 
+$script:ProcessID = Get-Process -Id $PID
+
 $script:configfile = [PSCustomObject]@{
     framework = "..\core\config.json"
     processdb = "process.json"
@@ -220,8 +222,9 @@ $script:apptxt = $script:JSONresult.data
 
 # Initialize the logfile
 $scripttimestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
-$script:app.logfile  = $script:config.jobaction."uupd-catch".logfile[1]
+$script:app.logfile  = $script:config.jobaction."uupd-compose".logfile[1]
 $script:app.logfile  = $script:app.logfile -replace '\[DATETIME\]', $scripttimestamp
+# Write the first line (using override)
 $script:logmsg=@("$($script:app.name) $($script:app.version) was launched.")
 $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "INFO" -Override 1
 $script:logmsg=@("All required Assemblies have been successfully loaded.",`
@@ -232,13 +235,64 @@ $script:logmsg=@("All required Assemblies have been successfully loaded.",`
 $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "OKAY"
 
 #--------------------------------------------------------------------------------
+# PROCESS REGISTRATION
+# This step is crucial to prevent multiple processes from running in
+# parallel mode and potentially accessing the same resources.
+#--------------------------------------------------------------------------------
+$script:processCheck = wintwincore.CheckProcess -FrameworkRoot $wintwin.root
+if ($script:processCheck.code -ne 0) {
+    # Failed checking for running process. Let's write it to the logfile
+    $script:logmsg=@("$($script:app.name) failed to verify potential process locks",`
+    "Function wintwincore.CheckProcess faild with the following reason:","$($script:processCheck.msg)")
+    $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "FAIL"
+    # Show an error dialog and exit
+    script:Show-RuntimeError -errortext "Failed checking for active process. Please check the logfile for more details." -exitapp
+}
+# Running Process detected
+if ($script:processCheck.data.IsRunning) {
+    $script:logmsg=@("$($script:app.name) detected another running/active Framework Process!",`
+    "The following Framework Process is currently running:","$($script:processCheck.data.IsRunning."proc-name")",`
+    "Due to protection rules, $($script:app.name) cannot continue as long as $($script:processCheck.data.IsRunning."proc-name") is running.")
+    $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "WARN"
+    # Show an error dialog and exit
+    $null = wintwincore.SystemMessageBox -smbTitle $script:errorhead `
+    -smbText "Another framework process is currently running!`nPlease wait until it has finished.`n`nCheck the logfile for more informations." `
+    -smbIcon Warning -smbButtons OK
+    exit 0
+}
+$script:selfRegister = wintwincore.RegisterProcess -FrameworkRoot $wintwin.root `
+                                     -ProcName "$($script:app.name)" `
+                                     -ProcPath $PSCommandPath `
+                                     -ActionId "$($script:app.actionid)" `
+                                     -ProcessId $script:ProcessID.Id
+if ($script:selfRegister.code -ne 0) {
+    # Registration failed. Write something to the logfile
+    $script:logmsg=@("$($script:app.name) failed to register as active Framework Process!",`
+    "Function wintwincore.RegisterProcess failed with the following reason:","$($script:selfRegister.msg)")
+    $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "FAIL"
+    # Show an error dialog an exit
+    $null = wintwincore.SystemMessageBox -smbTitle $script:errorhead `
+    -smbText "$($script:app.name) could not register as active framework process.`nPlease check the logfile for more informations."
+    -smbIcon Warning -smbButtons OK
+    exit 1
+}
+
+$script:logmsg=@("$($script:app.name) successfully registered as current Framework Process.")
+$null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "OKAY"
+
+#--------------------------------------------------------------------------------
 # Load/Create the Window
 # In this section, the UI is loaded from the XML file, the window is created,
 # and all UI elements are referenced. Everything will be stored in $script:app
 #--------------------------------------------------------------------------------
 # The -extended switch returns the window object including the referenced controls
 $script:LoadXML = xuiLoadWindow -XMLfile $script:app.xmlui -extended
-if ( $script:LoadXML.code -ne 0) { script:Show-RuntimeError -errortext "Faild loading User Interface:`n$($script:app.xmlui)`n$($script:LoadXML.msg)" -exitapp }
+if ( $script:LoadXML.code -ne 0) {
+    $script:logmsg=@("Failed loading UI from following XML-File:","$($script:app.xmlui)",`
+    "Function xuiLoadWindow failed with following reason:","$($script:LoadXML.msg)")
+    $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "OKAY"
+    script:Show-RuntimeError -errortext "Faild loading User Interface:`n$($script:app.xmlui)`n$($script:LoadXML.msg)" -exitapp
+}
 # Store the window and all controls inside the window
 $script:app.window  = $script:LoadXML.data.Window
 $script:app.control = $script:LoadXML.data.Controls
@@ -342,6 +396,38 @@ $script:app.control.TitleBarPanel.Add_MouseLeftButtonDown({
     }
 })
 
+# Browse for ZIP-File was clicked
+$script:app.control.BtnZIPLocation.Add_Click({
+    # Keep the old input
+    $Local:oldinput = $script:app.control.TxtZIPlocation.Text
+    # Clear the input field
+    $script:app.control.TxtZIPlocation.Clear()
+    # Show the Dialog
+    $Local:pickfile = xuiSelectFile -Title 'Where is the ZIP-File?' -Filter '*.zip'
+    # Set the new/old path to the input field
+    if ($Local:pickfile.code -eq 0) {
+        $script:app.control.TxtZIPlocation.Text = $Local:pickfile.data.Path
+    } else {
+        $script:app.control.TxtZIPlocation.Text = $Local:oldinput
+    }
+})
+
+# ISO Location was clicked
+$script:app.control.BtnISOLocation.Add_Click({
+    # Keep the old input
+    $Local:oldinput = $script:app.control.TxtISOlocation.Text
+    # Clear the input field
+    $script:app.control.TxtISOlocation.Clear()
+    # Show the Dialog
+    $Local:pickfolder = xuiSelectFolder -Title 'Where do you want to store the ISO File?'
+    # Set the new/old path to the input field
+    if ($Local:pickfolder.code -eq 0) {
+        $script:app.control.TxtISOlocation.Text = $Local:pickfolder.data.Path
+    } else {
+        $script:app.control.TxtISOlocation.Text = $Local:oldinput
+    }
+})
+
 # Exit was clicked
 $script:app.control.BtnExitApp.Add_Click({
     $script:app.window.Close()
@@ -358,17 +444,56 @@ $script:app.window.Add_Loaded({
     $script:app.window.Topmost = $false
 })
 
-#$script:app.window.Add_ContentRendered({
-#    # Load the current settings (jobaction.json)
-#    script:LoadUUPDsettings
-#    # Push the changes to the ui
-#    script:uiEvent
-#})
+$script:app.window.Add_ContentRendered({
+    # Load the current settings (jobaction.json)
+    
+    $script:logmsg=@("Trying to load job details from $($script:configfile.jobaction)")
+    $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "INFO"
+    
+    $local:zipfile = "$($script:config.jobaction."uupd-compose".zipfile)"
+    $local:isopath = "$($script:config.jobaction."uupd-compose".isopath)"
+    $local:isoname = "$($script:config.jobaction."uupd-compose".isoname)"
+    
+    $script:logmsg=@("Following job details could be retreived:",`
+    "zipfile:  $($local:zipfile)","isopath:  $($local:isopath)","isoname:  $($local:isoname)")
+    $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "INFO"
+    
+    $script:logmsg=@("Applying (only) valid job details to the ui.")
+    $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "INFO"
+    
+    if ( $local:zipfile.Contains('{0}') ) { $script:app.control.TxtZIPlocation.Text = "" }
+    else { $script:app.control.TxtZIPlocation.Text = "$($local:zipfile)" }
+
+    if ( $local:isopath.Contains('{0}') ) { $script:app.control.TxtISOlocation.Text = "" }
+    else { $script:app.control.TxtISOlocation.Text = "$($local:isopath)" }
+
+    if ( $local:zipfile.Contains('{0}') ) { $script:app.control.TxtISOFilename.Text = "" }
+    else { $script:app.control.TxtISOFilename.Text = "$($local:isoname)" }
+    
+    # Push the changes to the ui
+    script:uiEvent
+})
 
 $script:app.window.ShowDialog() | Out-Null
 # Cleanup/Exit
-#$null = wintwincore.SetCMDstate -State Show -Focus $false
-$script:logmsg=@("$($script:app.name) $($script:app.version) was closed.","Thank you for using UUPD.Catcher (PS.Tweak.Tools)")
+$script:logmsg=@("The Close-Event was triggered. Performing cleanup.")
 $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "INFO"
+# Unregister before final exit
+Write-Host "CURRENT PID:    $($script:ProcessID.Id)"
+Write-Host "-FrameworkRoot: $($wintwin.root)"
+$script:unregProcess = wintwincore.UnregisterProcess -FrameworkRoot $wintwin.root -ProcessId $($script:ProcessID.Id) -ExitCode 0
+Write-Host "$($script:unregProcess.code)"
+if ( $script:unregProcess.code -ne 0 ) {
+    $script:logmsg=@("$($script:app.name) failed to unregister as Framework Process!","$($script:unregProcess.msg)")
+    $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "FAIL"
+} else {
+    $script:logmsg=@("$($script:app.name) successfully unregistered as Framework Process.")
+    $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "OKAY"
+}
+# Final entry to the logfile
+$script:logmsg=@("$($script:app.name) $($script:app.version) was closed.","Thank you for using UUPD.Compose (PS.Tweak.Tools)")
+$null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "INFO"
+# Show the console again
+#$null = wintwincore.SetCMDstate -State Show -Focus $false
 exit 0
 
