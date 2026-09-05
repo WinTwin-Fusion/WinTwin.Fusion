@@ -86,6 +86,7 @@ $script:configfile = [PSCustomObject]@{
     framework = "..\core\config.json"
     processdb = "process.json"
     jobaction = "jobaction.json"
+    psttjson  = "pstt.config.json"
 }
 
 $script:config = [PSCustomObject]@{
@@ -127,6 +128,7 @@ $script:wintwin = [pscustomobject]@{
 # Set the real/full paths to the process.json and jobaction.json
 $script:configfile.processdb = Join-Path "$($script:wintwin.root)" "$($script:config.framework.path.appdb.process)"
 $script:configfile.jobaction = Join-Path "$($script:wintwin.root)" "$($script:config.framework.path.appdb.actions)"
+$script:configfile.psttjson  = Join-Path "$($script:wintwin.pstt)" "$($script:configfile.psttjson)"
 
 #--------------------------------------------------------------------------------
 # Try to load required Libraries from the WinTwin.Fusion Framework
@@ -172,8 +174,8 @@ if ( $script:JSONresult.code -ne 0) { script:Show-RuntimeError -errortext "Faile
 $script:config.processdb = $script:JSONresult.data
 
 # Load the pstt.config.json
-$script:JSONresult = wintwincore.LoadJSON -Path $script:app.config.pstt
-if ( $script:JSONresult.code -ne 0) { script:Show-RuntimeError -errortext "Failed loading following json file:`n$($script:app.config.pstt)`n$($script:JSONresult.msg)" -exitapp }
+$script:JSONresult = wintwincore.LoadJSON -Path $script:configfile.psttjson
+if ( $script:JSONresult.code -ne 0) { script:Show-RuntimeError -errortext "Failed loading following json file:`n$($script:configfile.psttjson)`n$($script:JSONresult.msg)" -exitapp }
 $script:config.psttjson = $script:JSONresult.data
 
 # --------------------------------------------------------------------------
@@ -199,10 +201,10 @@ $script:app = [PSCustomObject]@{
     }
 }
 # Load basic data from the pstt.config.json
-$script:app.name     = $script:config.psttjson."uupd-compose".appname
-$script:app.version  = $script:config.psttjson."uupd-compose".appvers
-$script:app.actionid = $script:config.psttjson."uupd-compose"."action-id"
-$script:app.xmlui    = $script:config.psttjson."uupd-compose".xmlui
+$script:app.name     = $script:config.psttjson.apptool."uupd-compose".appname
+$script:app.version  = $script:config.psttjson.apptool."uupd-compose".appvers
+$script:app.actionid = $script:config.psttjson.apptool."uupd-compose"."action-id"
+$script:app.xmlui    = Join-Path "$($wintwin.root)" "$($script:config.psttjson.apptool."uupd-compose".xmlui)"
 
 # Load the language information and assign the language file to load
 $script:app.language = $script:config.framework.appconfig.defaultlanguage
@@ -217,9 +219,9 @@ if ( $script:JSONresult.code -ne 0) { script:Show-RuntimeError -errortext "Faile
 $script:apptxt = $script:JSONresult.data
 
 # Initialize the logfile
-$Script:timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
-$script:app.logfile  = $Script:config.jobaction."uupd-catch".logfile[1]
-$script:app.logfile  = $script:app.logfile -replace '\[DATETIME\]', $Script:timestamp
+$scripttimestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
+$script:app.logfile  = $script:config.jobaction."uupd-catch".logfile[1]
+$script:app.logfile  = $script:app.logfile -replace '\[DATETIME\]', $scripttimestamp
 $script:logmsg=@("$($script:app.name) $($script:app.version) was launched.")
 $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "INFO" -Override 1
 $script:logmsg=@("All required Assemblies have been successfully loaded.",`
@@ -236,38 +238,38 @@ $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:lo
 #--------------------------------------------------------------------------------
 # The -extended switch returns the window object including the referenced controls
 $script:LoadXML = xuiLoadWindow -XMLfile $script:app.xmlui -extended
-if ( $script:LoadXML.code -ne 0) { script:Show-RuntimeError -errortext "Faild loading User Interface:`n$($script:setupconfig.xmlui)`n$($script:LoadXML.message)" -exitapp }
+if ( $script:LoadXML.code -ne 0) { script:Show-RuntimeError -errortext "Faild loading User Interface:`n$($script:app.xmlui)`n$($script:LoadXML.msg)" -exitapp }
 # Store the window and all controls inside the window
 $script:app.window  = $script:LoadXML.data.Window
 $script:app.control = $script:LoadXML.data.Controls
 # Store required styles
-$Script:app.style.InputErrorBack   = $script:app.window.FindResource('BrushInputError')
-$Script:app.style.InputErrorBrdr   = $script:app.window.FindResource('BrushInputErrorBrdr')
-$Script:app.style.LabelDefaultBack = $script:app.window.FindResource('BrushInputBg')
-$Script:app.style.LabelDefaultBrdr = $script:app.window.FindResource('BrushInputBorder')
-$Script:app.style.LabelDefaultText = $script:app.window.FindResource('BrushText')
+$script:app.style.InputErrorBack   = $script:app.window.FindResource('BrushInputError')
+$script:app.style.InputErrorBrdr   = $script:app.window.FindResource('BrushInputErrorBrdr')
+$script:app.style.LabelDefaultBack = $script:app.window.FindResource('BrushInputBg')
+$script:app.style.LabelDefaultBrdr = $script:app.window.FindResource('BrushInputBorder')
+$script:app.style.LabelDefaultText = $script:app.window.FindResource('BrushText')
 
 #--------------------------------------------------------------------------------
 # Applying loaded language file to the interface
 #--------------------------------------------------------------------------------
-$script:app.control.LblInstructions.Text         = $Script:apptxt.ui.LblInstructions
-$script:app.control.LblComposeInfo.Text          = $Script:apptxt.ui.LblComposeInfo
-$script:app.control.LblDownloadSettings.Text     = $Script:apptxt.ui.LblDownloadSettings
-$script:app.control.LblZIPlocation.Text          = $Script:apptxt.ui.LblZIPlocation
-$script:app.control.LblISOfileSettings.Text      = $Script:apptxt.ui.LblISOfileSettings
-$script:app.control.LblISOlocation.Text          = $Script:apptxt.ui.LblISOlocation
-$script:app.control.LblFilename.Text             = $Script:apptxt.ui.LblFilename
-$script:app.control.LblImportantInformation.Text = $Script:apptxt.ui.LblImportantInformation
-$script:app.control.TxtImportantInformation.Text = $Script:apptxt.ui.TxtImportantInformation
-$script:app.control.BtnCreateISO.Content         = $Script:apptxt.ui.BtnCreateISO
-$script:app.control.BtnExitApp.Content           = $Script:apptxt.ui.BtnExitApp
-$script:app.control.StatusText.Text              = $Script:apptxt.status.isready
-$script:app.control.StatusInfo.Text              = "$($scrtip:app.name) ($($scrtip:app.version))"
+$script:app.control.LblInstructions.Text         = $script:apptxt.ui.LblInstructions
+$script:app.control.LblComposeInfo.Text          = $script:apptxt.ui.LblComposeInfo
+$script:app.control.LblDownloadSettings.Text     = $script:apptxt.ui.LblDownloadSettings
+$script:app.control.LblZIPlocation.Text          = $script:apptxt.ui.LblZIPlocation
+$script:app.control.LblISOfileSettings.Text      = $script:apptxt.ui.LblISOfileSettings
+$script:app.control.LblISOlocation.Text          = $script:apptxt.ui.LblISOlocation
+$script:app.control.LblISOFilename.Text          = $script:apptxt.ui.LblISOFilename
+$script:app.control.LblImportantInformation.Text = $script:apptxt.ui.LblImportantInformation
+$script:app.control.TxtImportantInformation.Text = $script:apptxt.ui.TxtImportantInformation
+$script:app.control.BtnCreateISO.Content         = $script:apptxt.ui.BtnCreateISO
+$script:app.control.BtnExitApp.Content           = $script:apptxt.ui.BtnExitApp
+$script:app.control.StatusText.Text              = $script:apptxt.status.isready
+$script:app.control.StatusInfo.Text              = "$($script:app.name) ($($script:app.version))"
 
 
-if (Test-Path -LiteralPath $Script:app.icon) {
+if (Test-Path -LiteralPath $script:app.icon) {
     try {
-        $titleBarLogo.Source = [System.Windows.Media.Imaging.BitmapImage]::new([System.Uri]::new($Script:app.icon))
+        $titleBarLogo.Source = [System.Windows.Media.Imaging.BitmapImage]::new([System.Uri]::new($script:app.icon))
     }
     catch {
         Write-Verbose "Could not set title bar logo: $($_.Exception.Message)"
@@ -341,7 +343,7 @@ $script:app.control.TitleBarPanel.Add_MouseLeftButtonDown({
 })
 
 # Exit was clicked
-$script:app.control.BtnExit.Add_Click({
+$script:app.control.BtnExitApp.Add_Click({
     $script:app.window.Close()
 })
 
@@ -356,19 +358,16 @@ $script:app.window.Add_Loaded({
     $script:app.window.Topmost = $false
 })
 
-$script:app.window.Add_ContentRendered({
-    # Load the current settings (jobaction.json)
-    script:LoadUUPDsettings
-    # Push the changes to the ui
-    script:uiEvent
-})
-
-#$script:logmsg=@("Showing Install Manager Window using 'ShowDialog() | Out-Null'")
-#$null = wintwincore.WriteLogmsg -Logfile $script:setupconfig.logfile -Message $script:logmsg -Flag "INFO"
+#$script:app.window.Add_ContentRendered({
+#    # Load the current settings (jobaction.json)
+#    script:LoadUUPDsettings
+#    # Push the changes to the ui
+#    script:uiEvent
+#})
 
 $script:app.window.ShowDialog() | Out-Null
 # Cleanup/Exit
-$null = wintwincore.SetCMDstate -State Show -Focus $false
+#$null = wintwincore.SetCMDstate -State Show -Focus $false
 $script:logmsg=@("$($script:app.name) $($script:app.version) was closed.","Thank you for using UUPD.Catcher (PS.Tweak.Tools)")
 $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "INFO"
 exit 0
