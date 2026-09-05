@@ -2,13 +2,13 @@
   "component": "PS.Tweak.Tools",
   "sourceRepository": "WinTwin-Fusion/PS.Tweak.Tools",
   "sourceBranch": "main",
-  "sourceCommit": "985034eac3d3bc94385a68eba54516f0edbadd29",
-  "sourceCommitShort": "985034e",
+  "sourceCommit": "a72faa7ca50fd8b63bd962f0ed4c189c72cfa880",
+  "sourceCommitShort": "a72faa7",
   "sourcePullRequest": {
-    "number": 27,
-    "title": "UUPD: bump versions and add process/UX logic",
+    "number": 28,
+    "title": "Add ISO creation handoff flow",
     "mergedBy": "praetoriani",
-    "mergedAt": "2026-09-05T14:47:38Z"
+    "mergedAt": "2026-09-05T20:34:40Z"
   },
   "targetRepository": "WinTwin-Fusion/WinTwin.Fusion",
   "targetBaseBranch": "main",
@@ -20,7 +20,7 @@
   ],
   "syncedBy": "GitHub Actions",
   "workflow": "Sync PS.Tweak.Tools to WinTwin.Fusion",
-  "workflowRunId": "33972861479",
-  "workflowRunNumber": "24",
-  "syncDate": "2026-09-05T14:47:50Z"
+  "workflowRunId": "33990528392",
+  "workflowRunNumber": "25",
+  "syncDate": "2026-09-05T20:34:54Z"
 }

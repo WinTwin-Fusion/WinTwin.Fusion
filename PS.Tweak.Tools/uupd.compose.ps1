@@ -184,17 +184,23 @@ $script:config.psttjson = $script:JSONresult.data
 # Required Application Data for UUPD.Compose
 # --------------------------------------------------------------------------
 $script:app = [PSCustomObject]@{
-    icon     = "ps.tweak.tools.ico"
-    name     = $null    # <- Stores the name of the application
-    version  = $null    # <- Stores the version of the application
-    language = $null    # <- Stores the language code (e.g. en-us or de-de)
-    langfile = $null    # <- Stores the path to the language file
-    logfile  = $null    # <- Stores the path to the logfile
-    xmlui    = $null    # <- Stores the path to the xml ui file
-    actionid = $null    # <- Stores the action-id (required for job-registration)
-    window   = $null    # <- Stores the window-objekt
-    control  = $null    # <- Stores all window controls
-    style    = [PSCustomObject]@{ # <- Stores styles of the window
+    icon       = "ps.tweak.tools.ico"
+    toolbox    = $null    # <- Stores the name of the toolbox (e.g. PS.Tweak.Tools or DISM.UI.CC)
+    name       = $null    # <- Stores the name of the application
+    version    = $null    # <- Stores the version of the application
+    language   = $null    # <- Stores the language code (e.g. en-us or de-de)
+    langfile   = $null    # <- Stores the path to the language file
+    logfile    = $null    # <- Stores the path to the logfile
+    xmlui      = $null    # <- Stores the path to the xml ui file
+    actionid   = $null    # <- Stores the action-id (required for job-registration)
+    script     = [PSCustomObject]@{
+        file   = $null
+        type   = $null
+    }
+    consoleLog = $null
+    window     = $null    # <- Stores the window-objekt
+    control    = $null    # <- Stores all window controls
+    style      = [PSCustomObject]@{ # <- Stores styles of the window
         LabelDefaultText = $null # FindResource('BrushText')
         LabelDefaultBack = $null # FindResource('BrushInputBg')
         LabelDefaultBrdr = $null # FindResource('BrushInputBorder')
@@ -203,10 +209,16 @@ $script:app = [PSCustomObject]@{
     }
 }
 # Load basic data from the pstt.config.json
+$script:app.toolbox  = $script:config.psttjson.appinfo.name
 $script:app.name     = $script:config.psttjson.apptool."uupd-compose".appname
 $script:app.version  = $script:config.psttjson.apptool."uupd-compose".appvers
 $script:app.actionid = $script:config.psttjson.apptool."uupd-compose"."action-id"
-$script:app.xmlui    = Join-Path "$($wintwin.root)" "$($script:config.psttjson.apptool."uupd-compose".xmlui)"
+$script:app.xmlui    = Join-Path "$($script:wintwin.root)" "$($script:config.psttjson.apptool."uupd-compose".xmlui)"
+
+# Load the script and logging details (required for the console interaction)
+$script:app.script.file = Join-Path "$($script:wintwin.export)" "$($script:config.psttjson.apptool."uupd-compose".scriptfile)"
+$script:app.script.type = "$($script:config.psttjson.apptool."uupd-compose".scripttype)"
+$script:app.consoleLog  = Join-Path "$($script:wintwin.logs)" "$($script:config.psttjson.apptool."uupd-compose".consolelog)"
 
 # Load the language information and assign the language file to load
 $script:app.language = $script:config.framework.appconfig.defaultlanguage
@@ -239,7 +251,7 @@ $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:lo
 # This step is crucial to prevent multiple processes from running in
 # parallel mode and potentially accessing the same resources.
 #--------------------------------------------------------------------------------
-$script:processCheck = wintwincore.CheckProcess -FrameworkRoot $wintwin.root
+$script:processCheck = wintwincore.CheckProcess -FrameworkRoot $script:wintwin.root
 if ($script:processCheck.code -ne 0) {
     # Failed checking for running process. Let's write it to the logfile
     $script:logmsg=@("$($script:app.name) failed to verify potential process locks",`
@@ -260,7 +272,7 @@ if ($script:processCheck.data.IsRunning) {
     -smbIcon Warning -smbButtons OK
     exit 0
 }
-$script:selfRegister = wintwincore.RegisterProcess -FrameworkRoot $wintwin.root `
+$script:selfRegister = wintwincore.RegisterProcess -FrameworkRoot $script:wintwin.root `
                                      -ProcName "$($script:app.name)" `
                                      -ProcPath $PSCommandPath `
                                      -ActionId "$($script:app.actionid)" `
@@ -399,32 +411,32 @@ $script:app.control.TitleBarPanel.Add_MouseLeftButtonDown({
 # Browse for ZIP-File was clicked
 $script:app.control.BtnZIPLocation.Add_Click({
     # Keep the old input
-    $Local:oldinput = $script:app.control.TxtZIPlocation.Text
+    $local:oldinput = $script:app.control.TxtZIPlocation.Text
     # Clear the input field
     $script:app.control.TxtZIPlocation.Clear()
     # Show the Dialog
-    $Local:pickfile = xuiSelectFile -Title 'Where is the ZIP-File?' -Filter '*.zip'
+    $local:pickfile = xuiSelectFile -Title 'Where is the ZIP-File?' -Filter '*.zip'
     # Set the new/old path to the input field
-    if ($Local:pickfile.code -eq 0) {
-        $script:app.control.TxtZIPlocation.Text = $Local:pickfile.data.Path
+    if ($local:pickfile.code -eq 0) {
+        $script:app.control.TxtZIPlocation.Text = $local:pickfile.data.Path
     } else {
-        $script:app.control.TxtZIPlocation.Text = $Local:oldinput
+        $script:app.control.TxtZIPlocation.Text = $local:oldinput
     }
 })
 
 # ISO Location was clicked
 $script:app.control.BtnISOLocation.Add_Click({
     # Keep the old input
-    $Local:oldinput = $script:app.control.TxtISOlocation.Text
+    $local:oldinput = $script:app.control.TxtISOlocation.Text
     # Clear the input field
     $script:app.control.TxtISOlocation.Clear()
     # Show the Dialog
-    $Local:pickfolder = xuiSelectFolder -Title 'Where do you want to store the ISO File?'
+    $local:pickfolder = xuiSelectFolder -Title 'Where do you want to store the ISO File?'
     # Set the new/old path to the input field
-    if ($Local:pickfolder.code -eq 0) {
-        $script:app.control.TxtISOlocation.Text = $Local:pickfolder.data.Path
+    if ($local:pickfolder.code -eq 0) {
+        $script:app.control.TxtISOlocation.Text = $local:pickfolder.data.Path
     } else {
-        $script:app.control.TxtISOlocation.Text = $Local:oldinput
+        $script:app.control.TxtISOlocation.Text = $local:oldinput
     }
 })
 
@@ -432,6 +444,326 @@ $script:app.control.BtnISOLocation.Add_Click({
 $script:app.control.BtnExitApp.Add_Click({
     $script:app.window.Close()
 })
+
+# Download ISO was clicked
+$script:app.control.BtnCreateISO.Add_Click({
+    # Disable the action buttons
+    $script:app.control.BtnCreateISO.IsEnabled = $false
+    $script:app.control.BtnExitApp.IsEnabled   = $false
+    script:uiEvent
+
+    $script:logmsg=@("'$($script:app.control.BtnCreateISO.Content)'-Button was pressed.")
+    $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "INFO"
+    
+    # reset the error indication (if any)
+    $script:app.control.TxtZIPlocation.Background  = $script:app.style.LabelDefaultBack
+    $script:app.control.TxtZIPlocation.BorderBrush = $script:app.style.LabelDefaultBrdr
+    $script:app.control.TxtISOlocation.Background  = $script:app.style.LabelDefaultBack
+    $script:app.control.TxtISOlocation.BorderBrush = $script:app.style.LabelDefaultBrdr
+    $script:app.control.TxtISOFilename.Background  = $script:app.style.LabelDefaultBack
+    $script:app.control.TxtISOFilename.BorderBrush = $script:app.style.LabelDefaultBrdr
+
+    $local:zipfile = $null
+    $local:isopath = $null
+    $local:isofile = $null
+    $local:isofull = $null
+    $local:errorcount = 0
+
+    if ( [string]::IsNullOrWhiteSpace($script:app.control.TxtZIPLocation.Text) ) {
+        $local:errorcount++
+        $script:app.control.TxtZIPLocation.Background  = $script:app.style.InputErrorBack
+        $script:app.control.TxtZIPLocation.BorderBrush = $script:app.style.InputErrorBrdr
+        script:uiEvent
+    }
+    elseif ( -not (Test-Path -LiteralPath $script:app.control.TxtZIPLocation.Text -PathType Leaf) ) {
+        $local:errorcount++
+        $script:app.control.TxtZIPLocation.Background  = $script:app.style.InputErrorBack
+        $script:app.control.TxtZIPLocation.BorderBrush = $script:app.style.InputErrorBrdr
+        script:uiEvent
+    }    
+    else {
+        $local:zipfile = $script:app.control.TxtZIPLocation.Text
+    }
+
+    if ( [string]::IsNullOrWhiteSpace($script:app.control.TxtISOlocation.Text) ) {
+        $local:errorcount++
+        $script:app.control.TxtISOlocation.Background  = $script:app.style.InputErrorBack
+        $script:app.control.TxtISOlocation.BorderBrush = $script:app.style.InputErrorBrdr
+        script:uiEvent
+    }
+    elseif ( -not (Test-Path -LiteralPath $script:app.control.TxtISOlocation.Text -PathType Container) ) {
+        $local:errorcount++
+        $script:app.control.TxtISOlocation.Background  = $script:app.style.InputErrorBack
+        $script:app.control.TxtISOlocation.BorderBrush = $script:app.style.InputErrorBrdr
+        script:uiEvent
+    }    
+    else {
+        $local:isopath = $script:app.control.TxtISOlocation.Text
+    }
+
+    if ( [string]::IsNullOrWhiteSpace($script:app.control.TxtISOFilename.Text) ) {
+        $local:errorcount++
+        $script:app.control.TxtISOFilename.Background  = $Script:BrushInputError
+        $script:app.control.TxtISOFilename.BorderBrush = $Script:BrushInputErrorBrdr
+        script:uiEvent
+    }
+    elseif ( $script:app.control.TxtISOFilename.Text.Substring($script:app.control.TxtISOFilename.Text.Length - 4) -ne ".iso") {
+        $local:errorcount++
+        $script:app.control.TxtISOFilename.Background  = $Script:BrushInputError
+        $script:app.control.TxtISOFilename.BorderBrush = $Script:BrushInputErrorBrdr
+        script:uiEvent
+    }
+    else {
+        $local:isofile = $script:app.control.TxtISOFilename.Text
+    }
+
+    if (-not ([string]::IsNullOrWhiteSpace($script:app.control.TxtISOlocation.Text)) -and -not ([string]::IsNullOrWhiteSpace($script:app.control.TxtISOFilename.Text))) {
+        $local:isofull = Join-Path $local:isopath $local:isofile -ErrorAction SilentlyContinue
+        if ( Test-Path -LiteralPath $local:isofull -PathType Leaf ) {
+            $local:errorcount++
+            $script:app.control.TxtISOlocation.Background  = $Script:BrushInputError
+            $script:app.control.TxtISOlocation.BorderBrush = $Script:BrushInputErrorBrdr
+            $script:app.control.TxtISOFilename.Background  = $Script:BrushInputError
+            $script:app.control.TxtISOFilename.BorderBrush = $Script:BrushInputErrorBrdr
+        }
+    }
+
+    if ( $local:errorcount -ge 1 ) {
+        # Release the action buttons again
+        $script:app.control.BtnCreateISO.IsEnabled = $true
+        $script:app.control.BtnExitApp.IsEnabled   = $true
+        $script:logmsg=@("$($local:errorcount) errors found in the form. Cannot continue creating an ISO!")
+        $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "WARN"
+        return $false
+    }
+
+    $script:logmsg=@("No errors found. We can continue creating the ISO!")
+    $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "OKAY"
+
+    $script:logmsg=@("Creating the code for the console script now.")
+    $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "INFO"
+    $local:scriptContent = $null
+    try {
+        $local:scriptContent = @"
+`$ErrorActionPreference = 'Stop'
+
+Write-Output '*********************************************' -ForegroundColor DarkGray
+Write-Output '$($script:app.name) $($script:app.version)   ($($($script:app.toolbox)))' -ForegroundColor Gray
+Write-Output '*********************************************' -ForegroundColor DarkGray
+Write-Output 'Available Informations:' -ForegroundColor Gray
+Write-Output 'ZIP file: $($local:zipfile)' -ForegroundColor DarkGray
+Write-Output 'ISO file: $($local:isofull)' -ForegroundColor DarkGray
+Write-Output 'Output:   $($local:isopath)' -ForegroundColor DarkGray
+Write-Output '*********************************************' -ForegroundColor DarkGray
+
+`$moduleCandidates = @(
+    '$script:LibOPSR',
+    '$script:LibPSACL',
+    '$script:LibWTFXC'
+    '$script:LibWTXUI'
+) | Where-Object { -not [string]::IsNullOrWhiteSpace(`$_) }
+
+foreach (`$modulePath in `$moduleCandidates) {
+    if (-not (Test-Path -LiteralPath `$modulePath)) {
+        throw ('Required module path not found: {0}' -f `$modulePath)
+    }
+    Import-Module `$modulePath -Force -ErrorAction Stop
+}
+
+`$script:result = wintwincore.ExtractUUPDump `
+-ZIPfile '$($local:zipfile)' `
+-Target  '$($local:isopath)' `
+-Verify  1 `
+-Cleanup 0
+if (`$script:result.code -eq 0) {
+   Write-Output "ZIP file successfully extracted to:" -ForegroundColor DarkGreen
+   Write-Output "$($local:isopath)" -ForegroundColor DarkGreen
+} else {
+   Write-Output "Failed extracting ZIP file!" -ForegroundColor DardRed
+   exit 1
+}
+
+
+`$script:result = wintwincore.CreateUUPDiso -UUPDdir '$($local:isopath)' `
+-CleanUp 1 -ISOname '$($local:isofile.Substring(0, $local:isofile.Length - 4))'
+-SoftIdleMinutes 10 -HardIdleMinutes 60 -KillOnHardIdle
+if (`$script:result.code -ne 0) {
+   Write-Output "Function wintwincore.CreateUUPDiso failed!" -ForegroundColor DardRed
+   Write-Output "Reason:" -ForegroundColor DardRed
+   Write-Output "`$(`$script:result.msg)" -ForegroundColor DardRed
+   exit 1    
+}
+
+Write-Output "$($local:isofile) successfully created." -ForegroundColor DarkGreen
+Write-Output "Output directory:" -ForegroundColor DarkGreen
+Write-Output "$($local:isopath)" -ForegroundColor DarkGreen
+Write-Output "$($scrip:app.name) successfully finished." -ForegroundColor DarkGreen
+
+"@
+    }
+    catch {
+        <#
+        SOMETHING WENT WRONG IN THE TRY-BLOCK!
+        CATCH THE EXCEPITIONS, SHOW A DIALOG
+        AND RETURN TO THE UI
+        #>
+
+        $script:logmsg=@("$($script:app.name) failed trying to prepare further processes.",`
+        "Tried preparing script '$($script:app.script.name)' and launchung WTF.Console.",`
+        "local:zipfile:  $($local:zipfile)",`
+        "local:isopath:  $($local:isopath)",`
+        "local:isofile:  $($local:isofile)",`
+        "Details of Exception:",`
+        "Invocation:    $($_.InvocationInfo.InvocationName)",`
+        "Script name:   $($_.InvocationInfo.ScriptName)",`
+        "Linie number:  $($_.InvocationInfo.ScriptLineNumber)",`
+        "Command:       $($_.InvocationInfo.MyCommand)",`
+        "Statement:     $($_.InvocationInfo.Statement)",`
+        "Error details: $($_.ErrorDetails.Message)",`
+        "Exception:     $($_.Exception.Message)",`
+        "StackTrace:    $($_.Exception.StackTrace)")
+        $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "FAIL"
+
+        $null = wintwincore.SystemMessageBox -smbTitle "$($script:errorhead)" `
+        -smbText "An internal error occured while generating the console script!`nPlease check the logfile for more informations." `
+        -smbIcon Warning -smbButtons OK
+
+        # Finally release the buttons again
+        $script:app.control.BtnCreateISO.IsEnabled = $true
+        $script:app.control.BtnExitApp.IsEnabled   = $true
+
+        return $false
+    }
+
+    # Write the generated console script to a file (path defined in dism.congif.json)
+    $local:result = wintwincore.ConsoleScript -ScriptPath $script:app.script.file `
+                                -ScriptType $script:app.script.type `
+                                -ScriptData $local:scriptContent
+    if ($local:result.code -ne 0) {
+        # Write something to the logfile
+        $script:logmsg=@("Failed creating console script for WTF.Console!",`
+        "Function wintwincore.ConsoleScript failed with the following reason:",`
+        "$($local:result.msg)")
+        $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "FAIL"
+        # Show a warning dialog
+        $null = wintwincore.SystemMessageBox -smbTitle "$($script:errorhead)" `
+        -smbText "Error while creating console script!`nPlease check the logfile for more informations."
+        -smbIcon Warning -smbButtons OK
+        # Finally release the buttons again
+        $script:app.control.BtnCreateISO.IsEnabled = $true
+        $script:app.control.BtnExitApp.IsEnabled   = $true
+        return $false
+    }
+    
+    # Write something to the logfile
+    $script:logmsg=@("$($script:app.name) successfully created the following console script.","$($script:app.script.file)")
+    $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "OKAY"
+    $script:logmsg=@("$($script:app.name) is now passing over to WTF.Console using following script:","$($script:wintwin.console)")
+    $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "INFO"
+    
+    # Unregister the application before handing over to WTF.Console
+    # This is important, because otherwise, WTF.Console will not start!
+    $script:unregProcess = wintwincore.UnregisterProcess -FrameworkRoot $script:wintwin.root -ProcessId $($script:ProcessID.Id) -ExitCode 0
+    if ( $script:unregProcess.code -ne 0 ) {
+        $script:logmsg=@("$($script:app.name) failed to unregister as Framework Process!","$($script:unregProcess.msg)")
+        $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "FAIL"
+        $script:logmsg=@("Unable to continue with launching WTF.console!","$($script:wintwin.console)")
+        $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "WARN"
+        $null = wintwincore.SystemMessageBox -smbTitle "$($script:errorhead)" `
+        -smbText "Unable to launch WTF.Console!`nPlease check the logfile for more informations."
+        -smbIcon Warning -smbButtons OK
+        # Finally release the buttons again
+        $script:app.control.BtnCreateISO.IsEnabled = $false
+        $script:app.control.BtnExitApp.IsEnabled   = $true
+        return $false
+    }
+    
+    $script:logmsg=@("$($script:app.name) successfully unregistered as Framework Process.")
+    $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "OKAY"
+    
+    # Launch the WTF.Console Process
+    # Typical application hand-off after the tool has cleared process.json:
+    $script:launchConsole = wintwincore.LaunchConsole `
+    -Script $script:app.script.file `
+    -Mode framework `
+    -Action $script:app.actionid `
+    -Logging $true `
+    -Logfile $script:app.consoleLog `
+    -FrameworkRoot $script:wintwin.root
+
+    # Looks like there was an error while launching WTF.Console
+    if ($script:launchConsole.code -ne 0) {
+        
+        $script:logmsg=@("Hand-off from $($script:app.name) to WTF.Console failed!",`
+        "Function wintwincore.LaunchConsole failed with following reason:","$($script:launchConsole.msg)")
+        $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "FAIL"
+        $script:logmsg=@("Trying to re-register $($script:app.name) as framework process.")
+        $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "INFO"
+    
+
+        $script:selfRegister = wintwincore.RegisterProcess -FrameworkRoot $script:wintwin.root `
+                                            -ProcName "$($script:app.name)" `
+                                            -ProcPath $PSCommandPath `
+                                            -ActionId "$($script:app.actionid)" `
+                                            -ProcessId $script:ProcessID.Id
+        if ($script:selfRegister.code -ne 0) {
+            # Registration failed. Write something to the logfile
+            $script:logmsg=@("An unhandleable exception occurred while trying to launch WTF.Console!",`
+            "$($script:app.name) failed to re-register as active Framework Process!",`
+            "Function wintwincore.RegisterProcess failed with the following reason:","$($script:selfRegister.msg)")
+            $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "FAIL"
+            
+            # Show an error dialog an exit
+            $null = wintwincore.SystemMessageBox -smbTitle $script:errorhead `
+            -smbText "An unhandleable exception occurred while trying to launch WTF.Console!`nPlease check the logfile for more informations."
+            -smbIcon Error -smbButtons OK
+
+            $script:logmsg=@("WE'RE DOOMED!",`
+            "$($script.app.name) is not registered as active framework process anymore!",`
+            "And the hand-off to WTF.Console failed as well!","There's nothing we can do anymore. Just try to (more or less) exit safely.")
+            $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "ERROR"
+            
+            return $false
+            # At this point we do not re-activate the action buttons, cause we're officially doomed!
+            # This application is not registered anymore as active framework process! And we failed
+            # launching the WTF.Console. 
+        }
+
+        $script:logmsg=@("$($script:app.name) is definitely a lucky badass!","We could successfully re-register as active framework process :)")
+        $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "OKAY"
+
+        # Show a Win32-Dialog
+        $null = wintwincore.SystemMessageBox -smbTitle "$($script:errorhead)" `
+        -smbText "An error occured during hand-off to WTF.Console!`nPlease check the logfile for more information." `
+        -smbIcon Error -smbButtons OK
+
+        # Finally release the buttons again
+        $script:app.control.BtnCreateISO.IsEnabled = $false
+        $script:app.control.BtnExitApp.IsEnabled   = $true
+        return $false
+    }
+    # WTF.Console successfully launched.
+    else {
+        # At this point we can use $script:launchConsole.data.
+        $script:launchConsole = $script:launchConsole.data
+        $script:logmsg=@("$($script:app.name) successfully handed off to WTF.Console.","Here are some details about the WTF.Console process:",`
+        "ProcessId:   $($script:launchConsole.ProcessId)",`
+        "ConsolePath: $($script:launchConsole.ConsolePath)",`
+        "Script file: $($script:launchConsole.Script)",`
+        "CommandLine: $($script:launchConsole.CommandLine)",`
+        "Mode:        $($script:launchConsole.ProcessId)",`
+        "Action:      $($script:launchConsole.Action)")
+        $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "OKAY"
+        # But for now ... we just close the window
+        $window.Close()
+    }
+
+    # DEPRECATED: This point is unattainable
+    # Finally release the buttons again
+    #$script:app.control.BtnCreateISO.IsEnabled = $true
+    #$script:app.control.BtnExitApp.IsEnabled   = $true
+})
+
 
 #--------------------------------------------------------------------------------
 # Launch the UI and show the window
@@ -446,10 +778,10 @@ $script:app.window.Add_Loaded({
 
 $script:app.window.Add_ContentRendered({
     # Load the current settings (jobaction.json)
-    
+
     $script:logmsg=@("Trying to load job details from $($script:configfile.jobaction)")
     $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "INFO"
-    
+
     $local:zipfile = "$($script:config.jobaction."uupd-compose".zipfile)"
     $local:isopath = "$($script:config.jobaction."uupd-compose".isopath)"
     $local:isoname = "$($script:config.jobaction."uupd-compose".isoname)"
@@ -479,10 +811,7 @@ $script:app.window.ShowDialog() | Out-Null
 $script:logmsg=@("The Close-Event was triggered. Performing cleanup.")
 $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "INFO"
 # Unregister before final exit
-Write-Host "CURRENT PID:    $($script:ProcessID.Id)"
-Write-Host "-FrameworkRoot: $($wintwin.root)"
-$script:unregProcess = wintwincore.UnregisterProcess -FrameworkRoot $wintwin.root -ProcessId $($script:ProcessID.Id) -ExitCode 0
-Write-Host "$($script:unregProcess.code)"
+$script:unregProcess = wintwincore.UnregisterProcess -FrameworkRoot $script:wintwin.root -ProcessId $($script:ProcessID.Id) -ExitCode 0
 if ( $script:unregProcess.code -ne 0 ) {
     $script:logmsg=@("$($script:app.name) failed to unregister as Framework Process!","$($script:unregProcess.msg)")
     $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "FAIL"
