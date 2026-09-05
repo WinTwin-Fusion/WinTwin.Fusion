@@ -1,10 +1,10 @@
-function CreateUUPDiso {
+function wintwincore.CreateUUPDiso {
     <#
     .SYNOPSIS
         Runs uup_download_windows.cmd and monitors the full ISO creation process.
 
     .DESCRIPTION
-        CreateUUPDiso is the central orchestration function for ISO creation from a UUPDump
+        wintwincore.CreateUUPDiso is the central orchestration function for ISO creation from a UUPDump
         package. It performs the following steps in sequence:
 
         1.  Validates UUPDdir (must exist, must not be empty, warns on spaces in path).
@@ -67,11 +67,11 @@ function CreateUUPDiso {
         .data  >>  Full path to the final ISO file on success, $null on failure
 
     .EXAMPLE
-        $r = CreateUUPDiso -UUPDdir 'C:\WinISO\uupdump' -CleanUp 1 -ISOname 'Win11_24H2_Pro'
+        $r = wintwincore.CreateUUPDiso -UUPDdir 'C:\WinISO\uupdump' -CleanUp 1 -ISOname 'Win11_24H2_Pro'
         if ($r.code -eq 0) { Write-Host "ISO created: $($r.data)" }
 
     .EXAMPLE
-        $r = CreateUUPDiso -UUPDdir 'C:\WinISO\uupdump' `
+        $r = wintwincore.CreateUUPDiso -UUPDdir 'C:\WinISO\uupdump' `
                            -HardIdleMinutes 60 `
                            -GlobalTimeoutMinutes 480 `
                            -KillOnHardIdle
@@ -117,10 +117,6 @@ function CreateUUPDiso {
         [switch]$KillOnHardIdle
     )
 
-    # Module-scope variables
-    $AppInfo = AppScope -KeyID 'appinfo'
-    $EnvData  = AppScope -KeyID 'appenv'
-
     # Process object (used in finally block for cleanup)
     $CmdProcess = $null
 
@@ -129,20 +125,20 @@ function CreateUUPDiso {
     # ⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆
     try {
         if (-not (Test-Path -Path $UUPDdir -PathType Container)) {
-            return (OPSreturn -Code -1 -Message "CreateUUPDiso failed! UUPDdir does not exist: '$UUPDdir'")
+            return (OPSreturn -Code -1 -Message "wintwincore.CreateUUPDiso failed! UUPDdir does not exist: '$UUPDdir'")
         }
 
         $DirContent = Get-ChildItem -Path $UUPDdir -Force -ErrorAction SilentlyContinue
         if (-not $DirContent -or $DirContent.Count -eq 0) {
-            return (OPSreturn -Code -1 -Message "CreateUUPDiso failed! UUPDdir is empty: '$UUPDdir'")
+            return (OPSreturn -Code -1 -Message "wintwincore.CreateUUPDiso failed! UUPDdir is empty: '$UUPDdir'")
         }
 
         if ($UUPDdir -match '\s') {
-            Write-Warning "CreateUUPDiso: UUPDdir path contains spaces which may cause uup_download_windows.cmd to fail: '$UUPDdir'"
+            Write-Warning "wintwincore.CreateUUPDiso: UUPDdir path contains spaces which may cause uup_download_windows.cmd to fail: '$UUPDdir'"
         }
     }
     catch {
-        return (OPSreturn -Code -1 -Message "CreateUUPDiso failed! Error validating UUPDdir: $($_.Exception.Message)")
+        return (OPSreturn -Code -1 -Message "wintwincore.CreateUUPDiso failed! Error validating UUPDdir: $($_.Exception.Message)")
     }
 
     # ⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆
@@ -152,11 +148,11 @@ function CreateUUPDiso {
         $ExistingISOs = Get-ChildItem -Path $UUPDdir -Filter '*.iso' -File -Recurse -ErrorAction SilentlyContinue
         if ($ExistingISOs -and $ExistingISOs.Count -gt 0) {
             $ExistingList = ($ExistingISOs | Select-Object -ExpandProperty Name) -join ', '
-            return (OPSreturn -Code -1 -Message "CreateUUPDiso failed! Pre-existing .iso file(s) detected in '$UUPDdir': $ExistingList. Remove them before running CreateUUPDiso to ensure clean ISO-presence monitoring.")
+            return (OPSreturn -Code -1 -Message "wintwincore.CreateUUPDiso failed! Pre-existing .iso file(s) detected in '$UUPDdir': $ExistingList. Remove them before running wintwincore.CreateUUPDiso to ensure clean ISO-presence monitoring.")
         }
     }
     catch {
-        return (OPSreturn -Code -1 -Message "CreateUUPDiso failed! Error checking for pre-existing ISO files: $($_.Exception.Message)")
+        return (OPSreturn -Code -1 -Message "wintwincore.CreateUUPDiso failed! Error checking for pre-existing ISO files: $($_.Exception.Message)")
     }
 
     # ⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆
@@ -168,11 +164,11 @@ function CreateUUPDiso {
                   Select-Object -First 1
 
         if (-not $UUPcmd) {
-            return (OPSreturn -Code -1 -Message "CreateUUPDiso failed! 'uup_download_windows.cmd' not found anywhere in '$UUPDdir'. Ensure the UUPDump ZIP was extracted correctly.")
+            return (OPSreturn -Code -1 -Message "wintwincore.CreateUUPDiso failed! 'uup_download_windows.cmd' not found anywhere in '$UUPDdir'. Ensure the UUPDump ZIP was extracted correctly.")
         }
     }
     catch {
-        return (OPSreturn -Code -1 -Message "CreateUUPDiso failed! Error searching for uup_download_windows.cmd: $($_.Exception.Message)")
+        return (OPSreturn -Code -1 -Message "wintwincore.CreateUUPDiso failed! Error searching for uup_download_windows.cmd: $($_.Exception.Message)")
     }
 
     # ⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆
@@ -182,15 +178,15 @@ function CreateUUPDiso {
     try {
         $RuntimeLogPath = Invoke-UUPRuntimeLog -WorkingDir $UUPDdir -LogName 'uup.runtime.log' -KeepCount 5
         if (-not $RuntimeLogPath) {
-            return (OPSreturn -Code -1 -Message "CreateUUPDiso failed! Could not initialise the runtime log in '$UUPDdir'.")
+            return (OPSreturn -Code -1 -Message "wintwincore.CreateUUPDiso failed! Could not initialise the runtime log in '$UUPDdir'.")
         }
     }
     catch {
-        return (OPSreturn -Code -1 -Message "CreateUUPDiso failed! Error initialising runtime log: $($_.Exception.Message)")
+        return (OPSreturn -Code -1 -Message "wintwincore.CreateUUPDiso failed! Error initialising runtime log: $($_.Exception.Message)")
     }
 
-    Write-Verbose "CreateUUPDiso: Runtime log: '$RuntimeLogPath'"
-    Write-Verbose "CreateUUPDiso: Launching '$($UUPcmd.FullName)' ..."
+    Write-Verbose "wintwincore.CreateUUPDiso: Runtime log: '$RuntimeLogPath'"
+    Write-Verbose "wintwincore.CreateUUPDiso: Launching '$($UUPcmd.FullName)' ..."
 
     # ⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆
     # STEP 5 >> Launch uup_download_windows.cmd via cmd.exe
@@ -213,10 +209,10 @@ function CreateUUPDiso {
         $CmdProcess.StartInfo         = $PSI
         $null                         = $CmdProcess.Start()
 
-        Write-Verbose "CreateUUPDiso: Process started (PID: $($CmdProcess.Id))"
+        Write-Verbose "wintwincore.CreateUUPDiso: Process started (PID: $($CmdProcess.Id))"
     }
     catch {
-        return (OPSreturn -Code -1 -Message "CreateUUPDiso failed! Could not start cmd.exe / uup_download_windows.cmd: $($_.Exception.Message)")
+        return (OPSreturn -Code -1 -Message "wintwincore.CreateUUPDiso failed! Could not start cmd.exe / uup_download_windows.cmd: $($_.Exception.Message)")
     }
 
     # ⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆
@@ -241,7 +237,7 @@ function CreateUUPDiso {
 
             # -- Global timeout --
             if ($Stopwatch.Elapsed -gt $SpanGlobal) {
-                Write-Warning "CreateUUPDiso: Global timeout ($GlobalTimeoutMinutes min) reached."
+                Write-Warning "wintwincore.CreateUUPDiso: Global timeout ($GlobalTimeoutMinutes min) reached."
                 try { Add-Content -Path $RuntimeLogPath -Value "[WARN] Global timeout at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -Encoding Default -EA SilentlyContinue } catch { }
                 if ($KillOnHardIdle) { $WasKilled = Invoke-UUPProcessKill -ProcessId $CmdProcess.Id }
                 break
@@ -252,7 +248,7 @@ function CreateUUPDiso {
                 try {
                     if (Test-UUPConversionPhase -WorkingDir $UUPDdir -RuntimeLog $RuntimeLogPath) {
                         $InConversion = $true
-                        Write-Verbose "CreateUUPDiso: Conversion phase detected."
+                        Write-Verbose "wintwincore.CreateUUPDiso: Conversion phase detected."
                         try { Add-Content -Path $RuntimeLogPath -Value "[INFO] Conversion phase detected at $(Get-Date -Format 'HH:mm:ss')" -Encoding Default -EA SilentlyContinue } catch { }
                     }
                 } catch { }
@@ -298,7 +294,7 @@ function CreateUUPDiso {
                     $TailText = $Tail -join "`n"
 
                     if (-not $SentExitKey -and $TailText -match '(?i)Press 0 or q to exit') {
-                        Write-Verbose "CreateUUPDiso: Completion prompt detected — sending '0' to process stdin."
+                        Write-Verbose "wintwincore.CreateUUPDiso: Completion prompt detected — sending '0' to process stdin."
                         try { Add-Content -Path $RuntimeLogPath -Value "[INFO] Auto-sending exit key at $(Get-Date -Format 'HH:mm:ss')" -Encoding Default -EA SilentlyContinue } catch { }
                         try {
                             $CmdProcess.StandardInput.WriteLine('0')
@@ -307,11 +303,11 @@ function CreateUUPDiso {
                             $LastActivity  = Get-Date
                             Start-Sleep -Seconds 2
                         } catch {
-                            Write-Warning "CreateUUPDiso: Failed to send '0' to stdin: $($_.Exception.Message)"
+                            Write-Warning "wintwincore.CreateUUPDiso: Failed to send '0' to stdin: $($_.Exception.Message)"
                         }
                     }
                     elseif (-not $SoftWarnLogged) {
-                        Write-Verbose ('CreateUUPDiso: Soft-idle ({0:mm\:ss} no activity).' -f $IdleSpan)
+                        Write-Verbose ('wintwincore.CreateUUPDiso: Soft-idle ({0:mm\:ss} no activity).' -f $IdleSpan)
                         $SoftWarnLogged = $true
                     }
                 } catch { }
@@ -322,11 +318,11 @@ function CreateUUPDiso {
 
             # -- Hard-idle: warn and optionally kill --
             if ($IdleSpan -gt $SpanHard) {
-                Write-Warning ("CreateUUPDiso: Hard-idle threshold reached ({0} min)." -f $HardIdleMinutes)
+                Write-Warning ("wintwincore.CreateUUPDiso: Hard-idle threshold reached ({0} min)." -f $HardIdleMinutes)
                 try { Add-Content -Path $RuntimeLogPath -Value "[WARN] Hard-idle at $(Get-Date -Format 'HH:mm:ss')" -Encoding Default -EA SilentlyContinue } catch { }
 
                 if ($KillOnHardIdle) {
-                    Write-Warning "CreateUUPDiso: Killing process tree (KillOnHardIdle)."
+                    Write-Warning "wintwincore.CreateUUPDiso: Killing process tree (KillOnHardIdle)."
                     try { Add-Content -Path $RuntimeLogPath -Value "[ERROR] KillOnHardIdle triggered at $(Get-Date -Format 'HH:mm:ss')" -Encoding Default -EA SilentlyContinue } catch { }
                     $WasKilled = Invoke-UUPProcessKill -ProcessId $CmdProcess.Id
                     break
@@ -342,7 +338,7 @@ function CreateUUPDiso {
         # Allow the process a brief grace window to fully exit
         try { $null = $CmdProcess.WaitForExit(15000) } catch { }
         $Stopwatch.Stop()
-        Write-Verbose ("CreateUUPDiso: Monitoring ended. Total duration: {0}" -f $Stopwatch.Elapsed.ToString('hh\:mm\:ss'))
+        Write-Verbose ("wintwincore.CreateUUPDiso: Monitoring ended. Total duration: {0}" -f $Stopwatch.Elapsed.ToString('hh\:mm\:ss'))
     }
     finally {
         # Always close stdin and dispose the process — runs even if we break/throw
@@ -365,11 +361,11 @@ function CreateUUPDiso {
 
     if (-not $CreatedISO) {
         $KillNote = if ($WasKilled) { ' The process was forcefully terminated.' } else { '' }
-        return (OPSreturn -Code -1 -Message "CreateUUPDiso failed! No .iso file found in '$UUPDdir' after conversion.$KillNote Check runtime log: '$RuntimeLogPath'")
+        return (OPSreturn -Code -1 -Message "wintwincore.CreateUUPDiso failed! No .iso file found in '$UUPDdir' after conversion.$KillNote Check runtime log: '$RuntimeLogPath'")
     }
 
     $ISOpath = $CreatedISO.FullName
-    Write-Verbose "CreateUUPDiso: ISO found: '$ISOpath' ($([math]::Round($CreatedISO.Length / 1GB, 2)) GB)"
+    Write-Verbose "wintwincore.CreateUUPDiso: ISO found: '$ISOpath' ($([math]::Round($CreatedISO.Length / 1GB, 2)) GB)"
 
     # ⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆
     # STEP 8 >> Optional cleanup (CleanUp = 1) — remove everything except .iso
@@ -380,7 +376,7 @@ function CreateUUPDiso {
             Get-ChildItem -Path $UUPDdir -Directory -Force -ErrorAction SilentlyContinue |
                 ForEach-Object {
                     try   { Remove-Item -Path $_.FullName -Recurse -Force -ErrorAction Stop }
-                    catch { Write-Warning "CreateUUPDiso: Could not remove directory '$($_.FullName)': $($_.Exception.Message)" }
+                    catch { Write-Warning "wintwincore.CreateUUPDiso: Could not remove directory '$($_.FullName)': $($_.Exception.Message)" }
                 }
 
             # Remove all non-ISO files from root
@@ -388,13 +384,13 @@ function CreateUUPDiso {
                 Where-Object { $_.Extension.ToLower() -ne '.iso' } |
                 ForEach-Object {
                     try   { Remove-Item -Path $_.FullName -Force -ErrorAction Stop }
-                    catch { Write-Warning "CreateUUPDiso: Could not remove file '$($_.FullName)': $($_.Exception.Message)" }
+                    catch { Write-Warning "wintwincore.CreateUUPDiso: Could not remove file '$($_.FullName)': $($_.Exception.Message)" }
                 }
 
-            Write-Verbose "CreateUUPDiso: Cleanup complete — only the ISO remains in '$UUPDdir'."
+            Write-Verbose "wintwincore.CreateUUPDiso: Cleanup complete — only the ISO remains in '$UUPDdir'."
         }
         catch {
-            Write-Warning "CreateUUPDiso: Cleanup phase encountered an error: $($_.Exception.Message)"
+            Write-Warning "wintwincore.CreateUUPDiso: Cleanup phase encountered an error: $($_.Exception.Message)"
         }
     }
 
@@ -405,17 +401,17 @@ function CreateUUPDiso {
 
     if (-not [string]::IsNullOrWhiteSpace($ISOname)) {
         try {
-            $RenameResult = RenameUUPDiso -UUPDdir $UUPDdir -ISOname $ISOname
+            $RenameResult = wintwincore.RenameUUPDiso -UUPDdir $UUPDdir -ISOname $ISOname
             if ($RenameResult.code -eq 0) {
                 $FinalISOpath = $RenameResult.data
-                Write-Verbose "CreateUUPDiso: ISO renamed to '$FinalISOpath'."
+                Write-Verbose "wintwincore.CreateUUPDiso: ISO renamed to '$FinalISOpath'."
             }
             else {
-                Write-Warning "CreateUUPDiso: ISO rename failed: $($RenameResult.msg) — original path kept."
+                Write-Warning "wintwincore.CreateUUPDiso: ISO rename failed: $($RenameResult.msg) — original path kept."
             }
         }
         catch {
-            Write-Warning "CreateUUPDiso: Exception during ISO rename: $($_.Exception.Message) — original path kept."
+            Write-Warning "wintwincore.CreateUUPDiso: Exception during ISO rename: $($_.Exception.Message) — original path kept."
         }
     }
 
@@ -424,6 +420,6 @@ function CreateUUPDiso {
     # ⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆
     $FinalName = [System.IO.Path]::GetFileName($FinalISOpath)
     return (OPSreturn -Code 0 `
-        -Message "CreateUUPDiso successful! ISO: '$FinalName' in '$UUPDdir'. Runtime log: '$RuntimeLogPath'." `
+        -Message "wintwincore.CreateUUPDiso successful! ISO: '$FinalName' in '$UUPDdir'. Runtime log: '$RuntimeLogPath'." `
         -Data $FinalISOpath)
 }

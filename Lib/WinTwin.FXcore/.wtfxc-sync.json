@@ -2,13 +2,13 @@
   "component": "WinTwin.FXcore",
   "sourceRepository": "WinTwin-Fusion/WinTwin.FXcore",
   "sourceBranch": "main",
-  "sourceCommit": "b7254b9f5d2deb767eca6d633b1d0577a2019831",
-  "sourceCommitShort": "b7254b9",
+  "sourceCommit": "3ff6301144557085ae8a19b18ec657326eb70992",
+  "sourceCommitShort": "3ff6301",
   "sourcePullRequest": {
-    "number": 35,
-    "title": "Use 'processid' field for registered process PID",
+    "number": 36,
+    "title": "Rename UUP ISO functions and bump version",
     "mergedBy": "praetoriani",
-    "mergedAt": "2026-09-05T14:48:44Z"
+    "mergedAt": "2026-09-05T17:18:58Z"
   },
   "targetRepository": "WinTwin-Fusion/WinTwin.Fusion",
   "targetBaseBranch": "main",
@@ -19,7 +19,7 @@
   ],
   "syncedBy": "GitHub Actions",
   "workflow": "Sync WinTwin.FXcore to WinTwin.Fusion",
-  "workflowRunId": "33972916917",
-  "workflowRunNumber": "32",
-  "syncDate": "2026-09-05T14:49:02Z"
+  "workflowRunId": "33980577897",
+  "workflowRunNumber": "33",
+  "syncDate": "2026-09-05T17:19:13Z"
 }
