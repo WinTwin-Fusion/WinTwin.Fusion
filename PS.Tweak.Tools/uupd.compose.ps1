@@ -597,7 +597,7 @@ if (`$script:result.code -ne 0) {
 Write-Output "$($local:isofile) successfully created." -ForegroundColor DarkGreen
 Write-Output "Output directory:" -ForegroundColor DarkGreen
 Write-Output "$($local:isopath)" -ForegroundColor DarkGreen
-Write-Output "$($scrip:app.name) successfully finished." -ForegroundColor DarkGreen
+Write-Output "$($script:app.name) successfully finished." -ForegroundColor DarkGreen
 
 "@
     }
@@ -609,19 +609,21 @@ Write-Output "$($scrip:app.name) successfully finished." -ForegroundColor DarkGr
         #>
 
         $script:logmsg=@("$($script:app.name) failed trying to prepare further processes.",`
-        "Tried preparing script '$($script:app.script.name)' and launchung WTF.Console.",`
+        "Tried preparing script '$($script:app.script.file)' and launchung WTF.Console.",`
         "local:zipfile:  $($local:zipfile)",`
         "local:isopath:  $($local:isopath)",`
         "local:isofile:  $($local:isofile)",`
         "Details of Exception:",`
-        "Invocation:    $($_.InvocationInfo.InvocationName)",`
         "Script name:   $($_.InvocationInfo.ScriptName)",`
         "Linie number:  $($_.InvocationInfo.ScriptLineNumber)",`
+        "Linie (code):  $($_.InvocationInfo.Line.TrimEnd("`r","`n"))",`
         "Command:       $($_.InvocationInfo.MyCommand)",`
         "Statement:     $($_.InvocationInfo.Statement)",`
-        "Error details: $($_.ErrorDetails.Message)",`
         "Exception:     $($_.Exception.Message)",`
-        "StackTrace:    $($_.Exception.StackTrace)")
+        "Data:          $($_.Exception.Data)",`
+        "Source:        $($_.Exception.Source)",`
+        "Target:        $($_.Exception.TargetSite)",`
+        "HashCode:      $($_.Exception.GetHashCode())")
         $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "FAIL"
 
         $null = wintwincore.SystemMessageBox -smbTitle "$($script:errorhead)" `
