@@ -2,13 +2,13 @@
   "component": "PS.Tweak.Tools",
   "sourceRepository": "WinTwin-Fusion/PS.Tweak.Tools",
   "sourceBranch": "main",
-  "sourceCommit": "1debd9dbeec12104f6812e79ad176c67577578db",
-  "sourceCommitShort": "1debd9d",
+  "sourceCommit": "baedfe100bc09184f8fa7ecb5d505b5eb62bfb6d",
+  "sourceCommitShort": "baedfe1",
   "sourcePullRequest": {
-    "number": 31,
-    "title": "Bugfix in UUPD.Compose",
+    "number": 33,
+    "title": "Fix PS exec/placeholder checks and ISO name bug",
     "mergedBy": "praetoriani",
-    "mergedAt": "2026-09-06T07:04:09Z"
+    "mergedAt": "2026-09-06T13:03:07Z"
   },
   "targetRepository": "WinTwin-Fusion/WinTwin.Fusion",
   "targetBaseBranch": "main",
@@ -20,7 +20,7 @@
   ],
   "syncedBy": "GitHub Actions",
   "workflow": "Sync PS.Tweak.Tools to WinTwin.Fusion",
-  "workflowRunId": "34018150800",
-  "workflowRunNumber": "28",
-  "syncDate": "2026-09-06T07:04:21Z"
+  "workflowRunId": "34034918759",
+  "workflowRunNumber": "30",
+  "syncDate": "2026-09-06T13:03:19Z"
 }
