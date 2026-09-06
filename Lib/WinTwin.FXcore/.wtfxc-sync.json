@@ -2,13 +2,13 @@
   "component": "WinTwin.FXcore",
   "sourceRepository": "WinTwin-Fusion/WinTwin.FXcore",
   "sourceBranch": "main",
-  "sourceCommit": "42b6f369e8cc0dc43d153e67a38f303f28a4de77",
-  "sourceCommitShort": "42b6f36",
+  "sourceCommit": "7cb1aea840bdf4cb8b493d2fbd84a9924b9a128d",
+  "sourceCommitShort": "7cb1aea",
   "sourcePullRequest": {
-    "number": 40,
-    "title": "Add ScriptType parameter and auto-detection",
+    "number": 41,
+    "title": "Add Elevation support and process.json robustness",
     "mergedBy": "praetoriani",
-    "mergedAt": "2026-09-06T17:50:35Z"
+    "mergedAt": "2026-09-06T21:23:36Z"
   },
   "targetRepository": "WinTwin-Fusion/WinTwin.Fusion",
   "targetBaseBranch": "main",
@@ -19,7 +19,7 @@
   ],
   "syncedBy": "GitHub Actions",
   "workflow": "Sync WinTwin.FXcore to WinTwin.Fusion",
-  "workflowRunId": "34049856034",
-  "workflowRunNumber": "37",
-  "syncDate": "2026-09-06T17:50:48Z"
+  "workflowRunId": "34060934863",
+  "workflowRunNumber": "38",
+  "syncDate": "2026-09-06T21:23:47Z"
 }
