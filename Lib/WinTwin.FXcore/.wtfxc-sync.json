@@ -2,13 +2,13 @@
   "component": "WinTwin.FXcore",
   "sourceRepository": "WinTwin-Fusion/WinTwin.FXcore",
   "sourceBranch": "main",
-  "sourceCommit": "88dc96cc0c73ec2824eec2715546bcaa3a9af90b",
-  "sourceCommitShort": "88dc96c",
+  "sourceCommit": "e8ed7eb30d243b43540055c5aa96dc380f5d3ee0",
+  "sourceCommitShort": "e8ed7eb",
   "sourcePullRequest": {
-    "number": 38,
-    "title": "Switch logfile updates to shared 'wtfc' node",
+    "number": 39,
+    "title": "Improve FillPlaceholder placeholder handling",
     "mergedBy": "praetoriani",
-    "mergedAt": "2026-09-06T07:22:53Z"
+    "mergedAt": "2026-09-06T13:04:40Z"
   },
   "targetRepository": "WinTwin-Fusion/WinTwin.Fusion",
   "targetBaseBranch": "main",
@@ -19,7 +19,7 @@
   ],
   "syncedBy": "GitHub Actions",
   "workflow": "Sync WinTwin.FXcore to WinTwin.Fusion",
-  "workflowRunId": "34018992519",
-  "workflowRunNumber": "35",
-  "syncDate": "2026-09-06T07:23:08Z"
+  "workflowRunId": "34034993863",
+  "workflowRunNumber": "36",
+  "syncDate": "2026-09-06T13:04:54Z"
 }

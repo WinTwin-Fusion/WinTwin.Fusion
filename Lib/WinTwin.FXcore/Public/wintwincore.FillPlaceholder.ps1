@@ -36,25 +36,31 @@ function wintwincore.FillPlaceholder {
         [string[]]$txtval = @()
     )
 
-    $placeholder = [regex]::Matches($message, '\{\d+\}')
-
     try {
-        # Passed text has at least one placeholder
-        if ($placeholder.Count -gt 0) {
-            # Count of placeholders and args match
-            if ($txtval -and $txtval.Count -gt 0 -and $txtval.Count -eq $placeholder.Count) {
-                $newtext = [string]::Format($text, $txtval)
-                return OPSreturn -Code 0 -Message "$($MyInvocation.MyCommand.Name) successfully finished." -Data [string]$newtext
-            } else {
-                # There are either more or less placeholders than passed arguments
-                return OPSreturn -Code 1 -Message "Placeholders: $($placeholder.Count) ; Passed args: $($txtval.Count)" -Data [string]$text
-            }
-        } else {
+    
+        $placeholder = [regex]::Matches($text, '\{\d+\}')
+
+        if ( $placeholder.Count -eq 0) {
             # Passed text did not had any placeholders
-            return OPSreturn -Code 0 -Message "No placeholders found in passed text." -Data [string]$text
+            return (OPSreturn -Code 0 -Message "No placeholders found in passed text." -Data [string]$text)
         }
+
+        # Don't just consider the number of matches:
+        # "{0} {0}" requires only one value but has two matches.
+        $requiredIndexes = @(
+            $placeholder | ForEach-Object {$_.Value.Trim('{', '}')} | Sort-Object -Unique
+        )
+
+        $highestIndex = ($requiredIndexes | Measure-Object -Maximum).Maximum
+
+        if ($txtval.Count -le $highestIndex) {
+            return (OPSreturn -Code 1 -Message "Highest placeholder index: $highestIndex; passed arguments: $($txtval.Count)." -Data $text)
+        }
+
+        $newText = [string]::Format($text, [object[]]$txtval)
+        return (OPSreturn -Code 0 -Message "$($MyInvocation.MyCommand.Name) successfully finished." -Data [string]$newtext)
     }
     catch {
-        return OPSreturn -Code -1 -Message "$($MyInvocation.MyCommand.Name) failed replacing placeholders with given text." -Data $null -Exception [string]$_.Exception.Message
+        return (OPSreturn -Code -1 -Message "$($MyInvocation.MyCommand.Name) failed replacing placeholders with given text." -Data $null -Exception [string]$_.Exception.Message)
     }
 }
