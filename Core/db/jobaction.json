@@ -69,6 +69,7 @@
         "created":   "",
         "jobdone":   "",
         "state":     true,
-        "logfile":   [ true , "C:\\WinTwin.Fusion\\Core\\logs\\[DATETIME].wtf.console.log" ]
+        "logfile":   [ true , "C:\\WinTwin.Fusion\\Core\\logs\\[DATETIME].wtf.console.log" ],
+        "joblog":    "C:\\WinTwin.Fusion\\Core\\logs\\[DATETIME].[ACTIONID].console.log"
     }
 }

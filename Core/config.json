@@ -13,6 +13,16 @@
         "allowedlanguages": [ "en-us" , "de-de" ]
     },
 
+    "action-id": [
+        "uupd-catch",
+        "uupd-compose",
+        "uupd-isodump",
+        "wim-mount",
+        "wim-eject",
+        "wtfconsole",
+        "...."
+    ],
+
     "path": {
         "root":        "C:\\WinTwin.Fusion",
         "lib":         "\\Lib",
@@ -68,16 +78,6 @@
 
     "framework": {
         "guard": "\\Core\\wintwin.praetoriani.ps1"
-    },
-
-    "action-id": [
-        "uupd-catch",
-        "uupd-compose",
-        "uupd-isodump",
-        "wim-mount",
-        "wim-eject",
-        "wtfc",
-        "...."
-    ]
+    }
 
 }
