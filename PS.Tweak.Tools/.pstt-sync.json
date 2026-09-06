@@ -2,13 +2,13 @@
   "component": "PS.Tweak.Tools",
   "sourceRepository": "WinTwin-Fusion/PS.Tweak.Tools",
   "sourceBranch": "main",
-  "sourceCommit": "1debd9dbeec12104f6812e79ad176c67577578db",
-  "sourceCommitShort": "1debd9d",
+  "sourceCommit": "9e92987da5ff580634da203b0e27bc76aae6d517",
+  "sourceCommitShort": "9e92987",
   "sourcePullRequest": {
-    "number": 31,
-    "title": "Bugfix in UUPD.Compose",
+    "number": 32,
+    "title": "Migrate console API and fix validation",
     "mergedBy": "praetoriani",
-    "mergedAt": "2026-09-06T07:04:09Z"
+    "mergedAt": "2026-09-06T10:51:56Z"
   },
   "targetRepository": "WinTwin-Fusion/WinTwin.Fusion",
   "targetBaseBranch": "main",
@@ -20,7 +20,7 @@
   ],
   "syncedBy": "GitHub Actions",
   "workflow": "Sync PS.Tweak.Tools to WinTwin.Fusion",
-  "workflowRunId": "34018150800",
-  "workflowRunNumber": "28",
-  "syncDate": "2026-09-06T07:04:21Z"
+  "workflowRunId": "34028599021",
+  "workflowRunNumber": "29",
+  "syncDate": "2026-09-06T10:52:10Z"
 }
