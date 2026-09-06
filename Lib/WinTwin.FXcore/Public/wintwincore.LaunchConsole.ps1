@@ -124,7 +124,10 @@ function wintwincore.LaunchConsole {
 
         [Parameter(Mandatory = $false)]
         [AllowEmptyString()]
-        [string]$WtfConsolePath = ''
+        [string]$WtfConsolePath = '',
+
+        [Parameter(Mandatory = $false)]
+        [switch]$Elevated
     )
 
     $loggingWasBound = $PSBoundParameters.ContainsKey('Logging')
@@ -160,9 +163,9 @@ function wintwincore.LaunchConsole {
         $extension = [System.IO.Path]::GetExtension($resolvedScript).ToLowerInvariant()
 
         switch ($extension) {
-            '.ps1' { $global:ScriptType = 'ps1' }
-            '.cmd' { $global:ScriptType = 'cmd' }
-            '.bat' { $global:ScriptType = 'cmd' }
+            '.ps1' { $resolvedScriptType = 'ps1' }
+            '.cmd' { $resolvedScriptType = 'cmd' }
+            '.bat' { $resolvedScriptType = 'cmd' }
             default {
                 return (OPSreturn -Code fail -Message "Unsupported script type: $($extension)")
             }
@@ -426,14 +429,22 @@ function wintwincore.LaunchConsole {
     # Start-Process is used instead of PSAppCoreLib\RunProcess so FXcore stays
     # free of a hard dependency on that module.
     try {
-        $started = Start-Process -FilePath $powershellExe `
-        -ArgumentList $argList.ToArray() `
-        -WindowStyle Normal `
-        -PassThru `
-        -ErrorAction Stop
+        $startParams = @{
+            FilePath     = $powershellExe
+            ArgumentList = $argList.ToArray()
+            WindowStyle  = 'Normal'
+            PassThru     = $true
+            ErrorAction  = 'Stop'
+        }
+
+        if ($Elevated.IsPresent) {
+            $startParams.Verb = 'RunAs'
+        }
+
+        $started = Start-Process @startParams
     }
     catch {
-        # Rollback: never leave a stale "running" lock behind after a failed launch.
+        # Rollback: never leave a stale "running" lock behind.
         if ($resolvedMode -eq 'framework') {
             try {
                 $processDb.running.'proc-name' = ''
@@ -442,12 +453,24 @@ function wintwincore.LaunchConsole {
                 $processDb.running.cmdparams   = ''
                 $processDb.running.'job-start' = ''
                 $processDb.running.'job-state' = ''
-                if ($processDb.running.PSObject.Properties['pid']) { $processDb.running.processid = 0 }
+
+                if ($processDb.running.PSObject.Properties['processid']) {
+                    $processDb.running.processid = 0
+                }
+
                 $null = wintwincore.WriteJSON -Path $processDbPath -Value $processDb
             }
-            catch { }
+            catch {
+                Write-Verbose ("Rollback of process.json failed: {0}" -f $_.Exception.Message)
+            }
         }
-        return (OPSreturn -Code fail -Message "wintwincore.LaunchConsole failed! Could not start WTF.Console:`n$($_.Exception.Message)" -Exception $_.Exception)
+
+        $message = if ($_.Exception.NativeErrorCode -eq 1223) {
+            'The user canceled the administrator elevation request.'
+        }
+        else { $_.Exception.Message }
+
+        return (OPSreturn -Code fail -Message "wintwincore.LaunchConsole failed! Could not start WTF.Console:`n$message" -Exception $_.Exception)
     }
 
     if ($null -eq $started) {
@@ -460,9 +483,13 @@ function wintwincore.LaunchConsole {
             # 'pid' may not exist yet as a property on older process.json files -
             # Add-Member with -Force works whether it already exists or not.
             # Info: -Force was removed (for testing purpose)
-            if (-not $processDb.running.PSObject.Properties.Match('processid')) {
-                $processDb.running | Add-Member -MemberType NoteProperty -Name 'processid' -Value $started.Id -Force
+            if ($processDb.running.PSObject.Properties['processid']) {
+                $processDb.running.processid = [int]$started.Id
             }
+            else {
+                $processDb.running | Add-Member -MemberType NoteProperty -Name 'processid' -Value ([int]$started.Id)
+            }
+
             # Now we can be sure that 'processid' really exists            
             $writePid = wintwincore.WriteJSON -Path $processDbPath -Value $processDb
             if ($writePid.code -ne 0) {
@@ -479,6 +506,7 @@ function wintwincore.LaunchConsole {
         ProcessId      = $started.Id
         ConsolePath    = $resolvedConsolePath
         Script         = $resolvedScript
+        Elevated       = $Elevated.IsPresent
         Mode           = $resolvedMode
         Action         = $Action
         Size           = $resolvedSize
