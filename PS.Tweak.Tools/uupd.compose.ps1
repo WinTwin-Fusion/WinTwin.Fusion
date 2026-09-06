@@ -753,11 +753,11 @@ Write-Output "$($script:app.name) successfully finished." -ForegroundColor DarkG
         "ConsolePath: $($script:launchConsole.ConsolePath)",`
         "Script file: $($script:launchConsole.Script)",`
         "CommandLine: $($script:launchConsole.CommandLine)",`
-        "Mode:        $($script:launchConsole.ProcessId)",`
+        "Mode:        $($script:launchConsole.Mode)",`
         "Action:      $($script:launchConsole.Action)")
         $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "OKAY"
         # But for now ... we just close the window
-        $window.Close()
+        $script:app.window.Close()
     }
 
     # DEPRECATED: This point is unattainable
