@@ -2,13 +2,13 @@
   "component": "WinTwin.FXcore",
   "sourceRepository": "WinTwin-Fusion/WinTwin.FXcore",
   "sourceBranch": "main",
-  "sourceCommit": "3ff6301144557085ae8a19b18ec657326eb70992",
-  "sourceCommitShort": "3ff6301",
+  "sourceCommit": "3651f5a2579eb087645b25910c91140d76e6b817",
+  "sourceCommitShort": "3651f5a",
   "sourcePullRequest": {
-    "number": 36,
-    "title": "Rename UUP ISO functions and bump version",
+    "number": 37,
+    "title": "Prevent wtfc logfile overwrite",
     "mergedBy": "praetoriani",
-    "mergedAt": "2026-09-05T17:18:58Z"
+    "mergedAt": "2026-09-06T07:02:30Z"
   },
   "targetRepository": "WinTwin-Fusion/WinTwin.Fusion",
   "targetBaseBranch": "main",
@@ -19,7 +19,7 @@
   ],
   "syncedBy": "GitHub Actions",
   "workflow": "Sync WinTwin.FXcore to WinTwin.Fusion",
-  "workflowRunId": "33980577897",
-  "workflowRunNumber": "33",
-  "syncDate": "2026-09-05T17:19:13Z"
+  "workflowRunId": "34018075795",
+  "workflowRunNumber": "34",
+  "syncDate": "2026-09-06T07:02:45Z"
 }
