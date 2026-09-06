@@ -2,13 +2,13 @@
   "component": "PS.Tweak.Tools",
   "sourceRepository": "WinTwin-Fusion/PS.Tweak.Tools",
   "sourceBranch": "main",
-  "sourceCommit": "81a7bae4b22e745eedd2c388463e79627d24597a",
-  "sourceCommitShort": "81a7bae",
+  "sourceCommit": "787cc27bcdb75d3149988c47ae074cb0194e27b6",
+  "sourceCommitShort": "787cc27",
   "sourcePullRequest": {
-    "number": 29,
-    "title": "Update uupd.compose.ps1",
+    "number": 30,
+    "title": "Pre-Finalization",
     "mergedBy": "praetoriani",
-    "mergedAt": "2026-09-05T21:54:54Z"
+    "mergedAt": "2026-09-06T06:31:55Z"
   },
   "targetRepository": "WinTwin-Fusion/WinTwin.Fusion",
   "targetBaseBranch": "main",
@@ -20,7 +20,7 @@
   ],
   "syncedBy": "GitHub Actions",
   "workflow": "Sync PS.Tweak.Tools to WinTwin.Fusion",
-  "workflowRunId": "33994401805",
-  "workflowRunNumber": "26",
-  "syncDate": "2026-09-05T21:55:06Z"
+  "workflowRunId": "34016732274",
+  "workflowRunNumber": "27",
+  "syncDate": "2026-09-06T06:32:07Z"
 }
