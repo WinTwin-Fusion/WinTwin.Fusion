@@ -41,8 +41,8 @@
                 "en-us": "\\Core\\lang\\uupd-compose.en-us.json",
                 "de-de": "\\Core\\lang\\uupd-compose.de-de.json"
             },
-            "scriptfile": "uupd-compose.create-iso.ps1",
-            "scripttype": "ps1",
+            "scriptfile": "uup_download_windows.cmd",
+            "scripttype": "cmd",
             "consolelog": "uupd-compose.create-iso.log"
         }
     }

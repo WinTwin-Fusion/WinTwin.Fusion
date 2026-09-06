@@ -7,7 +7,7 @@
 .NOTES
     CREATOR:    Praetoriani (a.k.a M.Sczepanski)
     WEBSITE:    https://github.com/WinTwin-Fusion/PS.Tweak.Tools
-    VERSION:    v1.00.03
+    VERSION:    v1.00.05
     CREATED:    05.09.2026
     UPDATED:    06.09.2026
 
@@ -50,7 +50,7 @@ catch {
 # about errors that occurred during the process.
 # --------------------------------------------------------------------------
 $script:errorlist = @()
-$script:errorhead = "UUPD.Compose"
+$script:errorhead = "UUPD.Compose (PS.Twaek.Tools)"
 function script:Add-Error {
     # Small Helper-Function to add an error to script:errorlist
     # Usage: Add-Error "config.json is missing"
@@ -199,6 +199,7 @@ $script:app = [PSCustomObject]@{
         type   = $null
     }
     consoleLog = $null
+    process    = 'running'# can be running, stopped, handoff
     window     = $null    # <- Stores the window-objekt
     control    = $null    # <- Stores all window controls
     style      = [PSCustomObject]@{ # <- Stores styles of the window
@@ -209,6 +210,7 @@ $script:app = [PSCustomObject]@{
         InputErrorBrdr   = $null # FindResource('BrushInputErrorBrdr')
     }
 }
+
 # Load basic data from the pstt.config.json
 $script:app.toolbox  = $script:config.psttjson.appinfo.name
 $script:app.name     = $script:config.psttjson.apptool."uupd-compose".appname
@@ -217,7 +219,7 @@ $script:app.actionid = $script:config.psttjson.apptool."uupd-compose"."action-id
 $script:app.xmlui    = Join-Path "$($script:wintwin.root)" "$($script:config.psttjson.apptool."uupd-compose".xmlui)"
 
 # Load the script and logging details (required for the console interaction)
-$script:app.script.file = Join-Path "$($script:wintwin.export)" "$($script:config.psttjson.apptool."uupd-compose".scriptfile)"
+$script:app.script.file = "$($script:config.psttjson.apptool."uupd-compose".scriptfile)"
 $script:app.script.type = "$($script:config.psttjson.apptool."uupd-compose".scripttype)"
 $script:app.consoleLog  = Join-Path "$($script:wintwin.logs)" "$($script:config.psttjson.apptool."uupd-compose".consolelog)"
 
@@ -548,129 +550,71 @@ $script:app.control.BtnCreateISO.Add_Click({
         return $false
     }
 
-    $script:logmsg=@("No errors found. We can continue creating the ISO!")
+    $script:logmsg=@("No errors found. We can continue creating the ISO!","Extracting ZIP-Archive now.")
     $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "OKAY"
 
-    $script:logmsg=@("Creating the code for the console script now.")
-    $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "INFO"
-    $local:scriptContent = $null
-    try {
-        $local:scriptContent = @"
-`$ErrorActionPreference = 'Stop'
+    # VERY IMPORTANT!
+    <#
+    The previous process architecture could no longer be used because it had led to numerous issues. The main problem is
+    that WTF.Console launches a provided script within a hidden console process—a setup that, for instance, passes
+    through the I/O stream. However, this hidden process subsequently launches yet another hidden background process
+    via wintwincore.CreateUUPDiso. At that point, we lose control over the I/O stream. Consequently,
+    UUPD.Compose must now extract the ZIP file first. Once extraction is complete, UUPD.Compose launches
+    WTF.Console, which in turn directly starts tools like aria2; this restores our full control over the I/O stream.
+    #>
 
-Write-Output '*********************************************'
-Write-Output '$($script:app.name) $($script:app.version)   ($($($script:app.toolbox)))'
-Write-Output '*********************************************'
-Write-Output 'Available Informations:'
-Write-Output 'ZIP file: $($local:zipfile)'
-Write-Output 'ISO file: $($local:isofull)'
-Write-Output 'Output:   $($local:isopath)'
-Write-Output '*********************************************'
-
-`$moduleCandidates = @(
-    '$script:LibOPSR',
-    '$script:LibPSACL',
-    '$script:LibWTFXC',
-    '$script:LibWTXUI'
-) | Where-Object { -not [string]::IsNullOrWhiteSpace(`$_) }
-
-foreach (`$modulePath in `$moduleCandidates) {
-    if (-not (Test-Path -LiteralPath `$modulePath)) {
-        throw ('Required module path not found: {0}' -f `$modulePath)
-    }
-    Import-Module `$modulePath -Force -ErrorAction Stop
-}
-
-`$script:result = wintwincore.ExtractUUPDump ``
--ZIPfile '$($local:zipfile)' ``
--Target  '$($local:isopath)' ``
--Verify  1 ``
--Cleanup 0
-if (`$script:result.code -eq 0) {
-   Write-Output "ZIP file successfully extracted to:"
-   Write-Output "$($local:isopath)"
-} else {
-   Write-Output "Failed extracting ZIP file!"
-   exit 1
-}
-
-
-`$script:result = wintwincore.CreateUUPDiso -UUPDdir '$($local:isopath)' ``
--CleanUp 1 -ISOname '$($local:isofile.Substring(0, $local:isofile.Length - 4))' ``
--SoftIdleMinutes 10 -HardIdleMinutes 60 -KillOnHardIdle
-if (`$script:result.code -ne 0) {
-   Write-Output "Function wintwincore.CreateUUPDiso failed!"
-   Write-Output "Reason:"
-   Write-Output "`$(`$script:result.msg)"
-   exit 1    
-}
-
-Write-Output "$($local:isofile) successfully created."
-Write-Output "Output directory:"
-Write-Output "$($local:isopath)"
-Write-Output "$($script:app.name) successfully finished."
-
-"@
-    }
-    catch {
-        <#
-        SOMETHING WENT WRONG IN THE TRY-BLOCK!
-        CATCH THE EXCEPITIONS, SHOW A DIALOG
-        AND RETURN TO THE UI
-        #>
-
-        $script:logmsg=@("$($script:app.name) failed trying to prepare further processes.",`
-        "Tried preparing script '$($script:app.script.file)' and launchung WTF.Console.",`
-        "local:zipfile:  $($local:zipfile)",`
-        "local:isopath:  $($local:isopath)",`
-        "local:isofile:  $($local:isofile)",`
-        "Details of Exception:",`
-        "Script name:   $($_.InvocationInfo.ScriptName)",`
-        "Linie number:  $($_.InvocationInfo.ScriptLineNumber)",`
-        "Linie (code):  $($_.InvocationInfo.Line.TrimEnd("`r","`n"))",`
-        "Command:       $($_.InvocationInfo.MyCommand)",`
-        "Statement:     $($_.InvocationInfo.Statement)",`
-        "Exception:     $($_.Exception.Message)",`
-        "Data:          $($_.Exception.Data)",`
-        "Source:        $($_.Exception.Source)",`
-        "Target:        $($_.Exception.TargetSite)",`
-        "HashCode:      $($_.Exception.GetHashCode())")
-        $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "FAIL"
-
-        $null = wintwincore.SystemMessageBox -smbTitle "$($script:errorhead)" `
-        -smbText "An internal error occured while generating the console script!`nPlease check the logfile for more informations." `
+    # Try to extract the ZIP-Acrchive to the provided path
+    $script:result = wintwincore.ExtractUUPDump `
+    -ZIPfile "$($local:zipfile)" `
+    -Target  "$($local:isopath)" `
+    -Verify  1 -Cleanup 0
+    if ($script:result.code -ne 0) {
+        $script:logmsg=@("$($script:app.name) failed extracting ZIP-Archive!",`
+        "Function wintwincore.ExtractUUPDump failed with the following reason:","$($script:result.msg)")
+        $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "OKAY"
+        # Error Dialog
+        $null = wintwincore.SystemMessageBox -smbTitle $script:errorhead `
+        -smbText "Failed extracting the ZIP archive.`nPlease check the logfile for more informations."
         -smbIcon Warning -smbButtons OK
-
-        # Finally release the buttons again
-        $script:app.control.BtnCreateISO.IsEnabled = $true
-        $script:app.control.BtnExitApp.IsEnabled   = $true
-
-        return $false
-    }
-
-    # Write the generated console script to a file (path defined in dism.congif.json)
-    $local:result = wintwincore.ConsoleScript -ScriptPath $script:app.script.file `
-                                -ScriptType $script:app.script.type `
-                                -ScriptData $local:scriptContent
-    if ($local:result.code -ne 0) {
-        # Write something to the logfile
-        $script:logmsg=@("Failed creating console script for WTF.Console!",`
-        "Function wintwincore.ConsoleScript failed with the following reason:",`
-        "$($local:result.msg)")
-        $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "FAIL"
-        # Show a warning dialog
-        $null = wintwincore.SystemMessageBox -smbTitle "$($script:errorhead)" `
-        -smbText "Error while creating console script!`nPlease check the logfile for more informations."
-        -smbIcon Warning -smbButtons OK
-        # Finally release the buttons again
+        # Release the action buttons again
         $script:app.control.BtnCreateISO.IsEnabled = $true
         $script:app.control.BtnExitApp.IsEnabled   = $true
         return $false
     }
-    
+
+    $script:logmsg=@("ZIP Archive successfully extracted.", "ZIP Archive:  $($local:zipfile)", "Output Path:  $($local:isopath)")
+    $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "OKAY"
+    # Now that the ZIP Archive could be extracted, we need to find 'uup_download_windows.cmd'
+
+    $local:uupCommand = Get-ChildItem `
+    -LiteralPath $local:isopath `
+    -Filter "$($script:app.script.file)" `
+    -File `
+    -Recurse `
+    -ErrorAction Stop |
+    Select-Object -First 1
+
+    if ($null -eq $local:uupCommand) {
+        $script:logmsg=@("The ZIP Archive could be extrated. But the required script file could not be found!",`
+        "Missing Script File:  $($script:app.script.file)","Lookup Directory:     $($local:isopath)",
+        "$($csript:app.name) cannot continue without this file!")
+        $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "FAIL"
+        # Error Dialog
+        $null = wintwincore.SystemMessageBox -smbTitle $script:errorhead `
+        -smbText "Required Script File  '$($script:app.script.file)'  not found!`nPlease check the logfile for more informations."
+        -smbIcon Warning -smbButtons OK
+        # Release the action buttons again
+        $script:app.control.BtnCreateISO.IsEnabled = $true
+        $script:app.control.BtnExitApp.IsEnabled   = $true
+        return $false
+    }
+
+    $script:app.script.file = Join-Path "$($local:isopath)" "$($script:app.script.file)"
+
+    $script:logmsg=@("$($script:app.script.file) could be found in $($local:isopath)")
+    $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "OKAY"
+
     # Write something to the logfile
-    $script:logmsg=@("$($script:app.name) successfully created the following console script.","$($script:app.script.file)")
-    $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "OKAY"
     $script:logmsg=@("$($script:app.name) is now passing over to WTF.Console using following script:","$($script:wintwin.console)")
     $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "INFO"
     
@@ -690,6 +634,9 @@ Write-Output "$($script:app.name) successfully finished."
         $script:app.control.BtnExitApp.IsEnabled   = $true
         return $false
     }
+
+    # Importand for the clean exit
+    $script:app.process = 'handoff'
     
     $script:logmsg=@("$($script:app.name) successfully unregistered as Framework Process.")
     $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "OKAY"
@@ -698,6 +645,7 @@ Write-Output "$($script:app.name) successfully finished."
     # Typical application hand-off after the tool has cleared process.json:
     $script:launchConsole = wintwincore.LaunchConsole `
     -Script $script:app.script.file `
+    -ScriptType $script:app.script.type `
     -Mode framework `
     -Action $script:app.actionid `
     -Logging $true `
@@ -742,6 +690,9 @@ Write-Output "$($script:app.name) successfully finished."
             # launching the WTF.Console. 
         }
 
+        # Importand for the clean exit
+        $script:app.process = 'running'
+        
         $script:logmsg=@("$($script:app.name) is definitely a lucky badass!","We could successfully re-register as active framework process :)")
         $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "OKAY"
 
@@ -824,14 +775,21 @@ $script:app.window.ShowDialog() | Out-Null
 $script:logmsg=@("The Close-Event was triggered. Performing cleanup.")
 $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "INFO"
 # Unregister before final exit
-$script:unregProcess = wintwincore.UnregisterProcess -FrameworkRoot $script:wintwin.root -ProcessId $($script:ProcessID.Id) -ExitCode 0
-if ( $script:unregProcess.code -ne 0 ) {
-    $script:logmsg=@("$($script:app.name) failed to unregister as Framework Process!","$($script:unregProcess.msg)")
-    $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "FAIL"
+
+if ($script:app.process -eq 'running') {
+    $script:unregProcess = wintwincore.UnregisterProcess -FrameworkRoot $script:wintwin.root -ProcessId $($script:ProcessID.Id) -ExitCode 0
+    if ( $script:unregProcess.code -ne 0 ) {
+        $script:logmsg=@("$($script:app.name) failed to unregister as Framework Process!","$($script:unregProcess.msg)")
+        $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "FAIL"
+    } else {
+        $script:logmsg=@("$($script:app.name) successfully unregistered as Framework Process.")
+        $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "OKAY"
+    }
 } else {
-    $script:logmsg=@("$($script:app.name) successfully unregistered as Framework Process.")
-    $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "OKAY"
+    $script:logmsg=@("Looks like $($script:app.name) has already unregistered as Framework Process.","Reason: $($script:app.process)")
+    $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "INFO"
 }
+
 # Final entry to the logfile
 $script:logmsg=@("$($script:app.name) $($script:app.version) was closed.","Thank you for using UUPD.Compose (PS.Tweak.Tools)")
 $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "INFO"

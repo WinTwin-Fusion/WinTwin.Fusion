@@ -2,13 +2,13 @@
   "component": "PS.Tweak.Tools",
   "sourceRepository": "WinTwin-Fusion/PS.Tweak.Tools",
   "sourceBranch": "main",
-  "sourceCommit": "baedfe100bc09184f8fa7ecb5d505b5eb62bfb6d",
-  "sourceCommitShort": "baedfe1",
+  "sourceCommit": "d2cd8a9e3950de9e7e9c2670bb0c923ef3c50d9d",
+  "sourceCommitShort": "d2cd8a9",
   "sourcePullRequest": {
-    "number": 33,
-    "title": "Fix PS exec/placeholder checks and ISO name bug",
+    "number": 34,
+    "title": "Support cmd scripts & extract ZIP before handoff",
     "mergedBy": "praetoriani",
-    "mergedAt": "2026-09-06T13:03:07Z"
+    "mergedAt": "2026-09-06T17:49:18Z"
   },
   "targetRepository": "WinTwin-Fusion/WinTwin.Fusion",
   "targetBaseBranch": "main",
@@ -20,7 +20,7 @@
   ],
   "syncedBy": "GitHub Actions",
   "workflow": "Sync PS.Tweak.Tools to WinTwin.Fusion",
-  "workflowRunId": "34034918759",
-  "workflowRunNumber": "30",
-  "syncDate": "2026-09-06T13:03:19Z"
+  "workflowRunId": "34049790582",
+  "workflowRunNumber": "31",
+  "syncDate": "2026-09-06T17:49:28Z"
 }
