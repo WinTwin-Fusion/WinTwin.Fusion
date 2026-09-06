@@ -593,7 +593,7 @@ $script:app.control.BtnDownload.Add_Click({
         $script:config.jobaction."uupd-compose".zipfile = "$($Local:DLresult.data.FileName)"
         $script:config.jobaction."uupd-compose".isopath = "$($Local:location)"
         # Prepare a ISO-Filename based on the ZIP-Filename
-        $script:isoFilename = $Local:DLresult.data.FileName.Substring(0, $Local:DLresult.data.FileName.Length - 4)
+        $script:isoFilename = $Local:filename.Substring(0,$Local:filename.Length -4)
         $script:isoFilename = "$($script:isoFilename).iso"
         $script:config.jobaction."uupd-compose".isoname = "$($script:isoFilename)"
         # Write the current job action config to the JSON-File

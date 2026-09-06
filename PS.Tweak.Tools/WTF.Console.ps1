@@ -448,7 +448,7 @@ $global:Window = $script:LoadXML.data.Window
 $global:TitleBarPanel   = $global:Window.FindName('TitleBarPanel')
 $global:TitleBarText    = $global:Window.FindName('TitleBarText')
 $global:BtnMinimize     = $global:Window.FindName('BtnMinimize')
-$global:BtnMaximize     = $global:Window.FindName('BtnMaximize')
+#$global:BtnMaximize     = $global:Window.FindName('BtnMaximize')
 $global:BtnClose        = $global:Window.FindName('BtnClose')
 $global:TerminalOutput  = $global:Window.FindName('TerminalOutput')
 $global:InputBox        = $global:Window.FindName('InputBox')
@@ -467,7 +467,7 @@ $global:LblPrompt.Text          = $global:apptxt.labels.prompt
 $global:BtnSend.Content         = $global:apptxt.buttons.send
 $global:BtnClear.Content        = $global:apptxt.buttons.clear
 $global:BtnMinimize.ToolTip     = $global:apptxt.buttons.minimizeTooltip
-$global:BtnMaximize.ToolTip     = $global:apptxt.buttons.maximizeTooltip
+#$global:BtnMaximize.ToolTip     = $global:apptxt.buttons.maximizeTooltip
 $global:BtnClose.ToolTip        = $global:apptxt.buttons.closeTooltip
 $global:StatusText.Text         = $global:apptxt.status.ready
 $global:StatusInfo.Text         = "$($global:wtfconsole.appinfo.name) $($global:wtfconsole.appinfo.version)"
@@ -476,7 +476,7 @@ $global:StatusInfo.Text         = "$($global:wtfconsole.appinfo.name) $($global:
 # Window-Configuration
 #--------------------------------------------------------------------------------
 if ($global:AppMode -eq 'framework') {
-    $global:BtnMaximize.Visibility = [System.Windows.Visibility]::Collapsed
+#    $global:BtnMaximize.Visibility = [System.Windows.Visibility]::Collapsed
     $global:Window.ResizeMode      = [System.Windows.ResizeMode]::CanMinimize
 } else {
     $global:Window.ResizeMode = [System.Windows.ResizeMode]::CanResize
@@ -515,22 +515,32 @@ $global:TitleBarPanel.Add_MouseLeftButtonDown({
 })
 
 $global:BtnMinimize.Add_Click({ $global:Window.WindowState = [System.Windows.WindowState]::Minimized })
-$global:BtnMaximize.Add_Click({
-    if ($global:Window.WindowState -eq [System.Windows.WindowState]::Maximized) {
-        $global:Window.WindowState = [System.Windows.WindowState]::Normal
-    }
-    else {
-        $global:Window.WindowState = [System.Windows.WindowState]::Maximized
-    }
-})
+#$global:BtnMaximize.Add_Click({
+#    if ($global:Window.WindowState -eq [System.Windows.WindowState]::Maximized) {
+#        $global:Window.WindowState = [System.Windows.WindowState]::Normal
+#    }
+#    else {
+#        $global:Window.WindowState = [System.Windows.WindowState]::Maximized
+#    }
+#})
 
 #--------------------------------------------------------------------------------
 # Hidden Console with I/O-Rediretion
 # Following code defines a console process with a hidden console window. This
 # hidden window supports I/O-Redirection so we can take over with WTC.Console
 #--------------------------------------------------------------------------------
+
+$global:PSEcex = wintwincore.GetPSExecutable
+
+if ($global:PSEcex.code -ne 0) {
+    $null = wintwincore.SystemMessageBox -smbTitle "$($script:apperror.title)" `
+    -smbText "PowerShell executable could not be resolved:`n$($global:PSEcex.msg)" `
+    -smbIcon Error -smbButtons OK
+    exit 1
+}
+
 $global:psi = New-Object System.Diagnostics.ProcessStartInfo
-$global:psi.FileName               = (wintwincore.GetPSExecutable).data.Path
+$global:psi.FileName               = $global:PSEcex.data.Path
 $global:psi.Arguments              = "-NoLogo -NoProfile -ExecutionPolicy Bypass -File `"$global:ScriptPath`""
 $global:psi.RedirectStandardInput  = $true
 $global:psi.RedirectStandardOutput = $true
@@ -672,7 +682,7 @@ $global:SendCommand = {
         $global:InputBox.Clear()
         # Append the user input to the console output
         $script:textReplace = wintwincore.FillPlaceholder -text $global:apptxt.console.userInputEcho -txtval @("$($script:cmdText)")
-        if ($script:textReplace -ge 0) { $script:newStatus = $script:textReplace.data }
+        if ($script:textReplace.code -eq 0) { $script:newStatus = $script:textReplace.data }
         global:AddTerminalLine -Text $script:newStatus
         # UI-Update for WTF.Console
         $global:Window.Dispatcher.Invoke({
@@ -690,7 +700,7 @@ $global:SendCommand = {
         }
         # UI-Update for WTF.Console
         $script:textReplace = wintwincore.FillPlaceholder -text $global:apptxt.status.scriptrunning -txtval @("[$($script:timecode)]","$(Split-Path -Leaf $global:ScriptPath)")
-        if ($script:textReplace -ge 0) { $script:newStatus = $script:textReplace.data }
+        if ($script:textReplace.code -eq 0) { $script:newStatus = $script:textReplace.data }
         $global:Window.Dispatcher.Invoke({
             # Update the Status Text of WTF.Console
             $global:StatusText.Text = "$($script:newStatus)"
@@ -723,7 +733,7 @@ $global:RCPeventData = Register-ObjectEvent -InputObject $global:RCP -EventName 
         global:AddTerminalLine -Text $EventArgs.Data
         # UI-Update for WTF.Console
         $script:textReplace = wintwincore.FillPlaceholder -text $global:apptxt.status.scriptrunning -txtval @("[$($script:timecode)]","$(Split-Path -Leaf $global:ScriptPath)")
-        if ($script:textReplace -ge 0) { $script:newStatus = $script:textReplace.data }
+        if ($script:textReplace.code -eq 0) { $script:newStatus = $script:textReplace.data }
         $global:Window.Dispatcher.Invoke({
             # Update the Status Text of WTF.Console
             $global:StatusText.Text = "$($script:newStatus)"
@@ -752,7 +762,7 @@ $global:RCPeventFail = Register-ObjectEvent -InputObject $global:RCP -EventName 
         global:AddTerminalLine -Text "$($EventArgs.Data)"
         # UI-Update for WTF.Console
         $script:textReplace = wintwincore.FillPlaceholder -text $global:apptxt.status.scripterror -txtval @("[$($script:timecode)]","$(Split-Path -Leaf $global:ScriptPath)")
-        if ($script:textReplace -ge 0) { $script:newStatus = $script:textReplace.data }
+        if ($script:textReplace.code -eq 0) { $script:newStatus = $script:textReplace.data }
         $global:Window.Dispatcher.Invoke({
             # Update the Status Text of WTF.Console
             $global:StatusText.Text = "$($script:newStatus)"
@@ -780,7 +790,7 @@ $global:RCPeventExit = Register-ObjectEvent -InputObject $global:RCP -EventName 
         $script:textReplace = wintwincore.FillPlaceholder -text $global:apptxt.status.finishedFail `
         -txtval @("[$($script:timecode)]","$(Split-Path -Leaf $global:ScriptPath)","$($script:exitCode)")
     }
-    if ($script:textReplace -ge 0) { $script:newStatus = $script:textReplace.data }
+    if ($script:textReplace.code -eq 0) { $script:newStatus = $script:textReplace.data }
     # UI-Update for WTF.Console (set the status-message)
     $global:Window.Dispatcher.Invoke({
         # Update the Status Text of WTF.Console
@@ -818,7 +828,7 @@ try {
         # UI-Update for WTF.Console (set the status-message)
         $script:textReplace = wintwincore.FillPlaceholder -text $global:apptxt.status.scriptstarted `
         -txtval @("[$($script:timecode)]","$(Split-Path -Leaf $global:ScriptPath)","$($global:RCP.Id)")
-        if ($script:textReplace -ge 0) { $script:newStatus = $script:textReplace.data }
+        if ($script:textReplace.code -eq 0) { $script:newStatus = $script:textReplace.data }
         $global:Window.Dispatcher.Invoke({
             # Update the Status Text of WTF.Console
             $global:StatusText.Text = $script:newStatus
@@ -835,7 +845,7 @@ try {
         # UI-Update for WTF.Console (set the status-message)
         $script:textReplace = wintwincore.FillPlaceholder -text $global:apptxt.status.startfailed `
         -txtval @("[$($script:timecode)]","$(Split-Path -Leaf $global:ScriptPath)")
-        if ($script:textReplace -ge 0) { $script:newStatus = $script:textReplace.data }
+        if ($script:textReplace.code -eq 0) { $script:newStatus = $script:textReplace.data }
         $global:Window.Dispatcher.Invoke({
             # Update the Status Text of WTF.Console
             $global:StatusText.Text = $script:newStatus
@@ -854,7 +864,7 @@ catch {
     # UI-Update for WTF.Console (set the status-message)
     $script:textReplace = wintwincore.FillPlaceholder -text $global:apptxt.status.startfailed `
     -txtval @("[$($script:timecode)]","$(Split-Path -Leaf $global:ScriptPath)")
-    if ($script:textReplace -ge 0) { $script:newStatus = $script:textReplace.data }
+    if ($script:textReplace.code -eq 0) { $script:newStatus = $script:textReplace.data }
     $global:Window.Dispatcher.Invoke({
         # Update the Status Text of WTF.Console
         $global:StatusText.Text = $script:newStatus
@@ -872,7 +882,7 @@ catch {
     # Create the text for the warning dialog
     $script:textReplace = wintwincore.FillPlaceholder -text $global:apptxt.messages.scriptstartfailed `
     -txtval @("$(Split-Path -Leaf $global:ScriptPath)")
-    if ($script:textReplace -ge 0) { $script:newStatus = $script:textReplace.data }
+    if ($script:textReplace.code -eq 0) { $script:newStatus = $script:textReplace.data }
     # Throw a dialog with the formatted text
     $script:result = wintwincore.SystemMessageBox -smbTitle "$($script:apperror.title)" `
     -smbText "$($script:newStatus)" `
