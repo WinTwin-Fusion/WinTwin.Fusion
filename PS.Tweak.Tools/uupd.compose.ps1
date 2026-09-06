@@ -559,7 +559,7 @@ Write-Output '*********************************************' -ForegroundColor Da
 `$moduleCandidates = @(
     '$script:LibOPSR',
     '$script:LibPSACL',
-    '$script:LibWTFXC'
+    '$script:LibWTFXC',
     '$script:LibWTXUI'
 ) | Where-Object { -not [string]::IsNullOrWhiteSpace(`$_) }
 
