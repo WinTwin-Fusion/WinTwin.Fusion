@@ -1,11 +1,11 @@
 {
     "appinfo": {
         "name":         "PS.Tweak.Tools",
-        "version":      "v1.00.06",
+        "version":      "v1.00.08",
         "devname":      "praetoriani",
         "website":      "https://github.com/WinTwin-Fusion/PS.Tweak.Tools",
         "datecreate":   "26.08.2026",
-        "dateupdate":   "05.09.2026"
+        "dateupdate":   "06.09.2026"
     },
 
     "apptool": {
@@ -33,7 +33,7 @@
         },
         "uupd-compose": {
             "appname":   "UUPD.Compose",
-            "appvers":    "v1.00.02",
+            "appvers":    "v1.00.03",
             "action-id": "uupd-compose",
             "apppath":   "\\PS.Tweak.Tools\\uupd.compose.ps1",
             "xmlui":     "\\Core\\ui\\uupd-compose.main.xml",

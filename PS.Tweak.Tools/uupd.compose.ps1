@@ -7,9 +7,9 @@
 .NOTES
     CREATOR:    Praetoriani (a.k.a M.Sczepanski)
     WEBSITE:    https://github.com/WinTwin-Fusion/PS.Tweak.Tools
-    VERSION:    v1.00.01
+    VERSION:    v1.00.03
     CREATED:    05.09.2026
-    UPDATED:    05.09.2026
+    UPDATED:    06.09.2026
 
     REQUIREMENTS & DEPENDENCIES:
     - PowerShell 5.1 or higher
@@ -39,6 +39,7 @@ catch {
     Write-Host "Runtime-Error!" -ForegroundColor DarkRed
     Write-Host "****************" -ForegroundColor DarkRed
     Write-Host "Required assemblies could not be loaded!`n$($_.Exception.Message)" -ForegroundColor DarkRed
+    Start-Sleep -Milliseconds 3000
     exit 1
 }
 
@@ -503,28 +504,38 @@ $script:app.control.BtnCreateISO.Add_Click({
 
     if ( [string]::IsNullOrWhiteSpace($script:app.control.TxtISOFilename.Text) ) {
         $local:errorcount++
-        $script:app.control.TxtISOFilename.Background  = $Script:BrushInputError
-        $script:app.control.TxtISOFilename.BorderBrush = $Script:BrushInputErrorBrdr
-        script:uiEvent
-    }
-    elseif ( $script:app.control.TxtISOFilename.Text.Substring($script:app.control.TxtISOFilename.Text.Length - 4) -ne ".iso") {
-        $local:errorcount++
-        $script:app.control.TxtISOFilename.Background  = $Script:BrushInputError
-        $script:app.control.TxtISOFilename.BorderBrush = $Script:BrushInputErrorBrdr
+        $script:app.control.TxtISOFilename.Background  = $script:app.style.InputErrorBack
+        $script:app.control.TxtISOFilename.BorderBrush = $script:app.style.InputErrorBrdr
         script:uiEvent
     }
     else {
-        $local:isofile = $script:app.control.TxtISOFilename.Text
+        # We need to perform some additional checks, if the input isn't empty
+        # Filename must be at least 8 characters (like 'Test.iso')
+        if ($script:app.control.TxtISOFilename.Text.Length -lt 8) {
+            $local:errorcount++
+            $script:app.control.TxtISOFilename.Background  = $script:app.style.InputErrorBack
+            $script:app.control.TxtISOFilename.BorderBrush = $script:app.style.InputErrorBrdr
+            script:uiEvent
+        }
+        else {
+            if ( $script:app.control.TxtISOFilename.Text.Substring($script:app.control.TxtISOFilename.Text.Length - 4) -ne ".iso") {
+                $local:errorcount++
+                $script:app.control.TxtISOFilename.Background  = $script:app.style.InputErrorBack
+                $script:app.control.TxtISOFilename.BorderBrush = $script:app.style.InputErrorBrdr
+                script:uiEvent
+            }
+            else { $local:isofile = $script:app.control.TxtISOFilename.Text }
+        }
     }
 
     if (-not ([string]::IsNullOrWhiteSpace($script:app.control.TxtISOlocation.Text)) -and -not ([string]::IsNullOrWhiteSpace($script:app.control.TxtISOFilename.Text))) {
         $local:isofull = Join-Path $local:isopath $local:isofile -ErrorAction SilentlyContinue
         if ( Test-Path -LiteralPath $local:isofull -PathType Leaf ) {
             $local:errorcount++
-            $script:app.control.TxtISOlocation.Background  = $Script:BrushInputError
-            $script:app.control.TxtISOlocation.BorderBrush = $Script:BrushInputErrorBrdr
-            $script:app.control.TxtISOFilename.Background  = $Script:BrushInputError
-            $script:app.control.TxtISOFilename.BorderBrush = $Script:BrushInputErrorBrdr
+            $script:app.control.TxtISOlocation.Background  = $script:app.style.InputErrorBack
+            $script:app.control.TxtISOlocation.BorderBrush = $script:app.style.InputErrorBrdr
+            $script:app.control.TxtISOFilename.Background  = $script:app.style.InputErrorBack
+            $script:app.control.TxtISOFilename.BorderBrush = $script:app.style.InputErrorBrdr
         }
     }
 
@@ -547,14 +558,14 @@ $script:app.control.BtnCreateISO.Add_Click({
         $local:scriptContent = @"
 `$ErrorActionPreference = 'Stop'
 
-Write-Output '*********************************************' -ForegroundColor DarkGray
-Write-Output '$($script:app.name) $($script:app.version)   ($($($script:app.toolbox)))' -ForegroundColor Gray
-Write-Output '*********************************************' -ForegroundColor DarkGray
-Write-Output 'Available Informations:' -ForegroundColor Gray
-Write-Output 'ZIP file: $($local:zipfile)' -ForegroundColor DarkGray
-Write-Output 'ISO file: $($local:isofull)' -ForegroundColor DarkGray
-Write-Output 'Output:   $($local:isopath)' -ForegroundColor DarkGray
-Write-Output '*********************************************' -ForegroundColor DarkGray
+Write-Output '*********************************************'
+Write-Output '$($script:app.name) $($script:app.version)   ($($($script:app.toolbox)))'
+Write-Output '*********************************************'
+Write-Output 'Available Informations:'
+Write-Output 'ZIP file: $($local:zipfile)'
+Write-Output 'ISO file: $($local:isofull)'
+Write-Output 'Output:   $($local:isopath)'
+Write-Output '*********************************************'
 
 `$moduleCandidates = @(
     '$script:LibOPSR',
@@ -570,34 +581,34 @@ foreach (`$modulePath in `$moduleCandidates) {
     Import-Module `$modulePath -Force -ErrorAction Stop
 }
 
-`$script:result = wintwincore.ExtractUUPDump `
--ZIPfile '$($local:zipfile)' `
--Target  '$($local:isopath)' `
--Verify  1 `
+`$script:result = wintwincore.ExtractUUPDump ``
+-ZIPfile '$($local:zipfile)' ``
+-Target  '$($local:isopath)' ``
+-Verify  1 ``
 -Cleanup 0
 if (`$script:result.code -eq 0) {
-   Write-Output "ZIP file successfully extracted to:" -ForegroundColor DarkGreen
-   Write-Output "$($local:isopath)" -ForegroundColor DarkGreen
+   Write-Output "ZIP file successfully extracted to:"
+   Write-Output "$($local:isopath)"
 } else {
-   Write-Output "Failed extracting ZIP file!" -ForegroundColor DardRed
+   Write-Output "Failed extracting ZIP file!"
    exit 1
 }
 
 
-`$script:result = wintwincore.CreateUUPDiso -UUPDdir '$($local:isopath)' `
--CleanUp 1 -ISOname '$($local:isofile.Substring(0, $local:isofile.Length - 4))'
+`$script:result = wintwincore.CreateUUPDiso -UUPDdir '$($local:isopath)' ``
+-CleanUp 1 -ISOname '$($local:isofile.Substring(0, $local:isofile.Length - 4))' ``
 -SoftIdleMinutes 10 -HardIdleMinutes 60 -KillOnHardIdle
 if (`$script:result.code -ne 0) {
-   Write-Output "Function wintwincore.CreateUUPDiso failed!" -ForegroundColor DardRed
-   Write-Output "Reason:" -ForegroundColor DardRed
-   Write-Output "`$(`$script:result.msg)" -ForegroundColor DardRed
+   Write-Output "Function wintwincore.CreateUUPDiso failed!"
+   Write-Output "Reason:"
+   Write-Output "`$(`$script:result.msg)"
    exit 1    
 }
 
-Write-Output "$($local:isofile) successfully created." -ForegroundColor DarkGreen
-Write-Output "Output directory:" -ForegroundColor DarkGreen
-Write-Output "$($local:isopath)" -ForegroundColor DarkGreen
-Write-Output "$($script:app.name) successfully finished." -ForegroundColor DarkGreen
+Write-Output "$($local:isofile) successfully created."
+Write-Output "Output directory:"
+Write-Output "$($local:isopath)"
+Write-Output "$($script:app.name) successfully finished."
 
 "@
     }
