@@ -378,17 +378,18 @@ function wintwincore.LaunchConsole {
             $null = wintwincore.SetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId $Action -Field 'logfile' -Value @($true, $resolvedLogfile)
         }
 
+        # DANGER-ZONE: THE FOLLOWING CODE BLOCK OVERRIDES THE LOGFILE VALUE FOR THE PROCESS THAT STARTED THE CONSOLE!
         # Shared WTF.Console node so other tools can see who launched the console.
-        $wtfcExists = wintwincore.GetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId 'wtfc'
-        if ($wtfcExists.code -eq 0) {
-            $null = wintwincore.SetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId 'wtfc' -Field 'script'    -Value $resolvedScript
-            $null = wintwincore.SetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId 'wtfc' -Field 'action-id' -Value $Action
-            $null = wintwincore.SetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId 'wtfc' -Field 'created'   -Value $timestampNow
-            $null = wintwincore.SetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId 'wtfc' -Field 'state'     -Value $true
-            if ($loggingEnabled -and -not [string]::IsNullOrWhiteSpace($resolvedLogfile)) {
-                $null = wintwincore.SetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId 'wtfc' -Field 'logfile' -Value @($true, $resolvedLogfile)
-            }
-        }
+        #$wtfcExists = wintwincore.GetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId 'wtfc'
+        #if ($wtfcExists.code -eq 0) {
+        #    $null = wintwincore.SetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId 'wtfc' -Field 'script'    -Value $resolvedScript
+        #    $null = wintwincore.SetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId 'wtfc' -Field 'action-id' -Value $Action
+        #    $null = wintwincore.SetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId 'wtfc' -Field 'created'   -Value $timestampNow
+        #    $null = wintwincore.SetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId 'wtfc' -Field 'state'     -Value $true
+        #    if ($loggingEnabled -and -not [string]::IsNullOrWhiteSpace($resolvedLogfile)) {
+        #        $null = wintwincore.SetJobAction -FrameworkRoot $resolvedFrameworkRoot -ActionId 'wtfc' -Field 'logfile' -Value @($true, $resolvedLogfile)
+        #    }
+        #}
     }
 
     # --- Get full path to PowerShell ------------------------------------------
