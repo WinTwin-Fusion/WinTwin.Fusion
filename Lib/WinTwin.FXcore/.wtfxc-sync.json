@@ -2,13 +2,13 @@
   "component": "WinTwin.FXcore",
   "sourceRepository": "WinTwin-Fusion/WinTwin.FXcore",
   "sourceBranch": "main",
-  "sourceCommit": "3651f5a2579eb087645b25910c91140d76e6b817",
-  "sourceCommitShort": "3651f5a",
+  "sourceCommit": "88dc96cc0c73ec2824eec2715546bcaa3a9af90b",
+  "sourceCommitShort": "88dc96c",
   "sourcePullRequest": {
-    "number": 37,
-    "title": "Prevent wtfc logfile overwrite",
+    "number": 38,
+    "title": "Switch logfile updates to shared 'wtfc' node",
     "mergedBy": "praetoriani",
-    "mergedAt": "2026-09-06T07:02:30Z"
+    "mergedAt": "2026-09-06T07:22:53Z"
   },
   "targetRepository": "WinTwin-Fusion/WinTwin.Fusion",
   "targetBaseBranch": "main",
@@ -19,7 +19,7 @@
   ],
   "syncedBy": "GitHub Actions",
   "workflow": "Sync WinTwin.FXcore to WinTwin.Fusion",
-  "workflowRunId": "34018075795",
-  "workflowRunNumber": "34",
-  "syncDate": "2026-09-06T07:02:45Z"
+  "workflowRunId": "34018992519",
+  "workflowRunNumber": "35",
+  "syncDate": "2026-09-06T07:23:08Z"
 }
