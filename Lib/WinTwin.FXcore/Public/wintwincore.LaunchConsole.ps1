@@ -95,6 +95,10 @@ function wintwincore.LaunchConsole {
         [string]$Script,
 
         [Parameter(Mandatory = $false)]
+        [ValidateSet('Auto', 'ps1', 'cmd', 'bat')]
+        [string]$ScriptType = 'Auto',
+
+        [Parameter(Mandatory = $false)]
         [ValidateSet('framework', 'standalone')]
         [string]$Mode = 'framework',
 
@@ -141,6 +145,7 @@ function wintwincore.LaunchConsole {
         return (OPSreturn -Code fail -Message "wintwincore.LaunchConsole failed! Could not resolve Script path '$Script': $($_.Exception.Message)" -Exception $_.Exception)
     }
 
+    $resolvedScriptType    = $ScriptType.ToLowerInvariant()
     $resolvedMode          = $Mode.ToLowerInvariant()
     $resolvedSize          = $Size
     $resolvedConsolePath   = $WtfConsolePath
@@ -150,6 +155,19 @@ function wintwincore.LaunchConsole {
     $jobNode               = $null
     $timestampNow          = Get-Date -Format 'dd.MM.yyyy ; HH:mm:ss'
     $datetimeToken         = Get-Date -Format 'yyyyMMdd-HHmm'
+
+    if ($resolvedScriptType -eq 'auto') {
+        $extension = [System.IO.Path]::GetExtension($resolvedScript).ToLowerInvariant()
+
+        switch ($extension) {
+            '.ps1' { $global:ScriptType = 'ps1' }
+            '.cmd' { $global:ScriptType = 'cmd' }
+            '.bat' { $global:ScriptType = 'cmd' }
+            default {
+                return (OPSreturn -Code fail -Message "Unsupported script type: $($extension)")
+            }
+        }
+    }
 
     # =========================================================================
     # FRAMEWORK MODE
@@ -330,6 +348,7 @@ function wintwincore.LaunchConsole {
         '-ExecutionPolicy', 'Bypass',
         '-File', $resolvedConsolePath,
         '-ScriptPath', $resolvedScript,
+        '-ScriptType', $resolvedScriptType,
         '-AppMode', $resolvedMode,
         '-WinSize', $resolvedSize
     ))
