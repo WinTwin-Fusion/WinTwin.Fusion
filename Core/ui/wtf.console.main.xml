@@ -306,7 +306,7 @@
                                IsHitTestVisible="False"/>
 
                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,14,0">
-                        <Button x:Name="BtnMaximize" Style="{StaticResource WinCtrlBtnMaximize}" Background="{StaticResource BrushBtnMaximize}" ToolTip="Maximize"/>
+                        <!-- <Button x:Name="BtnMaximize" Style="{StaticResource WinCtrlBtnMaximize}" Background="{StaticResource BrushBtnMaximize}" ToolTip="Maximize"/> -->
                         <Button x:Name="BtnMinimize" Style="{StaticResource WinCtrlBtnMinimize}" Background="{StaticResource BrushBtnMinimize}" ToolTip="Minimize"/>
                         <Button x:Name="BtnClose" Style="{StaticResource WinCtrlBtnClose}" Background="{StaticResource BrushBtnClose}" ToolTip="Close"/>
                     </StackPanel>
