@@ -2,13 +2,13 @@
   "component": "PS.Tweak.Tools",
   "sourceRepository": "WinTwin-Fusion/PS.Tweak.Tools",
   "sourceBranch": "main",
-  "sourceCommit": "d2cd8a9e3950de9e7e9c2670bb0c923ef3c50d9d",
-  "sourceCommitShort": "d2cd8a9",
+  "sourceCommit": "e8e52fc39788c6abf90931220d6ac6e2495a4c4d",
+  "sourceCommitShort": "e8e52fc",
   "sourcePullRequest": {
-    "number": 34,
-    "title": "Support cmd scripts & extract ZIP before handoff",
+    "number": 35,
+    "title": "Add elevation-aware UUPD launch flow",
     "mergedBy": "praetoriani",
-    "mergedAt": "2026-09-06T17:49:18Z"
+    "mergedAt": "2026-09-06T21:21:59Z"
   },
   "targetRepository": "WinTwin-Fusion/WinTwin.Fusion",
   "targetBaseBranch": "main",
@@ -20,7 +20,7 @@
   ],
   "syncedBy": "GitHub Actions",
   "workflow": "Sync PS.Tweak.Tools to WinTwin.Fusion",
-  "workflowRunId": "34049790582",
-  "workflowRunNumber": "31",
-  "syncDate": "2026-09-06T17:49:28Z"
+  "workflowRunId": "34060847766",
+  "workflowRunNumber": "32",
+  "syncDate": "2026-09-06T21:22:13Z"
 }

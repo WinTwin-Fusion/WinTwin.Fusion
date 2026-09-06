@@ -37,6 +37,7 @@
             "action-id": "uupd-compose",
             "apppath":   "\\PS.Tweak.Tools\\uupd.compose.ps1",
             "xmlui":     "\\Core\\ui\\uupd-compose.main.xml",
+            "popup":     "\\Core\\ui\\magic.window.xml",
             "langfile":  {
                 "en-us": "\\Core\\lang\\uupd-compose.en-us.json",
                 "de-de": "\\Core\\lang\\uupd-compose.de-de.json"

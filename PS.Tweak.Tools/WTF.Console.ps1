@@ -42,6 +42,12 @@
     redirected console process. Required in BOTH operating modes. The file's
     existence is validated before the process is started.
 
+.EXAMPLE 
+    # Starts the WTF.Console with normal priviledges
+    .\WTF.Console.ps1 -ScriptPath 'D:\Jobs\Test.ps1' -AppMode standalone
+    # Starts WTF.Console with elevated priviledges!
+    .\WTF.Console.ps1 -ScriptPath 'D:\Jobs\Test.ps1' -AppMode standalone -Elevated
+
 .NOTES
     Creation Date: 24.03.2026 
     Last Update:   06.09.2026
@@ -79,7 +85,13 @@ param(
     [string]$Language = "unknown",
 
     [Parameter(Mandatory = $false)]
-    [string]$LogFilePath = "unknown"
+    [string]$LogFilePath = "unknown",
+
+    [Parameter(Mandatory = $false)]
+    [switch]$Elevated,
+
+    [Parameter(Mandatory = $false)]
+    [switch]$ElevationRestarted
 )
 
 Set-StrictMode -Version Latest
@@ -110,7 +122,77 @@ function Show-ErrorMsg {
     if ($exitapp.IsPresent) { exit 1 }
     return
 }
+#--------------------------------------------------------------------------------
+# ELEVATED PRIVILEDGES!
+# The following code block is extremely important. WTF.Console can generally be
+# run normally or with elevated privileges (administrative rights). In framework
+# mode, wintwincore.LaunchConsole ensures that WTF.Console is started with
+# elevated privileges. However, for this to work in standalone mode as well,
+# we need the following code block.
+#--------------------------------------------------------------------------------
+function Test-Administrator {
+    [CmdletBinding()]
+    param()
 
+    $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+    $principal = [Security.Principal.WindowsPrincipal]::new($identity)
+
+    return $principal.IsInRole(
+        [Security.Principal.WindowsBuiltInRole]::Administrator
+    )
+}
+
+$script:IsAdministrator = Test-Administrator
+
+if ($AppMode -eq 'standalone' -and $Elevated.IsPresent -and -not $script:IsAdministrator) {
+    if ($ElevationRestarted.IsPresent) {
+        throw 'WTF.Console requested elevation, but the restarted process is still not elevated.'
+    }
+
+    $psExe = if ($PSVersionTable.PSEdition -eq 'Core') {
+        Join-Path $PSHOME 'pwsh.exe'
+    }
+    else {
+        Join-Path $PSHOME 'powershell.exe'
+    }
+
+    $restartArgs = [System.Collections.Generic.List[string]]::new()
+
+    $restartArgs.AddRange([string[]]@(
+        '-NoLogo',
+        '-NoProfile',
+        '-ExecutionPolicy', 'Bypass',
+        '-File', $PSCommandPath,
+        '-ScriptPath', $ScriptPath,
+        '-ScriptType', $ScriptType,
+        '-AppMode', $AppMode,
+        '-WinSize', $WinSize,
+        '-Action', $Action,
+        '-Language', $Language,
+        '-LogFilePath', $LogFilePath,
+        '-Elevated',
+        '-ElevationRestarted'
+    ))
+
+    try {
+        $null = Start-Process `
+            -FilePath $psExe `
+            -ArgumentList $restartArgs.ToArray() `
+            -Verb RunAs `
+            -WindowStyle Normal `
+            -PassThru `
+            -ErrorAction Stop
+    }
+    catch {
+        if ($_.Exception.NativeErrorCode -eq 1223) {
+            exit 1223
+        }
+
+        throw
+    }
+
+    exit 0
+}
 #--------------------------------------------------------------------------------
 # Catch the Params and make them global available for the isolated scopes
 # $global:framework   ->  Stores the content of config.json
@@ -371,6 +453,10 @@ $global:logmsg=@("All required Assemblies have been successfully loaded.",`
 "All required framework libraries were loaded.",`
 "$($global:ScriptPath) exists.")
 $null = wintwincore.WriteLogmsg -Logfile $global:config.app.logfile -Message $global:logmsg -Flag "INFO"
+
+$global:logmsg = @("Requested elevation: $($Elevated.IsPresent)",`
+"Effective administrator state: $script:IsAdministrator","Application mode: $global:AppMode")
+$null = wintwincore.WriteLogmsg -Logfile $global:config.app.logfile -Message $global:logmsg -Flag "OKAY" -Override 1
 
 #--------------------------------------------------------------------------------
 # Store a reference on process.json , jobaction.json and workflow.json

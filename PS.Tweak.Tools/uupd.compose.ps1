@@ -193,6 +193,7 @@ $script:app = [PSCustomObject]@{
     langfile   = $null    # <- Stores the path to the language file
     logfile    = $null    # <- Stores the path to the logfile
     xmlui      = $null    # <- Stores the path to the xml ui file
+    popup      = $null    # <- Stores the path to the magic.window.xml :)
     actionid   = $null    # <- Stores the action-id (required for job-registration)
     script     = [PSCustomObject]@{
         file   = $null
@@ -217,6 +218,7 @@ $script:app.name     = $script:config.psttjson.apptool."uupd-compose".appname
 $script:app.version  = $script:config.psttjson.apptool."uupd-compose".appvers
 $script:app.actionid = $script:config.psttjson.apptool."uupd-compose"."action-id"
 $script:app.xmlui    = Join-Path "$($script:wintwin.root)" "$($script:config.psttjson.apptool."uupd-compose".xmlui)"
+$script:app.popup    = Join-Path "$($script:wintwin.root)" "$($script:config.psttjson.apptool."uupd-compose".popup)"
 
 # Load the script and logging details (required for the console interaction)
 $script:app.script.file = "$($script:config.psttjson.apptool."uupd-compose".scriptfile)"
@@ -387,6 +389,239 @@ function script:uiEvent {
     
     #Start-Sleep -Milliseconds 50
 }
+# This function orchestrates the magic.window.xml
+function script:ShowMagicWindow {
+    [CmdletBinding(DefaultParameterSetName = 'Info')]
+    param(
+        [Parameter(ParameterSetName = 'Info')]
+        [switch]$mwInfo,
+
+        [Parameter(ParameterSetName = 'Warning')]
+        [switch]$mwWarning,
+
+        [Parameter(ParameterSetName = 'Error')]
+        [switch]$mwError,
+
+        [ValidateSet('OK', 'OKCancel', 'YesNo', 'YesNoCancel')]
+        [string]$Buttons = 'OK',
+
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Title,
+
+        [Parameter(Mandatory)]
+        [AllowEmptyString()]
+        [string]$Message,
+
+        [System.Windows.Window]$Owner,
+
+        [Parameter(Mandatory = $false)]
+        [string]$XamlPath = $script:app.popup
+    )
+
+    if (-not (Test-Path -LiteralPath $XamlPath -PathType Leaf)) {
+        $script:logmsg=@("Failed loading UI from following XML-File:","$($XamlPath)",`
+        "Function script:ShowDialogWindow failed with following reason:","File not found!")
+        $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "FAIL"
+        script:Show-RuntimeError -errortext "Faild loading User Interface:`n$($XamlPath)`nPlease check the logfile for more informations." -exitapp
+    }
+
+    try {
+        [xml]$xaml = Get-Content -LiteralPath $XamlPath -Raw -Encoding UTF8 -ErrorAction Stop
+        $reader = [System.Xml.XmlNodeReader]::new($xaml)
+        $window = [System.Windows.Markup.XamlReader]::Load($reader)
+    }
+    catch {
+        $script:logmsg=@("Failed loading UI from following XML-File:","$($XamlPath)",`
+        "Function script:ShowDialogWindow failed with following reason:","$($_.Exception.Message)")
+        $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "FAIL"
+        script:Show-RuntimeError -errortext "Faild loading User Interface:`n$($XamlPath)`nPlease check the logfile for more informations." -exitapp
+    }
+    finally {
+        $reader.Close()
+    }
+
+    $controls = @{}
+
+    @(
+        'TitleBarPanel',
+        'TitleBarText',
+        'DialogTitle',
+        'DialogMessage',
+        'BtnClose',
+        'BtnYes',
+        'BtnNo',
+        'BtnOK',
+        'BtnCancel',
+        'TitleIconInfo',
+        'TitleIconWarning',
+        'TitleIconError',
+        'ContentIconInfo',
+        'ContentIconWarning',
+        'ContentIconError'
+    ) | ForEach-Object {
+        $controls[$_] = $window.FindName($_)
+
+        if ($null -eq $controls[$_]) {
+            throw "XAML-Element fehlt: $_"
+            $script:logmsg=@("Failed loading UI from following XML-File:","$($XamlPath)",`
+            "Function script:ShowDialogWindow failed with following reason:","Following XAML-Element is missing: $($_)")
+            $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "FAIL"
+            script:Show-RuntimeError -errortext "Faild loading User Interface:`n$($XamlPath)`nPlease check the logfile for more informations." -exitapp
+        }
+    }
+
+    $window.Title = $Title
+    $controls.TitleBarText.Text = $Title
+    $controls.DialogTitle.Text = $Title
+    $controls.DialogMessage.Text = $Message
+
+    if ($null -ne $Owner) {
+        $window.Owner = $Owner
+        $window.WindowStartupLocation = [System.Windows.WindowStartupLocation]::CenterOwner
+    }
+    else {
+        $window.WindowStartupLocation = [System.Windows.WindowStartupLocation]::CenterScreen
+    }
+
+    $kind = if ($mwWarning) { 'Warning' }
+    elseif ($mwError) { 'Error' }
+    else { 'Info' }
+
+    foreach ($name in @('Info', 'Warning', 'Error')) {
+        $visibility = if ($name -eq $kind) { [System.Windows.Visibility]::Visible }
+        else { [System.Windows.Visibility]::Collapsed }
+        $controls["TitleIcon$name"].Visibility = $visibility
+        $controls["ContentIcon$name"].Visibility = $visibility
+    }
+
+    $visibleButtons = switch ($Buttons) {
+        'OK'          { @('BtnOK') }
+        'OKCancel'    { @('BtnOK', 'BtnCancel') }
+        'YesNo'       { @('BtnYes', 'BtnNo') }
+        'YesNoCancel' { @('BtnYes', 'BtnNo', 'BtnCancel') }
+    }
+
+    foreach ($buttonName in @(
+        'BtnYes',
+        'BtnNo',
+        'BtnOK',
+        'BtnCancel'
+    )) {
+        $controls[$buttonName].Visibility =
+            if ($buttonName -in $visibleButtons) {
+                [System.Windows.Visibility]::Visible
+            }
+            else {
+                [System.Windows.Visibility]::Collapsed
+            }
+    }
+
+    $primaryButton = if ('BtnYes' -in $visibleButtons) { 'BtnYes' }
+    else { 'BtnOK' }
+
+    $controls[$primaryButton].IsDefault = $true
+
+    if ('BtnCancel' -in $visibleButtons) { $controls.BtnCancel.IsCancel = $true }
+    elseif ('BtnNo' -in $visibleButtons) { $controls.BtnNo.IsCancel = $true }
+
+    $state = [pscustomobject]@{ Choice = $null }
+
+    $closeWith = {
+        param(
+            [string]$Choice,
+            [Nullable[bool]]$DialogResult
+        )
+
+        $state.Choice = $Choice
+        $window.DialogResult = $DialogResult
+    }
+
+    $controls.BtnYes.Add_Click({ & $closeWith 'Yes' $true })
+    $controls.BtnOK.Add_Click({ & $closeWith 'OK' $true })
+    $controls.BtnNo.Add_Click({ & $closeWith 'No' $false })
+    $controls.BtnCancel.Add_Click({ & $closeWith 'Cancel' $false })
+    $controls.BtnClose.Add_Click({
+        $state.Choice = if ('BtnCancel' -in $visibleButtons) { 'Cancel' }
+        elseif ('BtnNo' -in $visibleButtons) { 'No' }
+        else { 'None' }
+        $window.Close()
+    })
+
+    $controls.TitleBarPanel.Add_MouseLeftButtonDown({
+        param($senderObj, $eventObj)
+        if ($eventObj.ButtonState -eq [System.Windows.Input.MouseButtonState]::Pressed ) {
+            $window.DragMove()
+        }
+    })
+
+    [void]$window.ShowDialog()
+
+    return $state.Choice
+}
+
+function script:RunElevatedCommandScript {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Path
+    )
+
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
+        $script:logmsg=@("Failed executing following script:","$($Path)",`
+        "Function script:RunElevatedCommandScript failed with the following reason:","File not found!")
+        $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "FAIL"
+        script:Show-RuntimeError -errortext "Function script:RunElevatedCommandScript failed!`nFollowing file could not be found:`n$($Path)" -exitapp
+    }
+
+    $resolvedPath = (Resolve-Path -LiteralPath $Path).ProviderPath
+    $workingDirectory = Split-Path -Path $resolvedPath -Parent
+    $cmdExe = Join-Path $env:SystemRoot 'System32\cmd.exe'
+
+    if (-not (Test-Path -LiteralPath $cmdExe -PathType Leaf)) {
+        $script:logmsg=@("Following file could not be found:","$($cmdExe)",`
+        "Function script:RunElevatedCommandScript failed!")
+        $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "FAIL"
+        script:Show-RuntimeError -errortext "Function script:RunElevatedCommandScript failed!`nFollowing file could not be found:`n$($cmdExe)" -exitapp
+    }
+
+    # /d: AutoRun-Einträge deaktivieren
+    # /s: definierte Verarbeitung der äußeren Anführungszeichen
+    # /c: Skript ausführen und cmd.exe danach beenden
+    # Alternativ (lässt die Konsole geöffnet):
+    # $arguments = '/d /s /k ""{0}""' -f $resolvedPath
+    $arguments = '/d /s /c ""{0}""' -f $resolvedPath
+
+    $process = Start-Process `
+        -FilePath $cmdExe `
+        -ArgumentList $arguments `
+        -WorkingDirectory $workingDirectory `
+        -Verb RunAs `
+        -WindowStyle Normal `
+        -PassThru `
+        -ErrorAction Stop
+
+    if ($null -eq $process) {
+        $script:logmsg=@("Function script:RunElevatedCommandScript failed with the following reason:",`
+        "Start-Process Event did not return a process object!")
+        $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "FAIL"
+        script:Show-RuntimeError -errortext "Function script:RunElevatedCommandScript failed!`nStart-Process Event did not return a process object!" -exitapp
+    }
+
+    Start-Sleep -Milliseconds 750
+    $process.Refresh()
+
+    return [pscustomobject]@{
+        Process      = $process
+        ProcessId    = $process.Id
+        HasExited    = $process.HasExited
+        ScriptPath   = $resolvedPath
+        Executable   = $cmdExe
+        Arguments    = $arguments
+        WorkingPath  = $workingDirectory
+    }
+}
 
 #--------------------------------------------------------------------------------
 # UI-Events / Triggers
@@ -555,12 +790,25 @@ $script:app.control.BtnCreateISO.Add_Click({
 
     # VERY IMPORTANT!
     <#
-    The previous process architecture could no longer be used because it had led to numerous issues. The main problem is
-    that WTF.Console launches a provided script within a hidden console process—a setup that, for instance, passes
-    through the I/O stream. However, this hidden process subsequently launches yet another hidden background process
-    via wintwincore.CreateUUPDiso. At that point, we lose control over the I/O stream. Consequently,
-    UUPD.Compose must now extract the ZIP file first. Once extraction is complete, UUPD.Compose launches
-    WTF.Console, which in turn directly starts tools like aria2; this restores our full control over the I/O stream.
+    In principle, UUPD.Composer would normally launch "uup_download_windows.cmd" using WTF.Console
+    (either via a generated script or directly). However, the situation is this: WTF.Console is
+    designed to launch a *single* process invisibly and redirect its I/O stream. If that process
+    restarts itself or launches another process before terminating, WTF.Console runs into a
+    problem because it wouldn't detect this simply by reading the I/O stream. Consequently, we
+    cannot pass uup_download_windows.cmd directly to WTF.Console. An earlier approach involved
+    UUPD.Composer creating a script that internally called wintwincore.CreateUUPiso. The issue
+    here, however, is that while wintwincore.CreateUUPiso can successfully launch
+    uup_download_windows.cmd, it does so in its own separate process—and that process redirects
+    all console output to a file. So, even if (!!) WTF.Console were aware of exactly what
+    wintwincore.CreateUUPiso was doing, it still wouldn't be able to read the console output,
+    as that output ends up in a file.
+
+    The only way to proceed at this point without significant effort is for UUPD.Composer to
+    locate uup_download_windows.cmd in the directory where the ZIP archive was extracted.
+    UUPD.Composer then launches uup_download_windows.cmd in its own separate process with
+    elevated privileges. The only problem here is the lack of actual process monitoring; we
+    can simply launch uup_download_windows.cmd, exit UUPD.Composer, and hope everything
+    runs as intended. ATM WinTwin.Fusion has no possibility to monitor that process!!
     #>
 
     # Try to extract the ZIP-Acrchive to the provided path
@@ -597,7 +845,7 @@ $script:app.control.BtnCreateISO.Add_Click({
     if ($null -eq $local:uupCommand) {
         $script:logmsg=@("The ZIP Archive could be extrated. But the required script file could not be found!",`
         "Missing Script File:  $($script:app.script.file)","Lookup Directory:     $($local:isopath)",
-        "$($csript:app.name) cannot continue without this file!")
+        "$($script:app.name) cannot continue without this file!")
         $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "FAIL"
         # Error Dialog
         $null = wintwincore.SystemMessageBox -smbTitle $script:errorhead `
@@ -609,118 +857,191 @@ $script:app.control.BtnCreateISO.Add_Click({
         return $false
     }
 
-    $script:app.script.file = Join-Path "$($local:isopath)" "$($script:app.script.file)"
+    $script:app.script.file = $local:uupCommand.FullName
 
-    $script:logmsg=@("$($script:app.script.file) could be found in $($local:isopath)")
+    $script:logmsg=@("Required UUP Command Script was found in $($local:isopath)",`
+    "Script:     $($script:app.script.file)","Directory:  $($local:uupCommand.DirectoryName)")
     $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "OKAY"
 
-    # Write something to the logfile
+    # Use the magic.window to display a Dialog Window
+    $local:dialogChoice = script:ShowMagicWindow `
+        -Info `
+        -Buttons YesNo `
+        -Title "$($script:app.name)  ($($script:app.toolbox))" `
+        -Message (
+        "The UUP dump script is launched in a separate console window " +
+        "with administrator privileges.`n`n" +
+        "UUPD.Compose cannot monitor the subsequent process. " +
+        "The console window must not be closed while the download " +
+        "and ISO creation are in progress.`n`n" +
+        "If no ISO is created, the current process chain remains " +
+        "interrupted, and the framework cannot automatically " +
+        "resume this task.`n`n" +
+        "Do you want to continue?"
+        ) `
+    -Owner $script:app.window
+
+    # We will only react, if the user decided NOT to run UUPD
+    if ($local:dialogChoice -ne 'Yes') {
+        $script:logmsg = @("The user declined launching the external UUP Command Process.",`
+        "Dialog result: $($local:dialogChoice)","UUPD.Compose will now close without creating the ISO.")
+        $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "WARN"
+
+        $null = script:ShowMagicWindow `
+            -Warning `
+            -Buttons OK `
+            -Title "$($script:app.name)  ($($script:app.toolbox))" `
+            -Message (
+            "The external UUP dump process is not being started.\n\n" +
+            "No ISO file will be created by this job. " +
+            "UUPD.Compose is now terminating."
+            ) `
+        -Owner $script:app.window
+
+        $script:app.window.Close()
+        return
+    }
+
+    # Looks like User wants to proceed. So we do NOT use WTF.Console (currently ... hopefully)!
+    # We're trying to launch the process directly with elevated rights!
     $script:logmsg=@("$($script:app.name) is now passing over to WTF.Console using following script:","$($script:wintwin.console)")
     $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "INFO"
     
+    # LAUNCH UUP COMMAND PROCESS WITH ELEVATED RIGHTS!
+    try {
+        $local:externalLaunch = script:Start-ElevatedCommandScript `
+        -Path $script:app.script.file
+    }
+    catch {
+        $local:wasCanceled = ($_.Exception.PSObject.Properties['NativeErrorCode'] -and $_.Exception.NativeErrorCode -eq 1223 )
+
+        $local:errorText = if ($local:wasCanceled) {
+            'The administrator request was cancelled by the user.'
+        }
+        else {
+            $_.Exception.Message
+        }
+
+        $script:logmsg = @(
+        "The external UUP command process could not be started.",`
+        "Script: $($script:app.script.file)","Reason:","$($local:errorText)")
+        $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag 'FAIL'
+
+        $null = script:ShowMagicWindow `
+            -Error `
+            -Buttons OK `
+            -Title "$($script:app.name)  ($($script:app.toolbox))" `
+            -Message (
+            "The UUP dump script could not be started.`n`n" +
+            "$local:errorText`n`n" +
+            "UUPD.Compose will remain open. You can retry the operation."
+            ) `
+        -Owner $script:app.window
+
+        $script:app.control.BtnCreateISO.IsEnabled = $true
+        $script:app.control.BtnExitApp.IsEnabled = $true
+        return
+    }
+    # Wait for the process ...
+    Start-Sleep -Milliseconds 1000
+
+    # CHECK IF UUP COMMAND PROCESS IS STILL ALIVE!
+    try {
+        if ($local:externalLaunch.HasExited) {
+            $local:exitCode = $null
+
+            try { $local:exitCode = $local:externalLaunch.Process.ExitCode }
+            catch { $local:exitCode = 'unknown' }
+
+            $script:logmsg = @('The external UUP command process was created but terminated immediately.',`
+            "ProcessId: $($local:externalLaunch.ProcessId)","ExitCode: $local:exitCode","Script: $($local:externalLaunch.ScriptPath)")
+            $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag 'WARN'
+
+            $null = script:ShowMagicWindow `
+                -Warning `
+                -Buttons OK `
+                -Title "$($script:app.name)  ($($script:app.toolbox))" `
+                -Message (
+                "The external process was started but terminated immediately. " +
+                "`n`nExit code: $local:exitCode`n`n" +
+                "Please check the console window and the UUP dump directory."
+                ) `
+            -Owner $script:app.window
+
+            $script:app.control.BtnCreateISO.IsEnabled = $false
+            $script:app.control.BtnExitApp.IsEnabled = $true
+            return
+        }
+    }
+    catch {
+        $script:logmsg = @(
+        "Failed to theck wether the UUPD Command Process is (still) alive or not!",`
+        "Here is what we know about that error!",`
+        "$($_.Exception.Message)",`
+        "$($_.InvocationInfo.ScriptName)",`
+        "$($_.InvocationInfo.ScriptLineNumber)",`
+        "$($_.Exception.Source)",`
+        "$($_.Exception.TargetSite)",`
+        "$($_.Exception.Message)",`
+        "$($_.InvocationInfo.DisplayScriptPosition)",`
+        "$($_.InvocationInfo.CommandOrigin)")
+        $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag 'WARN'
+        
+
+        $null = script:ShowMagicWindow `
+            -Warning `
+            -Buttons OK `
+            -Title "$($script:app.name)  ($($script:app.toolbox))" `
+            -Message (
+            "Failed to theck wether the UUP Command Process is (still) alive or not!`n" +
+            "Please check if the UUP Console is still open (and running).`n" +
+            "If not, please refer to the logfile for detailed informations.`n`n" +
+            "$($script:app.name) is now terminating"
+            ) `
+        -Owner $script:app.window
+
+        $script:app.control.BtnCreateISO.IsEnabled = $false
+        $script:app.control.BtnExitApp.IsEnabled = $true
+        return
+    }
+
+    $script:logmsg = @(
+    "The external UUP command process was successfully created.",`
+    "ProcessId: $($local:externalLaunch.ProcessId)",' '
+    "Executable: $($local:externalLaunch.Executable)",' '
+    "Script: $($local:externalLaunch.ScriptPath)",' '
+    "WorkingDirectory: $($local:externalLaunch.WorkingPath)")
+    $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag 'OKAY'
+    $script:logmsg = @("$($script:app.name) will now close.","The external process is no longer monitored by the framework.")
+    $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag 'WARN'
+    $script:logmsg = @("$($script:app.name) is now trying to unregister as current Framework Process.")
+    $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag 'INFO'
+
     # Unregister the application before handing over to WTF.Console
     # This is important, because otherwise, WTF.Console will not start!
     $script:unregProcess = wintwincore.UnregisterProcess -FrameworkRoot $script:wintwin.root -ProcessId $($script:ProcessID.Id) -ExitCode 0
     if ( $script:unregProcess.code -ne 0 ) {
         $script:logmsg=@("$($script:app.name) failed to unregister as Framework Process!","$($script:unregProcess.msg)")
         $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "FAIL"
-        $script:logmsg=@("Unable to continue with launching WTF.console!","$($script:wintwin.console)")
-        $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "WARN"
-        $null = wintwincore.SystemMessageBox -smbTitle "$($script:errorhead)" `
-        -smbText "Unable to launch WTF.Console!`nPlease check the logfile for more informations."
-        -smbIcon Warning -smbButtons OK
-        # Finally release the buttons again
-        $script:app.control.BtnCreateISO.IsEnabled = $false
-        $script:app.control.BtnExitApp.IsEnabled   = $true
-        return $false
+        $script:logmsg=@("The application has finished anyway (even if we did not try to unregister)",`
+        "This means it was planned to close the window in any case.",`
+        "We will give it a second try in the regular exit/cleanup.",
+        "NOTE: `$script:app.process must be 'running' to do so!!")
+        $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "INFO"
+        # Importand for the clean exit
+        $script:app.process = 'running'
+        return
     }
 
+    # Finally release the buttons again
+    $script:app.control.BtnCreateISO.IsEnabled = $true
+    $script:app.control.BtnExitApp.IsEnabled   = $true
+    
     # Importand for the clean exit
     $script:app.process = 'handoff'
     
     $script:logmsg=@("$($script:app.name) successfully unregistered as Framework Process.")
     $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "OKAY"
-    
-    # Launch the WTF.Console Process
-    # Typical application hand-off after the tool has cleared process.json:
-    $script:launchConsole = wintwincore.LaunchConsole `
-    -Script $script:app.script.file `
-    -ScriptType $script:app.script.type `
-    -Mode framework `
-    -Action $script:app.actionid `
-    -Logging $true `
-    -Logfile $script:app.consoleLog `
-    -FrameworkRoot $script:wintwin.root
-
-    # Looks like there was an error while launching WTF.Console
-    if ($script:launchConsole.code -ne 0) {
-        
-        $script:logmsg=@("Hand-off from $($script:app.name) to WTF.Console failed!",`
-        "Function wintwincore.LaunchConsole failed with following reason:","$($script:launchConsole.msg)")
-        $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "FAIL"
-        $script:logmsg=@("Trying to re-register $($script:app.name) as framework process.")
-        $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "INFO"
-    
-
-        $script:selfRegister = wintwincore.RegisterProcess -FrameworkRoot $script:wintwin.root `
-                                            -ProcName "$($script:app.name)" `
-                                            -ProcPath $PSCommandPath `
-                                            -ActionId "$($script:app.actionid)" `
-                                            -ProcessId $script:ProcessID.Id
-        if ($script:selfRegister.code -ne 0) {
-            # Registration failed. Write something to the logfile
-            $script:logmsg=@("An unhandleable exception occurred while trying to launch WTF.Console!",`
-            "$($script:app.name) failed to re-register as active Framework Process!",`
-            "Function wintwincore.RegisterProcess failed with the following reason:","$($script:selfRegister.msg)")
-            $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "FAIL"
-            
-            # Show an error dialog an exit
-            $null = wintwincore.SystemMessageBox -smbTitle $script:errorhead `
-            -smbText "An unhandleable exception occurred while trying to launch WTF.Console!`nPlease check the logfile for more informations."
-            -smbIcon Error -smbButtons OK
-
-            $script:logmsg=@("WE'RE DOOMED!",`
-            "$($script.app.name) is not registered as active framework process anymore!",`
-            "And the hand-off to WTF.Console failed as well!","There's nothing we can do anymore. Just try to (more or less) exit safely.")
-            $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "ERROR"
-            
-            return $false
-            # At this point we do not re-activate the action buttons, cause we're officially doomed!
-            # This application is not registered anymore as active framework process! And we failed
-            # launching the WTF.Console. 
-        }
-
-        # Importand for the clean exit
-        $script:app.process = 'running'
-        
-        $script:logmsg=@("$($script:app.name) is definitely a lucky badass!","We could successfully re-register as active framework process :)")
-        $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "OKAY"
-
-        # Show a Win32-Dialog
-        $null = wintwincore.SystemMessageBox -smbTitle "$($script:errorhead)" `
-        -smbText "An error occured during hand-off to WTF.Console!`nPlease check the logfile for more information." `
-        -smbIcon Error -smbButtons OK
-
-        # Finally release the buttons again
-        $script:app.control.BtnCreateISO.IsEnabled = $false
-        $script:app.control.BtnExitApp.IsEnabled   = $true
-        return $false
-    }
-    # WTF.Console successfully launched.
-    else {
-        # At this point we can use $script:launchConsole.data.
-        $script:launchConsole = $script:launchConsole.data
-        $script:logmsg=@("$($script:app.name) successfully handed off to WTF.Console.","Here are some details about the WTF.Console process:",`
-        "ProcessId:   $($script:launchConsole.ProcessId)",`
-        "ConsolePath: $($script:launchConsole.ConsolePath)",`
-        "Script file: $($script:launchConsole.Script)",`
-        "CommandLine: $($script:launchConsole.CommandLine)",`
-        "Mode:        $($script:launchConsole.Mode)",`
-        "Action:      $($script:launchConsole.Action)")
-        $null = wintwincore.WriteLogmsg -Logfile $script:app.logfile -Message $script:logmsg -Flag "OKAY"
-        # But for now ... we just close the window
-        $script:app.window.Close()
-    }
 
     # DEPRECATED: This point is unattainable
     # Finally release the buttons again
