@@ -2,13 +2,13 @@
   "component": "PS.Tweak.Tools",
   "sourceRepository": "WinTwin-Fusion/PS.Tweak.Tools",
   "sourceBranch": "main",
-  "sourceCommit": "787cc27bcdb75d3149988c47ae074cb0194e27b6",
-  "sourceCommitShort": "787cc27",
+  "sourceCommit": "1debd9dbeec12104f6812e79ad176c67577578db",
+  "sourceCommitShort": "1debd9d",
   "sourcePullRequest": {
-    "number": 30,
-    "title": "Pre-Finalization",
+    "number": 31,
+    "title": "Bugfix in UUPD.Compose",
     "mergedBy": "praetoriani",
-    "mergedAt": "2026-09-06T06:31:55Z"
+    "mergedAt": "2026-09-06T07:04:09Z"
   },
   "targetRepository": "WinTwin-Fusion/WinTwin.Fusion",
   "targetBaseBranch": "main",
@@ -20,7 +20,7 @@
   ],
   "syncedBy": "GitHub Actions",
   "workflow": "Sync PS.Tweak.Tools to WinTwin.Fusion",
-  "workflowRunId": "34016732274",
-  "workflowRunNumber": "27",
-  "syncDate": "2026-09-06T06:32:07Z"
+  "workflowRunId": "34018150800",
+  "workflowRunNumber": "28",
+  "syncDate": "2026-09-06T07:04:21Z"
 }
