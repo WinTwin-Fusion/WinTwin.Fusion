@@ -61,6 +61,10 @@ param(
     [string]$ScriptPath,
 
     [Parameter(Mandatory = $false)]
+    [ValidateSet('Auto', 'ps1', 'cmd', 'bat')]
+    [string]$ScriptType = 'Auto',
+
+    [Parameter(Mandatory = $false)]
     [ValidateSet('framework', 'standalone')]
     [string]$AppMode = 'framework',
 
@@ -80,6 +84,32 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+#--------------------------------------------------------------------------------
+# Internal Helper-Function to display Error-Messages
+# We have to do this, because we cannot use SystemMessageBox
+# untill the Framework libraries have been loaded successfully.
+#--------------------------------------------------------------------------------
+$script:apperror = [pscustomobject]@{
+    title = "WTF.Console (PS.Tweak.Tools)"
+}
+function Show-ErrorMsg {
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$message,
+        [Parameter(Mandatory = $true)]
+        [switch]$exitapp
+    )
+    [System.Windows.MessageBox]::Show(
+        "$($message)",
+        "$($script:apperror.title)",
+        [System.Windows.MessageBoxButton]::OK,
+        [System.Windows.MessageBoxImage]::Error
+    ) | Out-Null
+
+    if ($exitapp.IsPresent) { exit 1 }
+    return
+}
 
 #--------------------------------------------------------------------------------
 # Catch the Params and make them global available for the isolated scopes
@@ -88,13 +118,26 @@ $ErrorActionPreference = 'Stop'
 # $global:psttconfig  ->  Stores the content of pstt.config.json
 # $global:wtfconsole  ->  Stores the content of wtf.console.json
 #--------------------------------------------------------------------------------
-$global:ScriptPath    = $ScriptPath
+$global:ScriptPath    = [System.IO.Path]::GetFullPath($ScriptPath)
+$global:ScriptType    = $ScriptType.ToString().ToLower()
 $global:AppMode       = $AppMode.ToString().ToLower()
 $global:WinSize       = $WinSize
 $global:Action        = $Action.ToString().ToLower()
 $global:Language      = $Language.ToString().ToLower()
 $global:LogFilePath   = $LogFilePath
 
+if ($global:ScriptType -eq 'Auto') {
+    $extension = [System.IO.Path]::GetExtension($global:ScriptPath).ToLowerInvariant()
+
+    switch ($extension) {
+        '.ps1' { $global:ScriptType = 'ps1' }
+        '.cmd' { $global:ScriptType = 'cmd' }
+        '.bat' { $global:ScriptType = 'cmd' }
+        default {
+            Show-ErrorMsg -message ("Unsupported script type: {0}" -f $extension) -exitapp
+        }
+    }
+}
 #--------------------------------------------------------------------------------
 # Load additional Libraries (Required to build the UI)
 #--------------------------------------------------------------------------------
@@ -130,28 +173,6 @@ $global:config = [pscustomobject]@{
         logfile    = $null
     }
 }
-$script:apperror = [pscustomobject]@{
-    title = "WTF.Console (PS.Tweak.Tools)"
-}
-#--------------------------------------------------------------------------------
-# Internal Helper-Function to display Error-Messages
-# We have to do this, because we cannot use SystemMessageBox
-# untill the Framework libraries have been loaded successfully.
-#--------------------------------------------------------------------------------
-function Show-ErrorMsg {
-    param(
-        [Parameter(Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
-        [string]$message
-    )
-    [System.Windows.MessageBox]::Show(
-        "$($message)",
-        "$($script:apperror.title)",
-        [System.Windows.MessageBoxButton]::OK,
-        [System.Windows.MessageBoxImage]::Error
-    ) | Out-Null
-}
-
 #--------------------------------------------------------------------------------
 # Make sure that we have a Script to run
 #--------------------------------------------------------------------------------
@@ -344,12 +365,12 @@ $global:config.app.logfile = Join-Path $script:newlogpath $script:newlogfile
 # be necessary at all because of the date-time-code included in the file name)
 
 $global:logmsg=@("$($global:wtfconsole.appinfo.name) $($global:wtfconsole.appinfo.version) pre-initialization phase is complete.")
-$null = wintwincore.WriteLogmsg -Logfile $global:config.app.logfile -Message $script:logmsg -Flag "OKAY" -Override 1
+$null = wintwincore.WriteLogmsg -Logfile $global:config.app.logfile -Message $global:logmsg -Flag "OKAY" -Override 1
 $global:logmsg=@("All required Assemblies have been successfully loaded.",`
 "Configuration successfully loaded for $($global:AppMode) mode.",`
 "All required framework libraries were loaded.",`
 "$($global:ScriptPath) exists.")
-$null = wintwincore.WriteLogmsg -Logfile $global:config.app.logfile -Message $script:logmsg -Flag "INFO"
+$null = wintwincore.WriteLogmsg -Logfile $global:config.app.logfile -Message $global:logmsg -Flag "INFO"
 
 #--------------------------------------------------------------------------------
 # Store a reference on process.json , jobaction.json and workflow.json
@@ -540,14 +561,37 @@ if ($global:PSEcex.code -ne 0) {
 }
 
 $global:psi = New-Object System.Diagnostics.ProcessStartInfo
-$global:psi.FileName               = $global:PSEcex.data.Path
-$global:psi.Arguments              = "-NoLogo -NoProfile -ExecutionPolicy Bypass -File `"$global:ScriptPath`""
+#$global:psi.FileName               = $global:PSEcex.data.Path
+#$global:psi.Arguments              = "-NoLogo -NoProfile -ExecutionPolicy Bypass -File `"$global:ScriptPath`""
 $global:psi.RedirectStandardInput  = $true
 $global:psi.RedirectStandardOutput = $true
 $global:psi.RedirectStandardError  = $true
 $global:psi.UseShellExecute        = $false
 $global:psi.CreateNoWindow         = $true
 $global:psi.WorkingDirectory       = Split-Path -Parent $global:ScriptPath
+# Set the underlying host based on the type of script we need to execute
+switch ($global:ScriptType) {
+    'ps1' {
+        $global:PSEcex = wintwincore.GetPSExecutable
+
+        if ($global:PSEcex.code -ne 0) {
+            Show-ErrorMsg -message ("PowerShell executable could not be resolved:`n{0}" -f $global:PSEcex.msg) -exitapp
+        }
+
+        $global:psi.FileName = $global:PSEcex.data.Path
+        $global:psi.Arguments = ('-NoLogo -NoProfile -ExecutionPolicy Bypass -File "{0}"' -f $global:ScriptPath)
+    }
+
+    'cmd' {
+        $global:psi.FileName = Join-Path $env:SystemRoot 'System32\cmd.exe'
+        $global:psi.Arguments = ('/d /c call "{0}"' -f $global:ScriptPath)
+    }
+
+    default {
+        Show-ErrorMsg -message ("Unsupported execution type: {0}" -f $global:ScriptType) -exitapp
+    }
+}
+
 # RCP = Registered Console Process
 $global:RCP = New-Object System.Diagnostics.Process
 $global:RCP.StartInfo = $global:psi
@@ -641,7 +685,7 @@ function global:RegisterConsoleProcess {
         #return (OPSreturn -Code -1 -Message "Process was cleared in memory but could not be persisted to process.json: $($writeResult.msg)" -Exception $writeResult.exception)
         # Something went wront -> write it down in the WTF.Console log!
         $global:logmsg=@("An error occured while trying to $($actionmode) the script process!","$($writeResult.msg)")
-        $null = wintwincore.WriteLogmsg -Logfile $global:config.app.logfile -Message $script:logmsg -Flag "ERROR"
+        $null = wintwincore.WriteLogmsg -Logfile $global:config.app.logfile -Message $global:logmsg -Flag "ERROR"
     }
     else {
         # looks like we could update the process.json
@@ -649,18 +693,18 @@ function global:RegisterConsoleProcess {
             "register" {
                 $global:logmsg=@("$($processdata.processname) was started by WTF.Console.",`
                 "The process for $($processdata.processname) was successfully registered with state '$($processdata.jobstate)' in the process database.")
-                $null = wintwincore.WriteLogmsg -Logfile $global:config.app.logfile -Message $script:logmsg -Flag "OKAY"
+                $null = wintwincore.WriteLogmsg -Logfile $global:config.app.logfile -Message $global:logmsg -Flag "OKAY"
             }
             "update" {
                 $global:logmsg=@("Current state of $($processdata.processname) was updated to '$($processdata.jobstate)'.",`
                 "The process for $($processdata.processname) was successfully updated to '$($processdata.jobstate)' in the process database.")
-                $null = wintwincore.WriteLogmsg -Logfile $global:config.app.logfile -Message $script:logmsg -Flag "OKAY"
+                $null = wintwincore.WriteLogmsg -Logfile $global:config.app.logfile -Message $global:logmsg -Flag "OKAY"
             }
             "unregister" {
                 $global:logmsg=@("Current state of $($processdata.processname) was updated to '$($processdata.jobstate)'.",`
                 "The process for $($processdata.processname) was successfully updated to '$($processdata.jobstate)' in the process database.",`
                 "$($processdata.processname) was unregistered from the process database.")
-                $null = wintwincore.WriteLogmsg -Logfile $global:config.app.logfile -Message $script:logmsg -Flag "OKAY"
+                $null = wintwincore.WriteLogmsg -Logfile $global:config.app.logfile -Message $global:logmsg -Flag "OKAY"
             }
         }
     }
@@ -692,11 +736,11 @@ $global:SendCommand = {
         try {
             $global:RCP.StandardInput.WriteLine($script:cmdText)
             $global:logmsg=@("Input-Event received. User made following input:","$($script:cmdText)")
-            $null = wintwincore.WriteLogmsg -Logfile $global:config.app.logfile -Message $script:logmsg -Flag "INFO"
+            $null = wintwincore.WriteLogmsg -Logfile $global:config.app.logfile -Message $global:logmsg -Flag "INFO"
         }
         catch {
             $global:logmsg=@("WTF.Console failed to write to StandardInput:","$($_.Exception.Message)")
-            $null = wintwincore.WriteLogmsg -Logfile $global:config.app.logfile -Message $script:logmsg -Flag "WARN"
+            $null = wintwincore.WriteLogmsg -Logfile $global:config.app.logfile -Message $global:logmsg -Flag "WARN"
         }
         # UI-Update for WTF.Console
         $script:textReplace = wintwincore.FillPlaceholder -text $global:apptxt.status.scriptrunning -txtval @("[$($script:timecode)]","$(Split-Path -Leaf $global:ScriptPath)")
@@ -740,7 +784,7 @@ $global:RCPeventData = Register-ObjectEvent -InputObject $global:RCP -EventName 
         })
         # Write something to the logfile
         $global:logmsg=@("Output received:`n$($EventArgs.Data)")
-        $null = wintwincore.WriteLogmsg -Logfile $global:config.app.logfile -Message $script:logmsg -Flag "INFO"
+        $null = wintwincore.WriteLogmsg -Logfile $global:config.app.logfile -Message $global:logmsg -Flag "INFO"
         # Framework-Mode only!
         if ($global:AppMode -eq 'framework') {
             global:RegisterConsoleProcess -jobstate "running" -jobupdate
@@ -769,7 +813,7 @@ $global:RCPeventFail = Register-ObjectEvent -InputObject $global:RCP -EventName 
         })
         # Write something to the logfile
         $global:logmsg=@("Script '$(Split-Path -Leaf $global:ScriptPath)' caused an error during runtime!","$($EventArgs.Data)")
-        $null = wintwincore.WriteLogmsg -Logfile $global:config.app.logfile -Message $script:logmsg -Flag "ERROR"
+        $null = wintwincore.WriteLogmsg -Logfile $global:config.app.logfile -Message $global:logmsg -Flag "ERROR"
         # Framework-Mode only!
         if ($global:AppMode -eq 'framework') {
             global:RegisterConsoleProcess -jobstate "error" -jobupdate
@@ -801,7 +845,7 @@ $global:RCPeventExit = Register-ObjectEvent -InputObject $global:RCP -EventName 
     })
     # Write something to the logfile
     $global:logmsg=@("WTF.Consle received an exit-signal from the script.","Script '$(Split-Path -Leaf $global:ScriptPath)' has finished with exitcode: $($script:exitCode)")
-    $null = wintwincore.WriteLogmsg -Logfile $global:config.app.logfile -Message $script:logmsg -Flag "INFO"
+    $null = wintwincore.WriteLogmsg -Logfile $global:config.app.logfile -Message $global:logmsg -Flag "INFO"
     # Framework-Mode only!
     if ($global:AppMode -eq 'framework') {
         global:RegisterConsoleProcess -jobstate "finished" -exitcode $script:exitCode -jobended
@@ -835,7 +879,7 @@ try {
         })
         # Write something to the logfile
         $global:logmsg=@("WTF.Consle successfully started script '$(Split-Path -Leaf $global:ScriptPath)' in new (hidden) process (pid: $($global:RCP.Id))")
-        $null = wintwincore.WriteLogmsg -Logfile $global:config.app.logfile -Message $script:logmsg -Flag "INFO"
+        $null = wintwincore.WriteLogmsg -Logfile $global:config.app.logfile -Message $global:logmsg -Flag "INFO"
         # Framework-Mode only!
         if ($global:AppMode -eq 'framework') {
             global:RegisterConsoleProcess -jobstate "started" -processid $global:RCP.Id -jobstart
@@ -853,7 +897,7 @@ try {
         # Write something to the logfile
         $global:logmsg=@("WTF.Console failed starting script '$(Split-Path -Leaf $global:ScriptPath)' in new process.",`
         "Exitcode: $($global:RCP.ExitCode)`nError: $($global:RCP.StandardError)")
-        $null = wintwincore.WriteLogmsg -Logfile $global:config.app.logfile -Message $script:logmsg -Flag "ERROR"
+        $null = wintwincore.WriteLogmsg -Logfile $global:config.app.logfile -Message $global:logmsg -Flag "ERROR"
         # Framework-Mode only!
         if ($global:AppMode -eq 'framework') {
             global:RegisterConsoleProcess -jobstate "crashed" -exitcode $global:RCP.ExitCode -jobended
@@ -873,7 +917,7 @@ catch {
     # Write something to the logfile
     $global:logmsg=@("WTF.Console failed starting script '$(Split-Path -Leaf $global:ScriptPath)' in new process.",`
     "Exitcode: $($global:RCP.ExitCode)","Error: $($global:RCP.StandardError)","Exception: $($_.Exception.Message)")
-    $null = wintwincore.WriteLogmsg -Logfile $global:config.app.logfile -Message $script:logmsg -Flag "ERROR"
+    $null = wintwincore.WriteLogmsg -Logfile $global:config.app.logfile -Message $global:logmsg -Flag "ERROR"
 
     # Framework-Mode only!
     if ($global:AppMode -eq 'framework') {
@@ -915,13 +959,13 @@ $global:Window.Add_Closing({
                 # Write a final note to the logfile
                 $global:logmsg=@("WTF.Console was terminated by the user. The process (currently running at that time) was killed!",`
                 "Process StartTime: $($global:RCP.StartTime)","Process HasExited: $($global:RCP.HasExited)","Process ExitCode: $($global:RCP.ExitCode)")
-                $null = wintwincore.WriteLogmsg -Logfile $global:config.app.logfile -Message $script:logmsg -Flag "INFO"
+                $null = wintwincore.WriteLogmsg -Logfile $global:config.app.logfile -Message $global:logmsg -Flag "INFO"
             }
             catch {
                 # Write a note to the logfile
                 $global:logmsg=@("Failed terminating script process (pid: $($global:RCP.Id)). The process is still running ... ",`
                 "Process Error: $($global:RCP.StandardError)","Exceptional Error: $($_.Exception.Message)")
-                $null = wintwincore.WriteLogmsg -Logfile $global:config.app.logfile -Message $script:logmsg -Flag "WARN"
+                $null = wintwincore.WriteLogmsg -Logfile $global:config.app.logfile -Message $global:logmsg -Flag "WARN"
                 # Looks like killing the process failed
                 $null = wintwincore.SystemMessageBox -smbTitle "$($script:apperror.title)" `
                 -smbText "$($global:apptxt.message.killprocessfailed)" `
